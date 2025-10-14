@@ -3,7 +3,7 @@
 ![NovaFit Demo](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-A simple daily health metrics tracker with CLI menu and compact GUI built for the Developers Institute Hackathon.
+A simple daily health metrics tracker with enhanced CLI menu and professional dark-themed GUI built for the Developers Institute Hackathon.
 
 ## ✨ Features
 
@@ -17,15 +17,18 @@ A simple daily health metrics tracker with CLI menu and compact GUI built for th
 - 🧹 **Clear Screen**: Keep your terminal organized
 - 🛡️ **Input Validation**: Robust error handling and data validation
 
-### �️ **Professional GUI Interface**
+### 🖼️ **Professional GUI Interface**
 - 📑 **Tabbed Layout**: Organized into Add Entry, View Data, Dashboard, and Tools
 - 📅 **Date Picker**: Easy date selection with validation
 - 🎚️ **Interactive Sliders**: Visual input for steps and water
-- � **Visual Dashboard**: Rich statistics display with goal tracking
+- 📊 **Visual Dashboard**: Rich statistics display with goal tracking
 - 🎲 **Demo Data Generator**: Quick test data creation
 - 📁 **File Dialogs**: Professional import/export with file selection
 - 🌤️ **Weather Widget**: Integrated weather lookup
 - 📈 **Data Visualization**: Enhanced treeview for viewing entries
+- 🌙 **Enhanced Dark Theme**: Professional dark mode with custom styling
+- 🎨 **Theme Toggle**: Switch between light and dark themes with live preview
+- ✨ **Modern Styling**: Improved contrast and readability in all modes
 
 ### 💾 **Core Health Tracking**
 - 📊 **Track Daily Metrics**: steps, water intake, calories, mood
@@ -85,7 +88,7 @@ NovaFit — Health Tracker
 - **➕ Add Entry**: Interactive form with sliders and validation
 - **📋 View Entries**: Sortable table with all your health data
 - **📊 Dashboard**: Visual statistics and goal tracking
-- **🛠️ Tools**: Import/export, demo data, weather lookup
+- **🛠️ Tools**: Import/export, demo data, weather lookup, and theme settings
 
 ## 🗂️ Data Structure
 

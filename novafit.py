@@ -79,7 +79,7 @@ class Colors:
 
 def load_config():
     """Load user configuration."""
-    defaults = {"step_goal": 10000, "water_goal": 2.0, "default_city": "beersheba", "theme": "light", "show_achievements": True}
+    defaults = {"step_goal": 10000, "water_goal": 2.0, "default_city": "tel aviv", "theme": "dark", "show_achievements": True}
     if CONFIG_PATH.exists():
         try:
             with open(CONFIG_PATH) as f:
@@ -464,13 +464,13 @@ def cli_menu():
             print("  5) 📈 Dashboard")
             print("  6) 🔍 Search entries")
             print(f"{Colors.WARNING}🌐 External:{Colors.ENDC}")
-            print("  7) 🌤️  Weather lookup")
+            print("  7) 🌤️  Weather Report")
             print(f"{Colors.BLUE}💾 Import/Export:{Colors.ENDC}")
             print("  8) 📤 Export to JSON")
             print("  9) 📥 Import from JSON")
             print("  10) 🎲 Generate demo data")
             print(f"{Colors.CYAN}🖥️  Interface:{Colors.ENDC}")
-            print("  11) 🖼️ Open GUI")
+            print("  11) 🖼️ Open GUI Interface")
             print("  12) 🧹 Clear screen")
             print("  13) ❓ Show help")
             print(f"{Colors.FAIL}  0) 👋 Exit{Colors.ENDC}")
@@ -1055,18 +1055,26 @@ class NovaFitGUI:
         - Minimum size: 700x500 pixels
         """
         self.root = tk.Tk()
-        self.root.title("NovaFit — Mini Health Tracker GUI")
+        self.root.title("NovaFit — Enhanced Health Tracker")
         self.root.geometry("800x600")
         self.root.minsize(700, 500)
         
         self.style = ttk.Style()
+        
+        # Apply theme based on configuration
         if CONFIG.get("theme", "light") == "dark":
-            self.style.theme_use('alt')
-            self.root.configure(bg='#2b2b2b')
+            self.apply_dark_theme()
         else:
-            self.style.theme_use('clam')
+            self.apply_light_theme()
         
         self.setup_widgets()
+        
+        # Reapply theme to ensure all widgets are styled correctly
+        if CONFIG.get("theme", "light") == "dark":
+            self.apply_dark_theme()
+        else:
+            self.apply_light_theme()
+            
         self.refresh_data()
     
     def setup_widgets(self):
@@ -1320,13 +1328,17 @@ class NovaFitGUI:
                   command=self.import_data).pack(side="left", padx=5)
         
         # Theme section
-        theme_frame = ttk.LabelFrame(tools_frame, text="🎨 Appearance", padding="10")
+        theme_frame = ttk.LabelFrame(tools_frame, text="🎨 Appearance Settings", padding="10")
         theme_frame.pack(fill="x", pady=(0, 10))
         
         self.dark_mode = tk.BooleanVar(value=CONFIG.get("theme", "light") == "dark")
-        theme_check = ttk.Checkbutton(theme_frame, text="🌙 Dark Mode", 
+        theme_check = ttk.Checkbutton(theme_frame, text="🌙 Enable Dark Theme", 
                                       variable=self.dark_mode, command=self.toggle_theme)
         theme_check.pack(side="left", padx=10)
+        
+        current_theme = "Dark" if self.dark_mode.get() else "Light"
+        self.theme_status = ttk.Label(theme_frame, text=f"Current: {current_theme} Mode")
+        self.theme_status.pack(side="right", padx=10)
         
         # Data generation section
         gen_frame = ttk.LabelFrame(tools_frame, text="🎲 Data Generation", padding="10")
@@ -1930,20 +1942,117 @@ class NovaFitGUI:
         
         Themes:
         - Light theme: 'clam' style with system default colors
-        - Dark theme: 'alt' style with dark background (#2b2b2b)
+        - Dark theme: Enhanced dark theme with custom styling
         
         The theme preference is automatically saved to config.json and
         will be restored when the application restarts.
         """
         if self.dark_mode.get():
-            self.style.theme_use('alt')
-            self.root.configure(bg='#2b2b2b')
+            self.apply_dark_theme()
             CONFIG["theme"] = "dark"
         else:
-            self.style.theme_use('clam')
-            self.root.configure(bg='SystemButtonFace')
+            self.apply_light_theme()
             CONFIG["theme"] = "light"
         save_config(CONFIG)
+        
+        # Update theme status label if it exists
+        if hasattr(self, 'theme_status'):
+            current_theme = "Dark" if self.dark_mode.get() else "Light"
+            self.theme_status.configure(text=f"Current: {current_theme} Mode")
+    
+    def apply_dark_theme(self):
+        """Apply enhanced dark theme styling."""
+        # Use a better base theme for dark mode
+        self.style.theme_use('clam')
+        
+        # Configure root window
+        self.root.configure(bg='#1e1e1e')
+        
+        # Configure ttk styles for dark theme
+        self.style.configure('TFrame', background='#1e1e1e', borderwidth=0)
+        self.style.configure('TLabel', background='#1e1e1e', foreground='#ffffff')
+        self.style.configure('TButton', background='#404040', foreground='#ffffff',
+                           borderwidth=1, focuscolor='none')
+        self.style.map('TButton',
+                      background=[('active', '#505050'), ('pressed', '#303030')])
+        
+        self.style.configure('TEntry', fieldbackground='#2d2d2d', foreground='#ffffff',
+                           borderwidth=1, insertcolor='#ffffff')
+        self.style.map('TEntry', focuscolor=[('!focus', '#404040')])
+        
+        self.style.configure('TCombobox', fieldbackground='#2d2d2d', foreground='#ffffff',
+                           borderwidth=1, arrowcolor='#ffffff')
+        self.style.map('TCombobox', focuscolor=[('!focus', '#404040')])
+        
+        self.style.configure('TNotebook', background='#1e1e1e', borderwidth=0)
+        self.style.configure('TNotebook.Tab', background='#404040', foreground='#ffffff',
+                           padding=[8, 4])
+        self.style.map('TNotebook.Tab',
+                      background=[('selected', '#606060'), ('active', '#505050')])
+        
+        self.style.configure('TLabelFrame', background='#1e1e1e', foreground='#ffffff',
+                           borderwidth=1, relief='solid')
+        self.style.configure('TLabelFrame.Label', background='#1e1e1e', foreground='#ffffff')
+        
+        self.style.configure('Treeview', background='#2d2d2d', foreground='#ffffff',
+                           fieldbackground='#2d2d2d', borderwidth=1)
+        self.style.configure('Treeview.Heading', background='#404040', foreground='#ffffff',
+                           borderwidth=1)
+        self.style.map('Treeview.Heading',
+                      background=[('active', '#505050')])
+        
+        self.style.configure('TScale', background='#1e1e1e', troughcolor='#404040',
+                           borderwidth=0, sliderthickness=20)
+        
+        self.style.configure('TCheckbutton', background='#1e1e1e', foreground='#ffffff',
+                           focuscolor='none')
+        self.style.map('TCheckbutton',
+                      background=[('active', '#1e1e1e')])
+        
+        self.style.configure('Vertical.TScrollbar', background='#404040',
+                           troughcolor='#1e1e1e', borderwidth=0, arrowcolor='#ffffff')
+        
+        # Update Text widgets (requires special handling)
+        if hasattr(self, 'stats_text'):
+            self.stats_text.configure(bg='#2d2d2d', fg='#ffffff', insertbackground='#ffffff')
+        if hasattr(self, 'weather_text'):
+            self.weather_text.configure(bg='#2d2d2d', fg='#ffffff', insertbackground='#ffffff')
+        
+        # Update Canvas widgets
+        if hasattr(self, 'progress_canvas'):
+            self.progress_canvas.configure(bg='#2d2d2d', highlightbackground='#404040')
+    
+    def apply_light_theme(self):
+        """Apply light theme styling."""
+        self.style.theme_use('clam')
+        self.root.configure(bg='SystemButtonFace')
+        
+        # Reset all styles to default light theme
+        self.style.configure('TFrame', background='SystemButtonFace')
+        self.style.configure('TLabel', background='SystemButtonFace', foreground='black')
+        self.style.configure('TButton', background='SystemButtonFace', foreground='black')
+        self.style.configure('TEntry', fieldbackground='white', foreground='black')
+        self.style.configure('TCombobox', fieldbackground='white', foreground='black')
+        self.style.configure('TNotebook', background='SystemButtonFace')
+        self.style.configure('TNotebook.Tab', background='SystemButtonFace', foreground='black')
+        self.style.configure('TLabelFrame', background='SystemButtonFace', foreground='black')
+        self.style.configure('TLabelFrame.Label', background='SystemButtonFace', foreground='black')
+        self.style.configure('Treeview', background='white', foreground='black',
+                           fieldbackground='white')
+        self.style.configure('Treeview.Heading', background='SystemButtonFace', foreground='black')
+        self.style.configure('TScale', background='SystemButtonFace')
+        self.style.configure('TCheckbutton', background='SystemButtonFace', foreground='black')
+        self.style.configure('Vertical.TScrollbar', background='SystemButtonFace')
+        
+        # Update Text widgets
+        if hasattr(self, 'stats_text'):
+            self.stats_text.configure(bg='white', fg='black', insertbackground='black')
+        if hasattr(self, 'weather_text'):
+            self.weather_text.configure(bg='white', fg='black', insertbackground='black')
+        
+        # Update Canvas widgets
+        if hasattr(self, 'progress_canvas'):
+            self.progress_canvas.configure(bg='white', highlightbackground='gray')
     
     def run(self):
         """Start the GUI main event loop.

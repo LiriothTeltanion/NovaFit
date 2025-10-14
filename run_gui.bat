@@ -1,10 +1,10 @@
 @echo off
 echo ========================================
-echo      NovaFit - Interfaz GUI
+echo      NovaFit - GUI Interface
 echo ========================================
 echo.
-echo Iniciando interfaz grafica...
+echo Starting graphical interface...
 python novafit.py --gui
 echo.
-echo Presiona cualquier tecla para cerrar...
+echo Press any key to close...
 pause >nul

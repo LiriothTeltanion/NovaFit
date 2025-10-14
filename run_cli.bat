@@ -1,9 +1,9 @@
 @echo off
 echo ========================================
-echo      NovaFit - Interfaz CLI
+echo      NovaFit - CLI Interface
 echo ========================================
 echo.
 python novafit.py
 echo.
-echo Presiona cualquier tecla para cerrar...
+echo Press any key to close...
 pause >nul
