@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""NovaFit — Mini Health Tracker (CLI + GUI)"""
+# -*- coding: utf-8 -*-
+"""NovaFit - Mini Health Tracker (CLI + GUI)"""
 
 import argparse
 import csv
@@ -393,11 +394,9 @@ def get_weather(city: str) -> dict:
     
     try:
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=relative_humidity_2m"
-        print(f"Debug: Fetching weather from: {url}")  # Debug line
         
         # Use requests with SSL verification disabled due to PostgreSQL certificate issues
         response = requests.get(url, timeout=10, verify=False)
-        print(f"Debug: Response status: {response.status_code}")  # Debug line
         
         if response.status_code == 200:
             data = response.json()
@@ -417,7 +416,6 @@ def get_weather(city: str) -> dict:
                 "status": "success"
             }
         else:
-            print(f"Debug: API error: {response.status_code}")
             return {
                 "temp": "N/A", 
                 "humidity": "N/A", 
@@ -425,7 +423,6 @@ def get_weather(city: str) -> dict:
                 "status": "api_error"
             }
     except requests.exceptions.Timeout:
-        print("Debug: Request timeout")
         return {
             "temp": "N/A", 
             "humidity": "N/A", 
@@ -433,7 +430,6 @@ def get_weather(city: str) -> dict:
             "status": "timeout"
         }
     except requests.exceptions.ConnectionError:
-        print("Debug: Connection error")
         return {
             "temp": "N/A", 
             "humidity": "N/A", 
@@ -441,7 +437,6 @@ def get_weather(city: str) -> dict:
             "status": "connection_error"
         }
     except requests.exceptions.RequestException as e:
-        print(f"Debug: Network error: {e}")
         return {
             "temp": "N/A", 
             "humidity": "N/A", 
@@ -449,7 +444,6 @@ def get_weather(city: str) -> dict:
             "status": "network_error"
         }
     except json.JSONDecodeError:
-        print("Debug: Invalid JSON response")
         return {
             "temp": "N/A", 
             "humidity": "N/A", 
@@ -457,7 +451,6 @@ def get_weather(city: str) -> dict:
             "status": "json_error"
         }
     except Exception as e:
-        print(f"Debug: General error: {e}")
         return {
             "temp": "N/A", 
             "humidity": "N/A", 
@@ -2017,7 +2010,7 @@ class NovaFitGUI:
             filename = filedialog.asksaveasfilename(
                 defaultextension=".json",
                 filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-                initialname="novafit_export.json"
+                initialfile="novafit_export.json"
             )
             
             if filename:
@@ -2076,14 +2069,14 @@ class NovaFitGUI:
             filename = filedialog.asksaveasfilename(
                 defaultextension=".csv",
                 filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-                initialname="novafit_export.csv"
+                initialfile="novafit_export.csv"
             )
             
             if filename:
                 count = export_csv(Path(filename))
                 messagebox.showinfo("Export Complete", 
-                    f"Exported {count} records to {filename} 📊\n\n"
-                    f"💡 Tip: You can open this file in Excel, Google Sheets, "
+                    f"Exported {count} records to {filename} 📊\n\n" +
+                    f"💡 Tip: You can open this file in Excel, Google Sheets, " +
                     f"or any spreadsheet application!")
             else:
                 # If user cancels, try default export location
@@ -2091,7 +2084,7 @@ class NovaFitGUI:
                     default_path = DATA_DIR / "novafit_export.csv"
                     count = export_csv(default_path)
                     messagebox.showinfo("Export Complete", 
-                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}\n\n"
+                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}\n\n" +
                         f"💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
                 except Exception as default_error:
                     messagebox.showerror("Export Error", f"CSV export failed: {default_error}")
@@ -2237,7 +2230,6 @@ class NovaFitGUI:
         """
         try:
             city = self.city_var.get()
-            print(f"Debug: Getting weather for: {city}")  # Debug line
             
             # Update weather text to show loading
             self.weather_text.config(state="normal")
@@ -2249,7 +2241,6 @@ class NovaFitGUI:
             self.root.update()
             
             weather = get_weather(city)
-            print(f"Debug: Weather result: {weather}")  # Debug line
             
             self.weather_text.config(state="normal")
             self.weather_text.delete("1.0", tk.END)
@@ -2281,7 +2272,6 @@ class NovaFitGUI:
             
             self.weather_text.config(state="disabled")
         except Exception as e:
-            print(f"Debug: GUI weather error: {e}")
             self.weather_text.config(state="normal")
             self.weather_text.delete("1.0", tk.END)
             self.weather_text.insert(tk.END, f"❌ Error fetching weather: {str(e)}")
