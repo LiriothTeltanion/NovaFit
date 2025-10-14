@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "export_date": "2025-10-14 17:28:35",
+    "total_entries": 7,
+    "application": "NovaFit Health Tracker",
+    "version": "1.0"
+  },
+  "health_data": [
+    {
+      "date": "2025-10-08",
+      "steps": 8500,
+      "water_l": 2.1,
+      "calories": 1850,
+      "mood": "😊"
+    },
+    {
+      "date": "2025-10-09",
+      "steps": 12000,
+      "water_l": 2.5,
+      "calories": 2100,
+      "mood": "😊"
+    },
+    {
+      "date": "2025-10-10",
+      "steps": 6500,
+      "water_l": 1.8,
+      "calories": 1650,
+      "mood": "😐"
+    },
+    {
+      "date": "2025-10-11",
+      "steps": 10500,
+      "water_l": 2.2,
+      "calories": 1950,
+      "mood": "🙂"
+    },
+    {
+      "date": "2025-10-12",
+      "steps": 15000,
+      "water_l": 3.0,
+      "calories": 2300,
+      "mood": "💪"
+    },
+    {
+      "date": "2025-10-13",
+      "steps": 7800,
+      "water_l": 2.0,
+      "calories": 1700,
+      "mood": "😴"
+    },
+    {
+      "date": "2025-10-14",
+      "steps": 9200,
+      "water_l": 2.3,
+      "calories": 1800,
+      "mood": "😊"
+    }
+  ]
+}

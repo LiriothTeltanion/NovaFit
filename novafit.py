@@ -2,6 +2,7 @@
 """NovaFit — Mini Health Tracker (CLI + GUI)"""
 
 import argparse
+import csv
 import json
 import sqlite3
 import tkinter as tk
@@ -15,31 +16,24 @@ import ssl
 import os
 
 # =============================================================================
-# SSL CONFIGURATION - This section fixes SSL certificate issues
+# SSL CONFIGURATION - Fix SSL certificate issues
 # =============================================================================
-# Note for beginners: This section handles a technical issue with SSL certificates
-# that can occur when PostgreSQL is installed. You don't need to understand this
-# part to use or modify the rest of the application.
-
-# Completely disable SSL certificate verification for requests
-# This is necessary due to PostgreSQL's broken SSL certificate configuration
 os.environ['PYTHONHTTPSVERIFY'] = '0'
 
 # Remove problematic SSL environment variables set by PostgreSQL
-ssl_env_vars = ['SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE']
-for var in ssl_env_vars:
+for var in ['SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE']:
     if var in os.environ:
         problematic_path = os.environ[var]
         if 'PostgreSQL' in problematic_path or not os.path.exists(problematic_path):
             print(f"Debug: Removing problematic {var}: {problematic_path}")
             del os.environ[var]
 
-# Try to disable SSL warnings if urllib3 is available
+# Try to disable SSL warnings
 try:
     import urllib3
     urllib3.disable_warnings()
 except ImportError:
-    pass  # urllib3 is not installed, that's fine
+    pass
 
 # =============================================================================
 # END SSL CONFIGURATION
@@ -54,6 +48,7 @@ except ImportError:
 DATA_DIR = Path("./data")                    # Folder for all data files
 DB_PATH = DATA_DIR / "novafit.db"           # SQLite database file
 EXPORT_PATH = DATA_DIR / "novafit_export.json"  # Default export file
+CSV_EXPORT_PATH = DATA_DIR / "novafit_export.csv"   # Default CSV export file
 CONFIG_PATH = DATA_DIR / "config.json"      # User settings file
 
 # Coordinates for weather lookup (latitude, longitude)
@@ -102,27 +97,14 @@ CONFIG = load_config()
 
 
 def show_help():
-    """Show enhanced help information."""
+    """Show help information."""
     print(f"""
 {Colors.HEADER}NovaFit — User Guide{Colors.ENDC}
 {'='*30}
-
-{Colors.GREEN}📝 Data Entry:{Colors.ENDC}
-  • Use dates in YYYY-MM-DD format
-  • Steps and water are required fields
-
-{Colors.CYAN}🎯 Goals:{Colors.ENDC}
-  • Steps: {CONFIG['step_goal']:,} per day
-  • Water: {CONFIG['water_goal']}L per day
-
-{Colors.WARNING}💡 Tips:{Colors.ENDC}
-  • Use GUI mode for easier data entry
-  • Export your data regularly for backup
-
-{Colors.BLUE}🔧 Command Line Options:{Colors.ENDC}
-  • --gui: Open graphical interface
-  • --seed N: Generate N days of demo data
-  • --help: Show this help
+{Colors.GREEN}📝 Data Entry:{Colors.ENDC} Use YYYY-MM-DD format, steps and water required
+{Colors.CYAN}🎯 Goals:{Colors.ENDC} Steps: {CONFIG['step_goal']:,}/day, Water: {CONFIG['water_goal']}L/day
+{Colors.WARNING}💡 Tips:{Colors.ENDC} Use GUI mode for easier entry, export data regularly
+{Colors.BLUE}🔧 Command Line:{Colors.ENDC} --gui (GUI), --seed N (demo data), --help (this help)
 """)
 
 
@@ -188,30 +170,14 @@ def format_entry_display(entry):
     return f"📅 {date_str} | 🚶 {steps:,} {step_icon} | 💧 {water}L {water_icon}{cal_str}{mood_str}"
 
 def show_progress_bar(current, goal, label):
-    """Display a visual progress bar for tracking goals.
-    
-    Creates a visual progress bar using Unicode characters to show
-    progress towards a specific goal with percentage calculation.
-    
-    Args:
-        current (int|float): Current value achieved.
-        goal (int|float): Target goal value.
-        label (str): Label to display with the progress bar.
-    
-    Returns:
-        str: Formatted string containing the progress bar and statistics.
-    """
+    """Display a visual progress bar for tracking goals."""
     percentage = min(100, (current / goal) * 100) if goal > 0 else 0
     filled = int(percentage / 10)
     bar = "█" * filled + "░" * (10 - filled)
     return f"{label}: {bar} {percentage:.1f}% ({current}/{goal})"
 
 def clear_screen():
-    """Clear the terminal screen.
-    
-    Clears the terminal screen using the appropriate command for the
-    current operating system (cls for Windows, clear for Unix-like systems).
-    """
+    """Clear the terminal screen."""
     import os
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -250,64 +216,106 @@ def list_entries(limit: int = 10) -> list[tuple]:
 
 
 def export_json(path: Path) -> int:
-    """Export all health entries to a JSON file.
-    
-    This function saves all your health data to a JSON file that you can:
-    - Share with friends or family
-    - Import into other applications
-    - Keep as a backup
-    
-    Args:
-        path: Where to save the JSON file
-        
-    Returns:
-        Number of entries exported
-        
-    For beginners: This function connects to the database, gets all records,
-    converts them to a format that's easy to read, and saves to a file.
-    """
-    # Step 1: Connect to the database and get all entries
+    """Export all health entries to a JSON file with metadata."""
     conn = sqlite3.connect(DB_PATH)
-    rows = conn.execute("SELECT date, steps, water_l, calories, mood FROM logs").fetchall()
+    rows = conn.execute("SELECT date, steps, water_l, calories, mood FROM logs ORDER BY date").fetchall()
     conn.close()
     
-    # Step 2: Convert database rows to a list of dictionaries
-    # This makes the data more readable and easier to work with
-    data = []
-    for row in rows:
-        entry = {
-            "date": row[0],
-            "steps": row[1], 
-            "water_l": row[2],
-            "calories": row[3],
-            "mood": row[4]
-        }
-        data.append(entry)
+    entries = [{"date": r[0], "steps": r[1], "water_l": r[2], "calories": r[3], "mood": r[4]} for r in rows]
     
-    # Step 3: Create the directory if it doesn't exist and save the file
+    export_data = {
+        "metadata": {
+            "export_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "total_entries": len(entries),
+            "application": "NovaFit Health Tracker",
+            "version": "1.0"
+        },
+        "health_data": entries
+    }
+    
     path.parent.mkdir(exist_ok=True)
-    with open(path, 'w') as f:
-        json.dump(data, f, indent=2)  # indent=2 makes the file easier to read
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(export_data, f, indent=2, ensure_ascii=False)
     
-    return len(data)
+    return len(entries)
+
+def export_csv(path: Path) -> int:
+    """Export all health entries to a CSV file."""
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute("SELECT date, steps, water_l, calories, mood FROM logs ORDER BY date").fetchall()
+    conn.close()
+    
+    path.parent.mkdir(exist_ok=True)
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Date', 'Steps', 'Water (L)', 'Calories', 'Mood'])
+        writer.writerows(rows)
+    
+    return len(rows)
 
 def import_json(path: Path) -> int:
-    """Import entries from JSON file."""
+    """Import entries from JSON file. Supports both old and new formats."""
     if not path.exists():
         return 0
     
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         data = json.load(f)
+    
+    # Handle both old and new JSON formats
+    if isinstance(data, list):
+        entries = data
+    elif isinstance(data, dict) and "health_data" in data:
+        entries = data["health_data"]
+    else:
+        entries = data
     
     conn = sqlite3.connect(DB_PATH)
     count = 0
-    for entry in data:
+    for entry in entries:
         try:
             conn.execute("INSERT OR IGNORE INTO logs (date, steps, water_l, calories, mood) VALUES (?, ?, ?, ?, ?)",
                         (entry["date"], entry["steps"], entry["water_l"], entry.get("calories"), entry.get("mood")))
             count += 1
-        except KeyError:
+        except (KeyError, TypeError):
             continue
+    conn.commit()
+    conn.close()
+    return count
+
+def import_csv(path: Path) -> int:
+    """Import entries from CSV file with headers: Date, Steps, Water (L), Calories, Mood."""
+    if not path.exists():
+        return 0
+    
+    conn = sqlite3.connect(DB_PATH)
+    count = 0
+    
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    # Handle different possible column names
+                    date_val = row.get('Date') or row.get('date')
+                    steps_val = row.get('Steps') or row.get('steps')
+                    water_val = row.get('Water (L)') or row.get('water_l') or row.get('Water')
+                    calories_val = row.get('Calories') or row.get('calories')
+                    mood_val = row.get('Mood') or row.get('mood')
+                    
+                    # Convert values to appropriate types
+                    steps = int(float(steps_val)) if steps_val else 0
+                    water = float(water_val) if water_val else 0.0
+                    calories = int(float(calories_val)) if calories_val else None
+                    
+                    conn.execute("INSERT OR IGNORE INTO logs (date, steps, water_l, calories, mood) VALUES (?, ?, ?, ?, ?)",
+                                (date_val, steps, water, calories, mood_val))
+                    count += 1
+                except (ValueError, TypeError):
+                    continue
+    except Exception as e:
+        conn.close()
+        raise e
+    
     conn.commit()
     conn.close()
     return count
@@ -336,6 +344,46 @@ def seed_fake(n: int) -> int:
     conn.commit()
     conn.close()
     return count
+
+def initialize_sample_data() -> int:
+    """Initialize the application with sample health data for demonstration.
+    
+    Creates a week of realistic sample data to help new users understand
+    the application and see how their health tracking might look.
+    """
+    sample_data = [
+        {"date": (date.today() - timedelta(days=6)).isoformat(), "steps": 8500, "water_l": 2.1, "calories": 1850, "mood": "😊"},
+        {"date": (date.today() - timedelta(days=5)).isoformat(), "steps": 12000, "water_l": 2.5, "calories": 2100, "mood": "😊"},
+        {"date": (date.today() - timedelta(days=4)).isoformat(), "steps": 6500, "water_l": 1.8, "calories": 1650, "mood": "😐"},
+        {"date": (date.today() - timedelta(days=3)).isoformat(), "steps": 10500, "water_l": 2.2, "calories": 1950, "mood": "🙂"},
+        {"date": (date.today() - timedelta(days=2)).isoformat(), "steps": 15000, "water_l": 3.0, "calories": 2300, "mood": "💪"},
+        {"date": (date.today() - timedelta(days=1)).isoformat(), "steps": 7800, "water_l": 2.0, "calories": 1700, "mood": "😴"},
+        {"date": date.today().isoformat(), "steps": 9200, "water_l": 2.3, "calories": 1800, "mood": "😊"}
+    ]
+    
+    conn = sqlite3.connect(DB_PATH)
+    count = 0
+    
+    for entry in sample_data:
+        try:
+            conn.execute("INSERT OR REPLACE INTO logs (date, steps, water_l, calories, mood) VALUES (?, ?, ?, ?, ?)",
+                        (entry["date"], entry["steps"], entry["water_l"], entry["calories"], entry["mood"]))
+            count += 1
+        except Exception:
+            continue
+    
+    conn.commit()
+    conn.close()
+    return count
+
+def clear_all_data() -> int:
+    """Clear all health data from the database."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute("DELETE FROM logs")
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted_count
 
 
 def get_weather(city: str) -> dict:
@@ -433,21 +481,7 @@ def get_dashboard_stats() -> dict:
 
 
 def cli_menu():
-    """Main CLI menu loop interface.
-    
-    Displays the main menu interface for the command-line version of NovaFit,
-    handles user input for menu navigation, and routes to appropriate functions.
-    Provides comprehensive health tracking features including data entry,
-    analytics, import/export, and external integrations.
-    
-    The menu supports:
-    - Data entry and management
-    - Analytics and dashboard viewing  
-    - Weather integration
-    - Import/export functionality
-    - GUI launcher
-    - Demo data generation
-    """
+    """Main CLI menu loop interface."""
     print(f"{Colors.CYAN}Welcome to NovaFit! 🏃‍♂️{Colors.ENDC}")
     
     while True:
@@ -468,15 +502,19 @@ def cli_menu():
             print(f"{Colors.BLUE}💾 Import/Export:{Colors.ENDC}")
             print("  8) 📤 Export to JSON")
             print("  9) 📥 Import from JSON")
-            print("  10) 🎲 Generate demo data")
+            print("  10) 📊 Export to CSV")
+            print("  11) 📋 Import from CSV")
+            print("  12) 🎲 Generate demo data")
+            print("  13) 🌟 Initialize sample data")
+            print("  14) 🗑️ Clear all data")
             print(f"{Colors.CYAN}🖥️  Interface:{Colors.ENDC}")
-            print("  11) 🖼️ Open GUI Interface")
-            print("  12) 🧹 Clear screen")
-            print("  13) ❓ Show help")
+            print("  15) 🖼️ Open GUI Interface")
+            print("  16) 🧹 Clear screen")
+            print("  17) ❓ Show help")
             print(f"{Colors.FAIL}  0) 👋 Exit{Colors.ENDC}")
             print(f"{Colors.HEADER}{'='*40}{Colors.ENDC}")
             
-            choice = input(f"{Colors.BOLD}Choose option (0-13): {Colors.ENDC}").strip()
+            choice = input(f"{Colors.BOLD}Choose option (0-17): {Colors.ENDC}").strip()
             
             if choice == "0":
                 print(f"{Colors.GREEN}Goodbye! Stay healthy! 👋{Colors.ENDC}")
@@ -500,16 +538,24 @@ def cli_menu():
             elif choice == "9":
                 cli_import()
             elif choice == "10":
-                cli_seed()
+                cli_export_csv()
             elif choice == "11":
-                launch_gui()
+                cli_import_csv()
             elif choice == "12":
+                cli_seed()
+            elif choice == "13":
+                cli_initialize_data()
+            elif choice == "14":
+                cli_clear_data()
+            elif choice == "15":
+                launch_gui()
+            elif choice == "16":
                 clear_screen()
                 print(f"{Colors.GREEN}Screen cleared! ✨{Colors.ENDC}")
-            elif choice == "13":
+            elif choice == "17":
                 show_help()
             else:
-                print(f"{Colors.WARNING}Invalid choice! Please enter 0-13 ⚠️{Colors.ENDC}")
+                print(f"{Colors.WARNING}Invalid choice! Please enter 0-17 ⚠️{Colors.ENDC}")
                 
         except (KeyboardInterrupt, EOFError):
             print(f"\n{Colors.GREEN}Goodbye! 👋{Colors.ENDC}")
@@ -890,23 +936,7 @@ def cli_weather():
         print(f"{Colors.FAIL}❌ Error fetching weather: {e}{Colors.ENDC}")
 
 def cli_export():
-    """CLI interface for exporting health data to JSON format.
-    
-    Exports all health tracking data from the database to a JSON file.
-    Supports both default export location and custom file paths.
-    Provides feedback on export success including record count and file size.
-    
-    Options:
-    - Use default export path (./data/novafit_export.json)
-    - Specify custom file path
-    
-    Output information:
-    - Number of records exported
-    - File size in KB (when records > 0)
-    - Export file location
-    
-    Handles errors gracefully with informative error messages.
-    """
+    """CLI interface for exporting health data to JSON format."""
     print(f"\n{Colors.BLUE}📤 Export Data{Colors.ENDC}")
     
     try:
@@ -929,25 +959,7 @@ def cli_export():
         print(f"{Colors.FAIL}❌ Error exporting data: {e}{Colors.ENDC}")
 
 def cli_import():
-    """CLI interface for importing health data from JSON format.
-    
-    Imports health tracking data from a JSON file into the database.
-    Supports both default import location and custom file paths.
-    Uses INSERT OR IGNORE to prevent duplicate entries when importing.
-    
-    Options:
-    - Use default import path (./data/novafit_export.json)
-    - Specify custom file path
-    
-    Features:
-    - File existence validation before import attempt
-    - Duplicate entry prevention (ignores existing dates)
-    - Count of newly imported records
-    - Graceful error handling for invalid files
-    
-    Returns:
-        None (prints import results and status)
-    """
+    """CLI interface for importing health data from JSON format."""
     print(f"\n{Colors.BLUE}📥 Import Data{Colors.ENDC}")
     
     try:
@@ -964,6 +976,53 @@ def cli_import():
             return
         
         count = import_json(import_path)
+        print(f"{Colors.GREEN}✅ Imported {count} new records{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error importing data: {e}{Colors.ENDC}")
+
+def cli_export_csv():
+    """CLI interface for exporting health data to CSV format."""
+    print(f"\n{Colors.BLUE}📊 Export Data to CSV{Colors.ENDC}")
+    
+    try:
+        use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
+        
+        if use_custom in ['y', 'yes']:
+            custom_path = input(f"Enter file path (default {CSV_EXPORT_PATH}): ").strip()
+            export_path = Path(custom_path) if custom_path else CSV_EXPORT_PATH
+        else:
+            export_path = CSV_EXPORT_PATH
+        
+        count = export_csv(export_path)
+        print(f"{Colors.GREEN}✅ Exported {count} records to {export_path} 📊{Colors.ENDC}")
+        
+        if count > 0:
+            file_size = export_path.stat().st_size / 1024
+            print(f"  📁 File size: {file_size:.1f} KB")
+            print(f"  💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error exporting data: {e}{Colors.ENDC}")
+
+def cli_import_csv():
+    """CLI interface for importing health data from CSV format."""
+    print(f"\n{Colors.BLUE}📋 Import Data from CSV{Colors.ENDC}")
+    
+    try:
+        use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
+        
+        if use_custom in ['y', 'yes']:
+            custom_path = input(f"Enter file path (default {CSV_EXPORT_PATH}): ").strip()
+            import_path = Path(custom_path) if custom_path else CSV_EXPORT_PATH
+        else:
+            import_path = CSV_EXPORT_PATH
+        
+        if not import_path.exists():
+            print(f"{Colors.WARNING}⚠️ File not found: {import_path}{Colors.ENDC}")
+            return
+        
+        count = import_csv(import_path)
         print(f"{Colors.GREEN}✅ Imported {count} new records{Colors.ENDC}")
         
     except Exception as e:
@@ -1011,6 +1070,53 @@ def cli_seed():
         
     except Exception as e:
         print(f"{Colors.FAIL}❌ Error generating data: {e}{Colors.ENDC}")
+
+def cli_initialize_data():
+    """CLI interface for initializing sample health data."""
+    print(f"\n{Colors.CYAN}🌟 Initialize Sample Data{Colors.ENDC}")
+    
+    try:
+        print("This will create a week of realistic sample health data to get you started.")
+        print("This is perfect for new users to see how the application works.")
+        
+        confirm = input(f"⚠️ Initialize sample data? This will overwrite any existing data for the sample dates. (yes/no): ").strip().lower()
+        if confirm not in ['yes', 'y']:
+            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
+            return
+        
+        print("🌟 Initializing sample data...")
+        count = initialize_sample_data()
+        print(f"{Colors.GREEN}✅ Initialized {count} sample entries 🌟{Colors.ENDC}")
+        print(f"{Colors.BLUE}💡 You now have a week of sample data to explore the application!{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error initializing data: {e}{Colors.ENDC}")
+
+def cli_clear_data():
+    """CLI interface for clearing all health data."""
+    print(f"\n{Colors.FAIL}🗑️ Clear All Data{Colors.ENDC}")
+    
+    try:
+        print("⚠️  WARNING: This will permanently delete ALL your health data!")
+        print("This action cannot be undone. Make sure to export your data first if you want to keep it.")
+        
+        confirm1 = input("Are you sure you want to delete all data? (yes/no): ").strip().lower()
+        if confirm1 not in ['yes', 'y']:
+            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
+            return
+        
+        confirm2 = input("Type 'DELETE ALL' to confirm: ").strip()
+        if confirm2 != 'DELETE ALL':
+            print(f"{Colors.CYAN}Operation cancelled - confirmation phrase not matched{Colors.ENDC}")
+            return
+        
+        print("🗑️ Clearing all data...")
+        count = clear_all_data()
+        print(f"{Colors.GREEN}✅ Deleted {count} entries{Colors.ENDC}")
+        print(f"{Colors.BLUE}💡 Your database is now empty and ready for fresh data.{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error clearing data: {e}{Colors.ENDC}")
 
 
 class NovaFitGUI:
@@ -1314,8 +1420,10 @@ class NovaFitGUI:
         
         ttk.Button(action_frame, text="📈 Refresh Stats", 
                   command=self.update_dashboard).pack(side="left", padx=5)
-        ttk.Button(action_frame, text="📤 Export Data", 
+        ttk.Button(action_frame, text="📤 Export JSON", 
                   command=self.export_data).pack(side="left", padx=5)
+        ttk.Button(action_frame, text="📊 Export CSV", 
+                  command=self.export_csv).pack(side="left", padx=5)
         ttk.Button(action_frame, text="🌤️ Check Weather", 
                   command=self.check_weather).pack(side="left", padx=5)
     
@@ -1349,10 +1457,23 @@ class NovaFitGUI:
         io_frame = ttk.LabelFrame(tools_frame, text="📁 Import/Export", padding="10")
         io_frame.pack(fill="x", pady=(0, 10))
         
-        ttk.Button(io_frame, text="📤 Export to JSON", 
+        # JSON buttons
+        json_frame = ttk.Frame(io_frame)
+        json_frame.pack(fill="x", pady=(0, 5))
+        ttk.Label(json_frame, text="JSON:", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 10))
+        ttk.Button(json_frame, text="📤 Export JSON", 
                   command=self.export_data).pack(side="left", padx=5)
-        ttk.Button(io_frame, text="📥 Import from JSON", 
+        ttk.Button(json_frame, text="📥 Import JSON", 
                   command=self.import_data).pack(side="left", padx=5)
+        
+        # CSV buttons
+        csv_frame = ttk.Frame(io_frame)
+        csv_frame.pack(fill="x", pady=(5, 0))
+        ttk.Label(csv_frame, text="CSV:", font=("Arial", 9, "bold")).pack(side="left", padx=(0, 10))
+        ttk.Button(csv_frame, text="📊 Export CSV", 
+                  command=self.export_csv).pack(side="left", padx=5)
+        ttk.Button(csv_frame, text="📋 Import CSV", 
+                  command=self.import_csv).pack(side="left", padx=5)
         
         # Theme section
         theme_frame = ttk.LabelFrame(tools_frame, text="🎨 Appearance Settings", padding="10")
@@ -1366,15 +1487,27 @@ class NovaFitGUI:
         self.theme_status = ttk.Label(theme_frame, text=f"Current: {current_theme} Mode")
         self.theme_status.pack(side="right", padx=10)
         
-        # Data generation section
-        gen_frame = ttk.LabelFrame(tools_frame, text="🎲 Data Generation", padding="10")
-        gen_frame.pack(fill="x", pady=(0, 10))
+        # Data management section
+        data_frame = ttk.LabelFrame(tools_frame, text="🗂️ Data Management", padding="10")
+        data_frame.pack(fill="x", pady=(0, 10))
         
-        ttk.Label(gen_frame, text="Generate demo data:").pack(side="left")
+        # Sample data initialization
+        init_frame = ttk.Frame(data_frame)
+        init_frame.pack(fill="x", pady=(0, 5))
+        ttk.Label(init_frame, text="Sample data:").pack(side="left")
+        ttk.Button(init_frame, text="🌟 Initialize Sample Data", 
+                  command=self.initialize_sample_data).pack(side="left", padx=5)
+        ttk.Button(init_frame, text="🗑️ Clear All Data", 
+                  command=self.clear_all_data).pack(side="left", padx=5)
+        
+        # Demo data generation
+        demo_frame = ttk.Frame(data_frame)
+        demo_frame.pack(fill="x", pady=(5, 0))
+        ttk.Label(demo_frame, text="Generate demo data:").pack(side="left")
         self.seed_var = tk.StringVar(value="7")
-        ttk.Entry(gen_frame, textvariable=self.seed_var, width=5).pack(side="left", padx=5)
-        ttk.Label(gen_frame, text="days").pack(side="left")
-        ttk.Button(gen_frame, text="🎲 Generate", 
+        ttk.Entry(demo_frame, textvariable=self.seed_var, width=5).pack(side="left", padx=5)
+        ttk.Label(demo_frame, text="days").pack(side="left")
+        ttk.Button(demo_frame, text="🎲 Generate", 
                   command=self.generate_demo_data).pack(side="left", padx=10)
         
         # Weather section
@@ -1879,22 +2012,7 @@ class NovaFitGUI:
             self.stats_text.config(state="disabled")
     
     def export_data(self):
-        """Export health data to JSON file using file dialog.
-        
-        Opens a file save dialog allowing users to choose location and
-        filename for data export. Exports all health entries to a JSON
-        file with proper formatting and provides feedback on success.
-        
-        Features:
-        - File dialog with JSON filter and default filename
-        - Exports up to 1000 recent entries  
-        - Proper JSON formatting with indentation
-        - Success message with export count
-        - Error handling with user-friendly messages
-        
-        Default filename: novafit_export.json
-        File format: JSON array with entry objects
-        """
+        """Export health data to JSON file using file dialog."""
         try:
             filename = filedialog.asksaveasfilename(
                 defaultextension=".json",
@@ -1903,16 +2021,28 @@ class NovaFitGUI:
             )
             
             if filename:
-                entries = list_entries(1000)
-                data = [{"date": r[0], "steps": r[1], "water_l": r[2], "calories": r[3], "mood": r[4]} for r in entries]
-                
-                with open(filename, 'w') as f:
-                    json.dump(data, f, indent=2)
-                
-                messagebox.showinfo("Export Complete", f"Exported {len(entries)} records to {filename} 💾")
+                count = export_json(Path(filename))
+                messagebox.showinfo("Export Complete", f"Exported {count} records to {filename} 💾")
+            else:
+                # If user cancels, try default export location
+                try:
+                    default_path = DATA_DIR / "novafit_export.json"
+                    count = export_json(default_path)
+                    messagebox.showinfo("Export Complete", 
+                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}")
+                except Exception as default_error:
+                    messagebox.showerror("Export Error", f"Export failed: {default_error}")
                     
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting data: {e}")
+            # Try fallback export
+            try:
+                fallback_path = DATA_DIR / "emergency_export.json"
+                count = export_json(fallback_path)
+                messagebox.showinfo("Fallback Export", 
+                    f"Main export failed, but data saved to:\n{fallback_path}\n({count} records)")
+            except Exception as fallback_error:
+                messagebox.showerror("Critical Error", f"All export methods failed: {fallback_error}")
     
     def import_data(self):
         """Import health data from JSON file using file dialog.
@@ -1939,6 +2069,57 @@ class NovaFitGUI:
                 self.refresh_data()
         except Exception as e:
             messagebox.showerror("Import Error", f"Error importing data: {e}")
+    
+    def export_csv(self):
+        """Export health data to CSV file using file dialog."""
+        try:
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialname="novafit_export.csv"
+            )
+            
+            if filename:
+                count = export_csv(Path(filename))
+                messagebox.showinfo("Export Complete", 
+                    f"Exported {count} records to {filename} 📊\n\n"
+                    f"💡 Tip: You can open this file in Excel, Google Sheets, "
+                    f"or any spreadsheet application!")
+            else:
+                # If user cancels, try default export location
+                try:
+                    default_path = DATA_DIR / "novafit_export.csv"
+                    count = export_csv(default_path)
+                    messagebox.showinfo("Export Complete", 
+                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}\n\n"
+                        f"💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
+                except Exception as default_error:
+                    messagebox.showerror("Export Error", f"CSV export failed: {default_error}")
+                    
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Error exporting CSV data: {e}")
+            # Try fallback export
+            try:
+                fallback_path = DATA_DIR / "emergency_export.csv"
+                count = export_csv(fallback_path)
+                messagebox.showinfo("Fallback Export", 
+                    f"Main export failed, but CSV data saved to:\n{fallback_path}\n({count} records)")
+            except Exception as fallback_error:
+                messagebox.showerror("Critical Error", f"All CSV export methods failed: {fallback_error}")
+    
+    def import_csv(self):
+        """Import health data from CSV file using file dialog."""
+        try:
+            filename = filedialog.askopenfilename(
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+            )
+            
+            if filename:
+                count = import_csv(Path(filename))
+                messagebox.showinfo("Import Complete", f"Imported {count} new records 📋")
+                self.refresh_data()
+        except Exception as e:
+            messagebox.showerror("Import Error", f"Error importing CSV data: {e}")
     
     def generate_demo_data(self):
         """Generate demo health data for testing and demonstration.
@@ -1974,6 +2155,65 @@ class NovaFitGUI:
             messagebox.showerror("Error", "Please enter a valid number")
         except Exception as e:
             messagebox.showerror("Error", f"Error generating data: {e}")
+    
+    def initialize_sample_data(self):
+        """Initialize the application with sample health data."""
+        try:
+            result = messagebox.askyesno(
+                "Initialize Sample Data", 
+                "This will create a week of realistic sample health data.\n\n"
+                "This is perfect for new users to understand how the application works.\n\n"
+                "Note: This will overwrite any existing data for the sample dates.\n\n"
+                "Continue?"
+            )
+            
+            if result:
+                count = initialize_sample_data()
+                messagebox.showinfo(
+                    "Sample Data Initialized", 
+                    f"Successfully initialized {count} sample entries! 🌟\n\n"
+                    f"You now have a week of sample data to explore the application."
+                )
+                self.refresh_data()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error initializing sample data: {e}")
+    
+    def clear_all_data(self):
+        """Clear all health data from the database."""
+        try:
+            # First confirmation
+            result1 = messagebox.askyesno(
+                "Clear All Data", 
+                "⚠️ WARNING: This will permanently delete ALL your health data!\n\n"
+                "This action cannot be undone.\n\n"
+                "Make sure to export your data first if you want to keep it.\n\n"
+                "Are you sure you want to continue?"
+            )
+            
+            if not result1:
+                return
+            
+            # Second confirmation
+            result2 = messagebox.askyesno(
+                "Final Confirmation", 
+                "🚨 FINAL CONFIRMATION 🚨\n\n"
+                "You are about to delete ALL health data permanently.\n\n"
+                "This action CANNOT be undone!\n\n"
+                "Click 'Yes' only if you are absolutely certain."
+            )
+            
+            if result2:
+                count = clear_all_data()
+                messagebox.showinfo(
+                    "Data Cleared", 
+                    f"Successfully deleted {count} entries.\n\n"
+                    f"Your database is now empty and ready for fresh data."
+                )
+                self.refresh_data()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error clearing data: {e}")
     
     def check_weather(self):
         """Retrieve and display current weather for selected city.
