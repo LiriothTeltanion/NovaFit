@@ -345,6 +345,46 @@ def seed_fake(n: int) -> int:
     conn.close()
     return count
 
+def initialize_sample_data() -> int:
+    """Initialize the application with sample health data for demonstration.
+    
+    Creates a week of realistic sample data to help new users understand
+    the application and see how their health tracking might look.
+    """
+    sample_data = [
+        {"date": (date.today() - timedelta(days=6)).isoformat(), "steps": 8500, "water_l": 2.1, "calories": 1850, "mood": "😊"},
+        {"date": (date.today() - timedelta(days=5)).isoformat(), "steps": 12000, "water_l": 2.5, "calories": 2100, "mood": "😊"},
+        {"date": (date.today() - timedelta(days=4)).isoformat(), "steps": 6500, "water_l": 1.8, "calories": 1650, "mood": "😐"},
+        {"date": (date.today() - timedelta(days=3)).isoformat(), "steps": 10500, "water_l": 2.2, "calories": 1950, "mood": "🙂"},
+        {"date": (date.today() - timedelta(days=2)).isoformat(), "steps": 15000, "water_l": 3.0, "calories": 2300, "mood": "💪"},
+        {"date": (date.today() - timedelta(days=1)).isoformat(), "steps": 7800, "water_l": 2.0, "calories": 1700, "mood": "😴"},
+        {"date": date.today().isoformat(), "steps": 9200, "water_l": 2.3, "calories": 1800, "mood": "😊"}
+    ]
+    
+    conn = sqlite3.connect(DB_PATH)
+    count = 0
+    
+    for entry in sample_data:
+        try:
+            conn.execute("INSERT OR REPLACE INTO logs (date, steps, water_l, calories, mood) VALUES (?, ?, ?, ?, ?)",
+                        (entry["date"], entry["steps"], entry["water_l"], entry["calories"], entry["mood"]))
+            count += 1
+        except Exception:
+            continue
+    
+    conn.commit()
+    conn.close()
+    return count
+
+def clear_all_data() -> int:
+    """Clear all health data from the database."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.execute("DELETE FROM logs")
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted_count
+
 
 def get_weather(city: str) -> dict:
     """Fetch current weather using Open-Meteo API."""
@@ -465,14 +505,16 @@ def cli_menu():
             print("  10) 📊 Export to CSV")
             print("  11) 📋 Import from CSV")
             print("  12) 🎲 Generate demo data")
+            print("  13) 🌟 Initialize sample data")
+            print("  14) 🗑️ Clear all data")
             print(f"{Colors.CYAN}🖥️  Interface:{Colors.ENDC}")
-            print("  13) 🖼️ Open GUI Interface")
-            print("  14) 🧹 Clear screen")
-            print("  15) ❓ Show help")
+            print("  15) 🖼️ Open GUI Interface")
+            print("  16) 🧹 Clear screen")
+            print("  17) ❓ Show help")
             print(f"{Colors.FAIL}  0) 👋 Exit{Colors.ENDC}")
             print(f"{Colors.HEADER}{'='*40}{Colors.ENDC}")
             
-            choice = input(f"{Colors.BOLD}Choose option (0-15): {Colors.ENDC}").strip()
+            choice = input(f"{Colors.BOLD}Choose option (0-17): {Colors.ENDC}").strip()
             
             if choice == "0":
                 print(f"{Colors.GREEN}Goodbye! Stay healthy! 👋{Colors.ENDC}")
@@ -502,14 +544,18 @@ def cli_menu():
             elif choice == "12":
                 cli_seed()
             elif choice == "13":
-                launch_gui()
+                cli_initialize_data()
             elif choice == "14":
+                cli_clear_data()
+            elif choice == "15":
+                launch_gui()
+            elif choice == "16":
                 clear_screen()
                 print(f"{Colors.GREEN}Screen cleared! ✨{Colors.ENDC}")
-            elif choice == "15":
+            elif choice == "17":
                 show_help()
             else:
-                print(f"{Colors.WARNING}Invalid choice! Please enter 0-15 ⚠️{Colors.ENDC}")
+                print(f"{Colors.WARNING}Invalid choice! Please enter 0-17 ⚠️{Colors.ENDC}")
                 
         except (KeyboardInterrupt, EOFError):
             print(f"\n{Colors.GREEN}Goodbye! 👋{Colors.ENDC}")
@@ -1025,6 +1071,53 @@ def cli_seed():
     except Exception as e:
         print(f"{Colors.FAIL}❌ Error generating data: {e}{Colors.ENDC}")
 
+def cli_initialize_data():
+    """CLI interface for initializing sample health data."""
+    print(f"\n{Colors.CYAN}🌟 Initialize Sample Data{Colors.ENDC}")
+    
+    try:
+        print("This will create a week of realistic sample health data to get you started.")
+        print("This is perfect for new users to see how the application works.")
+        
+        confirm = input(f"⚠️ Initialize sample data? This will overwrite any existing data for the sample dates. (yes/no): ").strip().lower()
+        if confirm not in ['yes', 'y']:
+            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
+            return
+        
+        print("🌟 Initializing sample data...")
+        count = initialize_sample_data()
+        print(f"{Colors.GREEN}✅ Initialized {count} sample entries 🌟{Colors.ENDC}")
+        print(f"{Colors.BLUE}💡 You now have a week of sample data to explore the application!{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error initializing data: {e}{Colors.ENDC}")
+
+def cli_clear_data():
+    """CLI interface for clearing all health data."""
+    print(f"\n{Colors.FAIL}🗑️ Clear All Data{Colors.ENDC}")
+    
+    try:
+        print("⚠️  WARNING: This will permanently delete ALL your health data!")
+        print("This action cannot be undone. Make sure to export your data first if you want to keep it.")
+        
+        confirm1 = input("Are you sure you want to delete all data? (yes/no): ").strip().lower()
+        if confirm1 not in ['yes', 'y']:
+            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
+            return
+        
+        confirm2 = input("Type 'DELETE ALL' to confirm: ").strip()
+        if confirm2 != 'DELETE ALL':
+            print(f"{Colors.CYAN}Operation cancelled - confirmation phrase not matched{Colors.ENDC}")
+            return
+        
+        print("🗑️ Clearing all data...")
+        count = clear_all_data()
+        print(f"{Colors.GREEN}✅ Deleted {count} entries{Colors.ENDC}")
+        print(f"{Colors.BLUE}💡 Your database is now empty and ready for fresh data.{Colors.ENDC}")
+        
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error clearing data: {e}{Colors.ENDC}")
+
 
 class NovaFitGUI:
     """Tkinter-based graphical user interface for NovaFit health tracking.
@@ -1394,15 +1487,27 @@ class NovaFitGUI:
         self.theme_status = ttk.Label(theme_frame, text=f"Current: {current_theme} Mode")
         self.theme_status.pack(side="right", padx=10)
         
-        # Data generation section
-        gen_frame = ttk.LabelFrame(tools_frame, text="🎲 Data Generation", padding="10")
-        gen_frame.pack(fill="x", pady=(0, 10))
+        # Data management section
+        data_frame = ttk.LabelFrame(tools_frame, text="🗂️ Data Management", padding="10")
+        data_frame.pack(fill="x", pady=(0, 10))
         
-        ttk.Label(gen_frame, text="Generate demo data:").pack(side="left")
+        # Sample data initialization
+        init_frame = ttk.Frame(data_frame)
+        init_frame.pack(fill="x", pady=(0, 5))
+        ttk.Label(init_frame, text="Sample data:").pack(side="left")
+        ttk.Button(init_frame, text="🌟 Initialize Sample Data", 
+                  command=self.initialize_sample_data).pack(side="left", padx=5)
+        ttk.Button(init_frame, text="🗑️ Clear All Data", 
+                  command=self.clear_all_data).pack(side="left", padx=5)
+        
+        # Demo data generation
+        demo_frame = ttk.Frame(data_frame)
+        demo_frame.pack(fill="x", pady=(5, 0))
+        ttk.Label(demo_frame, text="Generate demo data:").pack(side="left")
         self.seed_var = tk.StringVar(value="7")
-        ttk.Entry(gen_frame, textvariable=self.seed_var, width=5).pack(side="left", padx=5)
-        ttk.Label(gen_frame, text="days").pack(side="left")
-        ttk.Button(gen_frame, text="🎲 Generate", 
+        ttk.Entry(demo_frame, textvariable=self.seed_var, width=5).pack(side="left", padx=5)
+        ttk.Label(demo_frame, text="days").pack(side="left")
+        ttk.Button(demo_frame, text="🎲 Generate", 
                   command=self.generate_demo_data).pack(side="left", padx=10)
         
         # Weather section
@@ -1918,9 +2023,26 @@ class NovaFitGUI:
             if filename:
                 count = export_json(Path(filename))
                 messagebox.showinfo("Export Complete", f"Exported {count} records to {filename} 💾")
+            else:
+                # If user cancels, try default export location
+                try:
+                    default_path = DATA_DIR / "novafit_export.json"
+                    count = export_json(default_path)
+                    messagebox.showinfo("Export Complete", 
+                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}")
+                except Exception as default_error:
+                    messagebox.showerror("Export Error", f"Export failed: {default_error}")
                     
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting data: {e}")
+            # Try fallback export
+            try:
+                fallback_path = DATA_DIR / "emergency_export.json"
+                count = export_json(fallback_path)
+                messagebox.showinfo("Fallback Export", 
+                    f"Main export failed, but data saved to:\n{fallback_path}\n({count} records)")
+            except Exception as fallback_error:
+                messagebox.showerror("Critical Error", f"All export methods failed: {fallback_error}")
     
     def import_data(self):
         """Import health data from JSON file using file dialog.
@@ -1963,9 +2085,27 @@ class NovaFitGUI:
                     f"Exported {count} records to {filename} 📊\n\n"
                     f"💡 Tip: You can open this file in Excel, Google Sheets, "
                     f"or any spreadsheet application!")
+            else:
+                # If user cancels, try default export location
+                try:
+                    default_path = DATA_DIR / "novafit_export.csv"
+                    count = export_csv(default_path)
+                    messagebox.showinfo("Export Complete", 
+                        f"File dialog cancelled. Exported {count} records to default location:\n{default_path}\n\n"
+                        f"💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
+                except Exception as default_error:
+                    messagebox.showerror("Export Error", f"CSV export failed: {default_error}")
                     
         except Exception as e:
             messagebox.showerror("Export Error", f"Error exporting CSV data: {e}")
+            # Try fallback export
+            try:
+                fallback_path = DATA_DIR / "emergency_export.csv"
+                count = export_csv(fallback_path)
+                messagebox.showinfo("Fallback Export", 
+                    f"Main export failed, but CSV data saved to:\n{fallback_path}\n({count} records)")
+            except Exception as fallback_error:
+                messagebox.showerror("Critical Error", f"All CSV export methods failed: {fallback_error}")
     
     def import_csv(self):
         """Import health data from CSV file using file dialog."""
@@ -2015,6 +2155,65 @@ class NovaFitGUI:
             messagebox.showerror("Error", "Please enter a valid number")
         except Exception as e:
             messagebox.showerror("Error", f"Error generating data: {e}")
+    
+    def initialize_sample_data(self):
+        """Initialize the application with sample health data."""
+        try:
+            result = messagebox.askyesno(
+                "Initialize Sample Data", 
+                "This will create a week of realistic sample health data.\n\n"
+                "This is perfect for new users to understand how the application works.\n\n"
+                "Note: This will overwrite any existing data for the sample dates.\n\n"
+                "Continue?"
+            )
+            
+            if result:
+                count = initialize_sample_data()
+                messagebox.showinfo(
+                    "Sample Data Initialized", 
+                    f"Successfully initialized {count} sample entries! 🌟\n\n"
+                    f"You now have a week of sample data to explore the application."
+                )
+                self.refresh_data()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error initializing sample data: {e}")
+    
+    def clear_all_data(self):
+        """Clear all health data from the database."""
+        try:
+            # First confirmation
+            result1 = messagebox.askyesno(
+                "Clear All Data", 
+                "⚠️ WARNING: This will permanently delete ALL your health data!\n\n"
+                "This action cannot be undone.\n\n"
+                "Make sure to export your data first if you want to keep it.\n\n"
+                "Are you sure you want to continue?"
+            )
+            
+            if not result1:
+                return
+            
+            # Second confirmation
+            result2 = messagebox.askyesno(
+                "Final Confirmation", 
+                "🚨 FINAL CONFIRMATION 🚨\n\n"
+                "You are about to delete ALL health data permanently.\n\n"
+                "This action CANNOT be undone!\n\n"
+                "Click 'Yes' only if you are absolutely certain."
+            )
+            
+            if result2:
+                count = clear_all_data()
+                messagebox.showinfo(
+                    "Data Cleared", 
+                    f"Successfully deleted {count} entries.\n\n"
+                    f"Your database is now empty and ready for fresh data."
+                )
+                self.refresh_data()
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error clearing data: {e}")
     
     def check_weather(self):
         """Retrieve and display current weather for selected city.
