@@ -1037,45 +1037,72 @@ class NovaFitGUI:
     """
     
     def __init__(self):
-        """Initialize the NovaFit GUI application.
+        """Initialize the NovaFit GUI application with enhanced theming.
         
-        Sets up the main window, applies user-configured theme, initializes
-        the widget hierarchy, and loads initial data. Configures window
-        properties including title, size, and minimum dimensions.
+        Sets up the main window with modern styling, applies user-configured theme,
+        initializes the widget hierarchy, and loads initial data. Configures window
+        properties including title, size, and enhanced visual appearance.
+        
+        Enhanced features:
+        - Modern window styling with improved theming
+        - Better theme persistence and application
+        - Enhanced window properties and sizing
+        - Improved initialization order for better rendering
         
         The constructor:
-        1. Creates main Tk window with appropriate sizing
-        2. Applies theme based on user configuration
-        3. Sets up all GUI widgets and tabs
-        4. Loads and displays initial health data
+        1. Creates main Tk window with modern styling
+        2. Configures enhanced window properties
+        3. Applies theme based on user configuration
+        4. Sets up all GUI widgets and tabs with proper theming
+        5. Loads and displays initial health data
         
         Window properties:
-        - Title: "NovaFit — Mini Health Tracker GUI"
-        - Size: 800x600 pixels (resizable)
-        - Minimum size: 700x500 pixels
+        - Title: "NovaFit — Enhanced Health Tracker"
+        - Size: 850x650 pixels (resizable) 
+        - Minimum size: 750x550 pixels
+        - Modern styling with theme-aware design
         """
         self.root = tk.Tk()
-        self.root.title("NovaFit — Enhanced Health Tracker")
-        self.root.geometry("800x600")
-        self.root.minsize(700, 500)
+        self.root.title("NovaFit — Enhanced Health Tracker 🏃‍♂️")
+        self.root.geometry("850x650")
+        self.root.minsize(750, 550)
         
+        # Enhanced window properties
+        try:
+            # Try to set the window icon (will gracefully fail if not found)
+            self.root.iconify()
+            self.root.deiconify()
+        except:
+            pass
+        
+        # Configure enhanced style
         self.style = ttk.Style()
         
-        # Apply theme based on configuration
-        if CONFIG.get("theme", "light") == "dark":
+        # Initialize theme variables early
+        self.dark_mode = tk.BooleanVar(value=CONFIG.get("theme", "light") == "dark")
+        
+        # Apply initial theme to setup base styling
+        if self.dark_mode.get():
             self.apply_dark_theme()
         else:
             self.apply_light_theme()
         
+        # Setup widgets with theme support
         self.setup_widgets()
         
-        # Reapply theme to ensure all widgets are styled correctly
-        if CONFIG.get("theme", "light") == "dark":
+        # Final theme application to ensure all widgets are properly styled
+        # This second application ensures that dynamically created widgets get proper styling
+        self.root.after(100, self.final_theme_application)
+        
+        # Load initial data
+        self.refresh_data()
+    
+    def final_theme_application(self):
+        """Apply final theme styling after all widgets are created."""
+        if self.dark_mode.get():
             self.apply_dark_theme()
         else:
             self.apply_light_theme()
-            
-        self.refresh_data()
     
     def setup_widgets(self):
         """Create and configure the main GUI widget hierarchy.
@@ -1331,7 +1358,6 @@ class NovaFitGUI:
         theme_frame = ttk.LabelFrame(tools_frame, text="🎨 Appearance Settings", padding="10")
         theme_frame.pack(fill="x", pady=(0, 10))
         
-        self.dark_mode = tk.BooleanVar(value=CONFIG.get("theme", "light") == "dark")
         theme_check = ttk.Checkbutton(theme_frame, text="🌙 Enable Dark Theme", 
                                       variable=self.dark_mode, command=self.toggle_theme)
         theme_check.pack(side="left", padx=10)
@@ -1628,29 +1654,36 @@ class NovaFitGUI:
         self.update_progress_chart()
     
     def update_progress_chart(self):
-        """Update the weekly progress chart visualization.
+        """Update enhanced weekly progress chart visualization.
         
-        Creates a visual bar chart showing the last 7 days of step data
-        with color-coded bars and a goal reference line. Each bar represents
-        one day's step count with different colors for goal achievement.
+        Creates a modern, theme-aware visual bar chart showing the last 7 days
+        of step data with improved styling and better visual feedback.
         
-        Chart features:
-        - Green bars: Days meeting step goal (10,000+ steps)
-        - Yellow bars: Days below step goal  
-        - Red dashed line: Daily step goal indicator
-        - Date labels: MM/DD format below each bar
-        - Responsive sizing: Adapts to canvas width
+        Enhanced features:
+        - Dynamic color schemes based on current theme
+        - Gradient bars for modern appearance
+        - Enhanced goal line with better visibility
+        - Improved spacing and proportions
+        - Better text contrast and readability
+        - Step count labels above bars
+        - Responsive design that adapts to canvas size
         
-        Handles empty data gracefully with informative message.
-        Chart automatically scales to show the highest step count or goal.
+        Chart components:
+        - Green bars: Days where step goal was achieved
+        - Orange/amber bars: Days below step goal
+        - Enhanced goal line: Visual step goal indicator with emoji
+        - Date labels: MM/DD format with improved fonts
+        - Value labels: Show exact step counts
         """
         self.progress_canvas.delete("all")
         
         # Get last 7 days of data
         entries = list_entries(7)
         if not entries:
-            self.progress_canvas.create_text(200, 50, text="No data available", 
-                                           fill="gray", font=("Arial", 12))
+            # Theme-aware text color for "no data" message
+            text_color = '#8b949e' if self.dark_mode.get() else '#656d76'
+            self.progress_canvas.create_text(200, 50, text="📊 No data available", 
+                                           fill=text_color, font=("Segoe UI", 11))
             return
         
         # Get canvas dimensions
@@ -1661,35 +1694,116 @@ class NovaFitGUI:
         if width <= 1:  # Canvas not yet rendered
             width = 400
         
-        # Calculate bar dimensions
-        bar_width = max(30, (width - 20) // 7)
+        # Define theme-aware colors
+        if self.dark_mode.get():
+            colors = {
+                'success': '#238636',      # Success green for achieved goals
+                'warning': '#d29922',      # Warning amber for below goal
+                'goal_line': '#f85149',    # Goal line red
+                'text_primary': '#f0f6fc', # Primary text
+                'text_secondary': '#8b949e', # Secondary text
+                'background': '#21262d'    # Chart background
+            }
+        else:
+            colors = {
+                'success': '#1a7f37',      # Success green for achieved goals
+                'warning': '#bf8700',      # Warning amber for below goal
+                'goal_line': '#d1242f',    # Goal line red
+                'text_primary': '#24292f', # Primary text
+                'text_secondary': '#656d76', # Secondary text
+                'background': '#f6f8fa'    # Chart background
+            }
+        
+        # Calculate bar dimensions with better spacing
+        padding = 15
+        bar_spacing = 8
+        available_width = width - (2 * padding)
+        bar_width = max(35, (available_width - (bar_spacing * 6)) // 7)
+        
         max_steps = max(entry[1] for entry in entries) if entries else CONFIG["step_goal"]
         max_steps = max(max_steps, CONFIG["step_goal"])  # Ensure goal line is visible
         
-        # Draw bars for each day
+        # Add some headroom to the chart
+        max_steps = int(max_steps * 1.1)
+        
+        # Draw bars for each day with enhanced styling
         for i, entry in enumerate(entries):
-            x1 = 10 + i * (bar_width + 5)
-            bar_height = min(height - 20, (entry[1] / max_steps) * (height - 20))
-            y1 = height - bar_height
+            x1 = padding + i * (bar_width + bar_spacing)
+            bar_height = min(height - 25, (entry[1] / max_steps) * (height - 25))
+            y1 = height - bar_height - 5
             x2 = x1 + bar_width
-            y2 = height
+            y2 = height - 5
             
-            # Color based on goal achievement
-            color = "#4CAF50" if entry[1] >= CONFIG["step_goal"] else "#FFC107"
-            self.progress_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="")
+            # Enhanced color selection with gradient effect
+            if entry[1] >= CONFIG["step_goal"]:
+                primary_color = colors['success']
+                # Create a subtle gradient effect by using a slightly lighter top
+                gradient_color = self.lighten_color(primary_color, 0.1)
+            else:
+                primary_color = colors['warning']
+                gradient_color = self.lighten_color(primary_color, 0.1)
             
-            # Add date label
+            # Draw main bar with rounded corners effect
+            self.progress_canvas.create_rectangle(x1, y1, x2, y2, 
+                                                fill=primary_color, outline="", width=0)
+            
+            # Add a subtle highlight at the top for 3D effect
+            if bar_height > 5:
+                highlight_height = min(4, bar_height // 4)
+                self.progress_canvas.create_rectangle(x1, y1, x2, y1 + highlight_height,
+                                                    fill=gradient_color, outline="")
+            
+            # Add step count label above bar
+            if bar_height > 15:  # Only show if bar is tall enough
+                self.progress_canvas.create_text(x1 + bar_width//2, y1 - 8, 
+                                               text=f"{entry[1]:,}", 
+                                               fill=colors['text_secondary'], 
+                                               font=("Segoe UI", 7, "bold"))
+            
+            # Enhanced date label
             date_parts = entry[0].split("-")
             date_label = f"{date_parts[1]}/{date_parts[2]}" if len(date_parts) == 3 else entry[0]
-            self.progress_canvas.create_text(x1 + bar_width//2, height + 10, 
-                                           text=date_label, fill="black", font=("Arial", 8))
+            self.progress_canvas.create_text(x1 + bar_width//2, height + 12, 
+                                           text=date_label, 
+                                           fill=colors['text_primary'], 
+                                           font=("Segoe UI", 8))
         
-        # Draw goal line
-        goal_y = height - ((CONFIG["step_goal"] / max_steps) * (height - 20))
-        self.progress_canvas.create_line(5, goal_y, width - 5, goal_y, 
-                                       fill="red", dash=(3, 3), width=2)
-        self.progress_canvas.create_text(width - 30, goal_y - 10, text="Goal", 
-                                       fill="red", font=("Arial", 8))
+        # Draw enhanced goal line with better visibility
+        goal_y = height - 5 - ((CONFIG["step_goal"] / max_steps) * (height - 25))
+        
+        # Draw goal line background for better contrast
+        self.progress_canvas.create_line(padding - 5, goal_y, width - padding + 5, goal_y, 
+                                       fill=colors['background'], width=4)
+        
+        # Draw actual goal line
+        self.progress_canvas.create_line(padding - 5, goal_y, width - padding + 5, goal_y, 
+                                       fill=colors['goal_line'], dash=(5, 3), width=2)
+        
+        # Enhanced goal label with background
+        goal_text = f"🎯 Goal: {CONFIG['step_goal']:,}"
+        text_x = width - 80
+        text_y = goal_y - 12
+        
+        # Create text background for better readability
+        self.progress_canvas.create_rectangle(text_x - 25, text_y - 8, text_x + 55, text_y + 8,
+                                            fill=colors['background'], outline="", width=0)
+        
+        self.progress_canvas.create_text(text_x + 15, text_y, text=goal_text, 
+                                       fill=colors['goal_line'], font=("Segoe UI", 8, "bold"))
+    
+    def lighten_color(self, color, factor):
+        """Lighten a hex color by a given factor for gradient effects."""
+        try:
+            # Remove # if present
+            color = color.lstrip('#')
+            # Convert to RGB
+            rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+            # Lighten
+            rgb = tuple(min(255, int(c + (255 - c) * factor)) for c in rgb)
+            # Convert back to hex
+            return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+        except:
+            return color  # Return original color if conversion fails
     
     def refresh_entries(self):
         """Refresh the health entries display in the View tab.
@@ -1961,98 +2075,389 @@ class NovaFitGUI:
             self.theme_status.configure(text=f"Current: {current_theme} Mode")
     
     def apply_dark_theme(self):
-        """Apply enhanced dark theme styling."""
+        """Apply enhanced modern dark theme styling with improved colors and gradients."""
         # Use a better base theme for dark mode
         self.style.theme_use('clam')
         
-        # Configure root window
-        self.root.configure(bg='#1e1e1e')
+        # Modern dark color palette
+        colors = {
+            'bg_primary': '#0d1117',        # Deep dark background (GitHub dark)
+            'bg_secondary': '#161b22',      # Secondary background
+            'bg_tertiary': '#21262d',       # Cards and panels
+            'surface': '#30363d',           # Input fields and elevated surfaces
+            'surface_hover': '#373e47',     # Hover states
+            'surface_active': '#444c56',    # Active/pressed states
+            'accent': '#1f6feb',            # Primary accent (blue)
+            'accent_hover': '#388bfd',      # Accent hover
+            'success': '#238636',           # Success green
+            'warning': '#d29922',           # Warning orange
+            'danger': '#da3633',            # Error red
+            'text_primary': '#f0f6fc',      # Primary text
+            'text_secondary': '#8b949e',    # Secondary text
+            'text_muted': '#6e7681',        # Muted text
+            'border': '#30363d',            # Borders
+            'border_muted': '#21262d'       # Subtle borders
+        }
         
-        # Configure ttk styles for dark theme
-        self.style.configure('TFrame', background='#1e1e1e', borderwidth=0)
-        self.style.configure('TLabel', background='#1e1e1e', foreground='#ffffff')
-        self.style.configure('TButton', background='#404040', foreground='#ffffff',
-                           borderwidth=1, focuscolor='none')
+        # Configure root window with gradient effect
+        self.root.configure(bg=colors['bg_primary'])
+        
+        # Enhanced Frame styling with subtle borders
+        self.style.configure('TFrame', 
+                           background=colors['bg_primary'], 
+                           borderwidth=0,
+                           relief='flat')
+        
+        # Modern label styling with better contrast
+        self.style.configure('TLabel', 
+                           background=colors['bg_primary'], 
+                           foreground=colors['text_primary'],
+                           font=('Segoe UI', 9))
+        
+        # Enhanced button styling with modern look
+        self.style.configure('TButton', 
+                           background=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           focuscolor='none',
+                           padding=(12, 8),
+                           font=('Segoe UI', 9))
         self.style.map('TButton',
-                      background=[('active', '#505050'), ('pressed', '#303030')])
+                      background=[('active', colors['surface_hover']), 
+                                ('pressed', colors['surface_active']),
+                                ('focus', colors['surface_hover'])],
+                      bordercolor=[('active', colors['accent']),
+                                 ('focus', colors['accent'])])
         
-        self.style.configure('TEntry', fieldbackground='#2d2d2d', foreground='#ffffff',
-                           borderwidth=1, insertcolor='#ffffff')
-        self.style.map('TEntry', focuscolor=[('!focus', '#404040')])
+        # Modern input field styling
+        self.style.configure('TEntry', 
+                           fieldbackground=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           insertcolor=colors['text_primary'],
+                           selectbackground=colors['accent'],
+                           selectforeground=colors['text_primary'])
+        self.style.map('TEntry', 
+                      bordercolor=[('focus', colors['accent']),
+                                 ('!focus', colors['border'])],
+                      lightcolor=[('focus', colors['accent'])])
         
-        self.style.configure('TCombobox', fieldbackground='#2d2d2d', foreground='#ffffff',
-                           borderwidth=1, arrowcolor='#ffffff')
-        self.style.map('TCombobox', focuscolor=[('!focus', '#404040')])
+        # Enhanced combobox styling
+        self.style.configure('TCombobox', 
+                           fieldbackground=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           arrowcolor=colors['text_secondary'],
+                           selectbackground=colors['accent'])
+        self.style.map('TCombobox',
+                      bordercolor=[('focus', colors['accent']),
+                                 ('!focus', colors['border'])],
+                      lightcolor=[('focus', colors['accent'])])
         
-        self.style.configure('TNotebook', background='#1e1e1e', borderwidth=0)
-        self.style.configure('TNotebook.Tab', background='#404040', foreground='#ffffff',
-                           padding=[8, 4])
-        self.style.map('TNotebook.Tab',
-                      background=[('selected', '#606060'), ('active', '#505050')])
-        
-        self.style.configure('TLabelFrame', background='#1e1e1e', foreground='#ffffff',
-                           borderwidth=1, relief='solid')
-        self.style.configure('TLabelFrame.Label', background='#1e1e1e', foreground='#ffffff')
-        
-        self.style.configure('Treeview', background='#2d2d2d', foreground='#ffffff',
-                           fieldbackground='#2d2d2d', borderwidth=1)
-        self.style.configure('Treeview.Heading', background='#404040', foreground='#ffffff',
-                           borderwidth=1)
-        self.style.map('Treeview.Heading',
-                      background=[('active', '#505050')])
-        
-        self.style.configure('TScale', background='#1e1e1e', troughcolor='#404040',
-                           borderwidth=0, sliderthickness=20)
-        
-        self.style.configure('TCheckbutton', background='#1e1e1e', foreground='#ffffff',
+        # Modern notebook and tab styling
+        self.style.configure('TNotebook', 
+                           background=colors['bg_primary'],
+                           borderwidth=0,
+                           tabmargins=[2, 5, 2, 0])
+        self.style.configure('TNotebook.Tab', 
+                           background=colors['bg_secondary'],
+                           foreground=colors['text_secondary'],
+                           padding=[16, 10],
+                           borderwidth=1,
                            focuscolor='none')
+        self.style.map('TNotebook.Tab',
+                      background=[('selected', colors['bg_tertiary']),
+                                ('active', colors['surface'])],
+                      foreground=[('selected', colors['text_primary']),
+                                ('active', colors['text_primary'])],
+                      expand=[('selected', [1, 1, 1, 0])])
+        
+        # Enhanced label frame styling
+        self.style.configure('TLabelFrame', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='solid',
+                           bordercolor=colors['border'])
+        self.style.configure('TLabelFrame.Label', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           font=('Segoe UI', 9, 'bold'))
+        
+        # Modern treeview styling with alternating rows
+        self.style.configure('Treeview', 
+                           background=colors['bg_tertiary'],
+                           foreground=colors['text_primary'],
+                           fieldbackground=colors['bg_tertiary'],
+                           borderwidth=1,
+                           relief='flat')
+        self.style.configure('Treeview.Heading', 
+                           background=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           font=('Segoe UI', 9, 'bold'))
+        self.style.map('Treeview.Heading',
+                      background=[('active', colors['surface_hover'])],
+                      relief=[('active', 'flat')])
+        self.style.map('Treeview',
+                      background=[('selected', colors['accent'])],
+                      foreground=[('selected', colors['text_primary'])])
+        
+        # Enhanced scale (slider) styling
+        self.style.configure('TScale', 
+                           background=colors['bg_primary'],
+                           troughcolor=colors['surface'],
+                           borderwidth=0,
+                           sliderthickness=16,
+                           gripcount=0)
+        self.style.map('TScale',
+                      troughcolor=[('active', colors['surface_hover'])])
+        
+        # Modern checkbox styling
+        self.style.configure('TCheckbutton', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           focuscolor='none',
+                           borderwidth=0,
+                           font=('Segoe UI', 9))
         self.style.map('TCheckbutton',
-                      background=[('active', '#1e1e1e')])
+                      background=[('active', colors['bg_primary'])])
         
-        self.style.configure('Vertical.TScrollbar', background='#404040',
-                           troughcolor='#1e1e1e', borderwidth=0, arrowcolor='#ffffff')
+        # Enhanced scrollbar styling
+        self.style.configure('Vertical.TScrollbar', 
+                           background=colors['surface'],
+                           troughcolor=colors['bg_tertiary'],
+                           borderwidth=0,
+                           arrowcolor=colors['text_secondary'],
+                           width=12)
+        self.style.map('Vertical.TScrollbar',
+                      background=[('active', colors['surface_hover'])])
         
-        # Update Text widgets (requires special handling)
+        # Update Text widgets with modern styling
         if hasattr(self, 'stats_text'):
-            self.stats_text.configure(bg='#2d2d2d', fg='#ffffff', insertbackground='#ffffff')
-        if hasattr(self, 'weather_text'):
-            self.weather_text.configure(bg='#2d2d2d', fg='#ffffff', insertbackground='#ffffff')
+            self.stats_text.configure(
+                bg=colors['bg_tertiary'],
+                fg=colors['text_primary'],
+                insertbackground=colors['text_primary'],
+                selectbackground=colors['accent'],
+                selectforeground=colors['text_primary'],
+                borderwidth=1,
+                relief='flat',
+                font=('Consolas', 9))
         
-        # Update Canvas widgets
+        if hasattr(self, 'weather_text'):
+            self.weather_text.configure(
+                bg=colors['bg_tertiary'],
+                fg=colors['text_primary'],
+                insertbackground=colors['text_primary'],
+                selectbackground=colors['accent'],
+                selectforeground=colors['text_primary'],
+                borderwidth=1,
+                relief='flat',
+                font=('Segoe UI', 9))
+        
+        # Update Canvas widgets with modern styling
         if hasattr(self, 'progress_canvas'):
-            self.progress_canvas.configure(bg='#2d2d2d', highlightbackground='#404040')
+            self.progress_canvas.configure(
+                bg=colors['bg_tertiary'],
+                highlightbackground=colors['border'],
+                highlightthickness=1)
     
     def apply_light_theme(self):
-        """Apply light theme styling."""
+        """Apply enhanced modern light theme styling."""
         self.style.theme_use('clam')
-        self.root.configure(bg='SystemButtonFace')
         
-        # Reset all styles to default light theme
-        self.style.configure('TFrame', background='SystemButtonFace')
-        self.style.configure('TLabel', background='SystemButtonFace', foreground='black')
-        self.style.configure('TButton', background='SystemButtonFace', foreground='black')
-        self.style.configure('TEntry', fieldbackground='white', foreground='black')
-        self.style.configure('TCombobox', fieldbackground='white', foreground='black')
-        self.style.configure('TNotebook', background='SystemButtonFace')
-        self.style.configure('TNotebook.Tab', background='SystemButtonFace', foreground='black')
-        self.style.configure('TLabelFrame', background='SystemButtonFace', foreground='black')
-        self.style.configure('TLabelFrame.Label', background='SystemButtonFace', foreground='black')
-        self.style.configure('Treeview', background='white', foreground='black',
-                           fieldbackground='white')
-        self.style.configure('Treeview.Heading', background='SystemButtonFace', foreground='black')
-        self.style.configure('TScale', background='SystemButtonFace')
-        self.style.configure('TCheckbutton', background='SystemButtonFace', foreground='black')
-        self.style.configure('Vertical.TScrollbar', background='SystemButtonFace')
+        # Modern light color palette
+        colors = {
+            'bg_primary': '#ffffff',        # Pure white background
+            'bg_secondary': '#f6f8fa',      # Light gray background
+            'bg_tertiary': '#f1f3f4',       # Cards and panels
+            'surface': '#ffffff',           # Input fields and elevated surfaces
+            'surface_hover': '#f6f8fa',     # Hover states
+            'surface_active': '#eaeef2',    # Active/pressed states
+            'accent': '#0969da',            # Primary accent (blue)
+            'accent_hover': '#0860ca',      # Accent hover
+            'success': '#1a7f37',           # Success green
+            'warning': '#9a6700',           # Warning orange
+            'danger': '#d1242f',            # Error red
+            'text_primary': '#24292f',      # Primary text
+            'text_secondary': '#656d76',    # Secondary text
+            'text_muted': '#8b949e',        # Muted text
+            'border': '#d0d7de',            # Borders
+            'border_muted': '#eaeef2'       # Subtle borders
+        }
         
-        # Update Text widgets
+        # Configure root window
+        self.root.configure(bg=colors['bg_primary'])
+        
+        # Enhanced Frame styling
+        self.style.configure('TFrame', 
+                           background=colors['bg_primary'],
+                           borderwidth=0,
+                           relief='flat')
+        
+        # Modern label styling
+        self.style.configure('TLabel', 
+                           background=colors['bg_primary'], 
+                           foreground=colors['text_primary'],
+                           font=('Segoe UI', 9))
+        
+        # Enhanced button styling
+        self.style.configure('TButton', 
+                           background=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           focuscolor='none',
+                           padding=(12, 8),
+                           font=('Segoe UI', 9))
+        self.style.map('TButton',
+                      background=[('active', colors['surface_hover']), 
+                                ('pressed', colors['surface_active']),
+                                ('focus', colors['surface_hover'])],
+                      bordercolor=[('active', colors['accent']),
+                                 ('focus', colors['accent'])])
+        
+        # Modern input field styling
+        self.style.configure('TEntry', 
+                           fieldbackground=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           insertcolor=colors['text_primary'],
+                           selectbackground=colors['accent'],
+                           selectforeground='white')
+        self.style.map('TEntry', 
+                      bordercolor=[('focus', colors['accent']),
+                                 ('!focus', colors['border'])],
+                      lightcolor=[('focus', colors['accent'])])
+        
+        # Enhanced combobox styling
+        self.style.configure('TCombobox', 
+                           fieldbackground=colors['surface'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           arrowcolor=colors['text_secondary'],
+                           selectbackground=colors['accent'])
+        self.style.map('TCombobox',
+                      bordercolor=[('focus', colors['accent']),
+                                 ('!focus', colors['border'])],
+                      lightcolor=[('focus', colors['accent'])])
+        
+        # Modern notebook and tab styling
+        self.style.configure('TNotebook', 
+                           background=colors['bg_primary'],
+                           borderwidth=0,
+                           tabmargins=[2, 5, 2, 0])
+        self.style.configure('TNotebook.Tab', 
+                           background=colors['bg_secondary'],
+                           foreground=colors['text_secondary'],
+                           padding=[16, 10],
+                           borderwidth=1,
+                           focuscolor='none')
+        self.style.map('TNotebook.Tab',
+                      background=[('selected', colors['bg_primary']),
+                                ('active', colors['surface_hover'])],
+                      foreground=[('selected', colors['text_primary']),
+                                ('active', colors['text_primary'])],
+                      expand=[('selected', [1, 1, 1, 0])])
+        
+        # Enhanced label frame styling
+        self.style.configure('TLabelFrame', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='solid',
+                           bordercolor=colors['border'])
+        self.style.configure('TLabelFrame.Label', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           font=('Segoe UI', 9, 'bold'))
+        
+        # Modern treeview styling
+        self.style.configure('Treeview', 
+                           background=colors['surface'],
+                           foreground=colors['text_primary'],
+                           fieldbackground=colors['surface'],
+                           borderwidth=1,
+                           relief='flat')
+        self.style.configure('Treeview.Heading', 
+                           background=colors['bg_secondary'],
+                           foreground=colors['text_primary'],
+                           borderwidth=1,
+                           relief='flat',
+                           font=('Segoe UI', 9, 'bold'))
+        self.style.map('Treeview.Heading',
+                      background=[('active', colors['surface_hover'])],
+                      relief=[('active', 'flat')])
+        self.style.map('Treeview',
+                      background=[('selected', colors['accent'])],
+                      foreground=[('selected', 'white')])
+        
+        # Enhanced scale (slider) styling
+        self.style.configure('TScale', 
+                           background=colors['bg_primary'],
+                           troughcolor=colors['bg_secondary'],
+                           borderwidth=0,
+                           sliderthickness=16,
+                           gripcount=0)
+        self.style.map('TScale',
+                      troughcolor=[('active', colors['surface_hover'])])
+        
+        # Modern checkbox styling
+        self.style.configure('TCheckbutton', 
+                           background=colors['bg_primary'],
+                           foreground=colors['text_primary'],
+                           focuscolor='none',
+                           borderwidth=0,
+                           font=('Segoe UI', 9))
+        self.style.map('TCheckbutton',
+                      background=[('active', colors['bg_primary'])])
+        
+        # Enhanced scrollbar styling
+        self.style.configure('Vertical.TScrollbar', 
+                           background=colors['bg_secondary'],
+                           troughcolor=colors['surface'],
+                           borderwidth=0,
+                           arrowcolor=colors['text_secondary'],
+                           width=12)
+        self.style.map('Vertical.TScrollbar',
+                      background=[('active', colors['surface_hover'])])
+        
+        # Update Text widgets with modern styling
         if hasattr(self, 'stats_text'):
-            self.stats_text.configure(bg='white', fg='black', insertbackground='black')
-        if hasattr(self, 'weather_text'):
-            self.weather_text.configure(bg='white', fg='black', insertbackground='black')
+            self.stats_text.configure(
+                bg=colors['surface'],
+                fg=colors['text_primary'],
+                insertbackground=colors['text_primary'],
+                selectbackground=colors['accent'],
+                selectforeground='white',
+                borderwidth=1,
+                relief='flat',
+                font=('Consolas', 9))
         
-        # Update Canvas widgets
+        if hasattr(self, 'weather_text'):
+            self.weather_text.configure(
+                bg=colors['surface'],
+                fg=colors['text_primary'],
+                insertbackground=colors['text_primary'],
+                selectbackground=colors['accent'],
+                selectforeground='white',
+                borderwidth=1,
+                relief='flat',
+                font=('Segoe UI', 9))
+        
+        # Update Canvas widgets with modern styling
         if hasattr(self, 'progress_canvas'):
-            self.progress_canvas.configure(bg='white', highlightbackground='gray')
+            self.progress_canvas.configure(
+                bg=colors['surface'],
+                highlightbackground=colors['border'],
+                highlightthickness=1)
     
     def run(self):
         """Start the GUI main event loop.
