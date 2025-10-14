@@ -41,13 +41,11 @@ A simple daily health metrics tracker with enhanced CLI menu and professional da
 
 ### Installation
 ```bash
-pip install requests Faker
+pip install -r requirements.txt
 ```
 
 ### Usage
 ```bash
-# Demo test script
-python test_improvements.py
 
 # Interactive CLI
 python novafit.py
