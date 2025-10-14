@@ -19,23 +19,26 @@ import os
 # =============================================================================
 # SSL CONFIGURATION - Fix SSL certificate issues
 # =============================================================================
-os.environ['PYTHONHTTPSVERIFY'] = '0'
+def configure_ssl():
+    """Configurar SSL de forma simplificada."""
+    os.environ['PYTHONHTTPSVERIFY'] = '0'
+    
+    # Remove problematic SSL environment variables set by PostgreSQL
+    problematic_vars = ['SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE']
+    for var in problematic_vars:
+        if var in os.environ:
+            problematic_path = os.environ[var]
+            if 'PostgreSQL' in problematic_path or not os.path.exists(problematic_path):
+                del os.environ[var]
+    
+    # Try to disable SSL warnings
+    try:
+        import urllib3
+        urllib3.disable_warnings()
+    except ImportError:
+        pass
 
-# Remove problematic SSL environment variables set by PostgreSQL
-for var in ['SSL_CERT_FILE', 'SSL_CERT_DIR', 'REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE']:
-    if var in os.environ:
-        problematic_path = os.environ[var]
-        if 'PostgreSQL' in problematic_path or not os.path.exists(problematic_path):
-            print(f"Debug: Removing problematic {var}: {problematic_path}")
-            del os.environ[var]
-
-# Try to disable SSL warnings
-try:
-    import urllib3
-    urllib3.disable_warnings()
-except ImportError:
-    pass
-
+configure_ssl()
 # =============================================================================
 # END SSL CONFIGURATION
 # =============================================================================
@@ -118,23 +121,7 @@ def validate_date(date_str: str) -> bool:
         return False
 
 def safe_input(prompt: str, input_type: type = str, default=None, validator=None):
-    """Safe input with type conversion and validation.
-    
-    Prompts the user for input with automatic type conversion, default values,
-    and custom validation. Handles keyboard interrupts gracefully.
-    
-    Args:
-        prompt (str): The input prompt to display to the user.
-        input_type (type, optional): Type to convert input to. Defaults to str.
-        default: Default value if user enters nothing. Defaults to None.
-        validator: Function to validate the converted input. Defaults to None.
-    
-    Returns:
-        The user input converted to the specified type, or None if cancelled.
-        
-    Raises:
-        KeyboardInterrupt: Converted to None return value for graceful handling.
-    """
+    """Entrada segura con conversión de tipo y validación."""
     while True:
         try:
             value = input(prompt).strip()
@@ -347,11 +334,7 @@ def seed_fake(n: int) -> int:
     return count
 
 def initialize_sample_data() -> int:
-    """Initialize the application with sample health data for demonstration.
-    
-    Creates a week of realistic sample data to help new users understand
-    the application and see how their health tracking might look.
-    """
+    """Crear una semana de datos de muestra para nuevos usuarios."""
     sample_data = [
         {"date": (date.today() - timedelta(days=6)).isoformat(), "steps": 8500, "water_l": 2.1, "calories": 1850, "mood": "😊"},
         {"date": (date.today() - timedelta(days=5)).isoformat(), "steps": 12000, "water_l": 2.5, "calories": 2100, "mood": "😊"},
@@ -477,78 +460,50 @@ def cli_menu():
     """Main CLI menu loop interface."""
     print(f"{Colors.CYAN}Welcome to NovaFit! 🏃‍♂️{Colors.ENDC}")
     
+    # Configuración compacta del menú
+    menu_options = [
+        ("📝 Data", [("➕ Add new entry", cli_add_entry), ("⚡ Quick entry for today", cli_quick_entry), 
+                     ("📋 List recent entries", cli_list_entries), ("🗑️ Delete entry by date", cli_delete_entry)]),
+        ("📊 Analytics", [("📈 Dashboard", cli_dashboard), ("🔍 Search entries", cli_search_entries)]),
+        ("🌐 External", [("🌤️ Weather Report", cli_weather)]),
+        ("💾 Import/Export", [("📤 Export to JSON", cli_export), ("📥 Import from JSON", cli_import),
+                              ("📊 Export to CSV", cli_export_csv), ("📋 Import from CSV", cli_import_csv)]),
+        ("🛠️ Tools", [("🎲 Generate demo data", cli_seed), ("🌟 Initialize sample data", cli_initialize_data),
+                       ("🗑️ Clear all data", cli_clear_data), ("🖼️ Open GUI Interface", launch_gui),
+                       ("🧹 Clear screen", lambda: (clear_screen(), print(f"{Colors.GREEN}Screen cleared! ✨{Colors.ENDC}"))),
+                       ("❓ Show help", show_help)])
+    ]
+    
     while True:
         try:
+            # Mostrar menú
             print(f"\n{Colors.HEADER}{'='*40}{Colors.ENDC}")
             print(f"{Colors.BOLD}{Colors.BLUE}        NovaFit — Health Tracker{Colors.ENDC}")
             print(f"{Colors.HEADER}{'='*40}{Colors.ENDC}")
-            print(f"{Colors.GREEN}📝 Data:{Colors.ENDC}")
-            print("  1) ➕ Add new entry")
-            print("  2) ⚡ Quick entry for today")
-            print("  3) 📋 List recent entries")
-            print("  4) 🗑️  Delete entry by date")
-            print(f"{Colors.CYAN}📊 Analytics:{Colors.ENDC}")
-            print("  5) 📈 Dashboard")
-            print("  6) 🔍 Search entries")
-            print(f"{Colors.WARNING}🌐 External:{Colors.ENDC}")
-            print("  7) 🌤️  Weather Report")
-            print(f"{Colors.BLUE}💾 Import/Export:{Colors.ENDC}")
-            print("  8) 📤 Export to JSON")
-            print("  9) 📥 Import from JSON")
-            print("  10) 📊 Export to CSV")
-            print("  11) 📋 Import from CSV")
-            print("  12) 🎲 Generate demo data")
-            print("  13) 🌟 Initialize sample data")
-            print("  14) 🗑️ Clear all data")
-            print(f"{Colors.CYAN}🖥️  Interface:{Colors.ENDC}")
-            print("  15) 🖼️ Open GUI Interface")
-            print("  16) 🧹 Clear screen")
-            print("  17) ❓ Show help")
+            
+            option_num = 1
+            option_map = {}
+            
+            for category, items in menu_options:
+                color = Colors.GREEN if "Data" in category else Colors.CYAN if "Analytics" in category else Colors.WARNING if "External" in category else Colors.BLUE if "Import" in category else Colors.HEADER
+                print(f"{color}{category}:{Colors.ENDC}")
+                for title, func in items:
+                    print(f"  {option_num}) {title}")
+                    option_map[str(option_num)] = func
+                    option_num += 1
+            
             print(f"{Colors.FAIL}  0) 👋 Exit{Colors.ENDC}")
             print(f"{Colors.HEADER}{'='*40}{Colors.ENDC}")
             
-            choice = input(f"{Colors.BOLD}Choose option (0-17): {Colors.ENDC}").strip()
+            choice = input(f"{Colors.BOLD}Choose option (0-{option_num-1}): {Colors.ENDC}").strip()
             
             if choice == "0":
                 print(f"{Colors.GREEN}Goodbye! Stay healthy! 👋{Colors.ENDC}")
                 break
-            elif choice == "1":
-                cli_add_entry()
-            elif choice == "2":
-                cli_quick_entry()
-            elif choice == "3":
-                cli_list_entries()
-            elif choice == "4":
-                cli_delete_entry()
-            elif choice == "5":
-                cli_dashboard()
-            elif choice == "6":
-                cli_search_entries()
-            elif choice == "7":
-                cli_weather()
-            elif choice == "8":
-                cli_export()
-            elif choice == "9":
-                cli_import()
-            elif choice == "10":
-                cli_export_csv()
-            elif choice == "11":
-                cli_import_csv()
-            elif choice == "12":
-                cli_seed()
-            elif choice == "13":
-                cli_initialize_data()
-            elif choice == "14":
-                cli_clear_data()
-            elif choice == "15":
-                launch_gui()
-            elif choice == "16":
-                clear_screen()
-                print(f"{Colors.GREEN}Screen cleared! ✨{Colors.ENDC}")
-            elif choice == "17":
-                show_help()
+            elif choice in option_map:
+                option_map[choice]()
             else:
-                print(f"{Colors.WARNING}Invalid choice! Please enter 0-17 ⚠️{Colors.ENDC}")
+                print(f"{Colors.WARNING}Invalid choice! Please enter 0-{option_num-1} ⚠️{Colors.ENDC}")
                 
         except (KeyboardInterrupt, EOFError):
             print(f"\n{Colors.GREEN}Goodbye! 👋{Colors.ENDC}")
@@ -556,20 +511,7 @@ def cli_menu():
 
 
 def cli_quick_entry():
-    """Quick entry interface for today's health data.
-    
-    Provides a streamlined interface for entering health data for the current date.
-    Prompts for steps, water intake, and optional calories and mood data.
-    Automatically sets the date to today for convenience.
-    
-    Required inputs:
-    - Steps (integer, must be >= 0)
-    - Water intake in liters (float, must be >= 0)
-    
-    Optional inputs:
-    - Calories (integer)
-    - Mood (emoji string, defaults to 😊)
-    """
+    """Interfaz rápida para entrada de datos de salud de hoy."""
     print(f"\n{Colors.BLUE}⚡ Quick Entry for Today{Colors.ENDC}")
     print("=" * 25)
     
@@ -928,188 +870,148 @@ def cli_weather():
     except Exception as e:
         print(f"{Colors.FAIL}❌ Error fetching weather: {e}{Colors.ENDC}")
 
-def cli_export():
-    """CLI interface for exporting health data to JSON format."""
-    print(f"\n{Colors.BLUE}📤 Export Data{Colors.ENDC}")
+def cli_export_import(operation, format_type):
+    """Función unificada para importar/exportar en diferentes formatos."""
+    icons = {"export": {"json": "💾", "csv": "📊"}, "import": {"json": "", "csv": ""}}
+    action = "Export" if operation == "export" else "Import"
+    icon = "📤" if operation == "export" else "📥"
+    
+    print(f"\n{Colors.BLUE}{icon} {action} Data{' to CSV' if format_type == 'csv' and operation == 'export' else ' from CSV' if format_type == 'csv' else ''}{Colors.ENDC}")
     
     try:
         use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
+        default_path = EXPORT_PATH if format_type == "json" else CSV_EXPORT_PATH
         
         if use_custom in ['y', 'yes']:
-            custom_path = input(f"Enter file path (default {EXPORT_PATH}): ").strip()
-            export_path = Path(custom_path) if custom_path else EXPORT_PATH
+            custom_path = input(f"Enter file path (default {default_path}): ").strip()
+            file_path = Path(custom_path) if custom_path else default_path
         else:
-            export_path = EXPORT_PATH
+            file_path = default_path
         
-        count = export_json(export_path)
-        print(f"{Colors.GREEN}✅ Exported {count} records to {export_path} 💾{Colors.ENDC}")
-        
-        if count > 0:
-            file_size = export_path.stat().st_size / 1024
-            print(f"  📁 File size: {file_size:.1f} KB")
+        if operation == "export":
+            func = export_json if format_type == "json" else export_csv
+            count = func(file_path)
+            print(f"{Colors.GREEN}✅ Exported {count} records to {file_path} {icons['export'][format_type]}{Colors.ENDC}")
+            
+            if count > 0:
+                file_size = file_path.stat().st_size / 1024
+                print(f"  📁 File size: {file_size:.1f} KB")
+                if format_type == "csv":
+                    print(f"  💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
+        else:
+            if not file_path.exists():
+                print(f"{Colors.WARNING}⚠️ File not found: {file_path}{Colors.ENDC}")
+                return
+            func = import_json if format_type == "json" else import_csv
+            count = func(file_path)
+            print(f"{Colors.GREEN}✅ Imported {count} new records{Colors.ENDC}")
         
     except Exception as e:
-        print(f"{Colors.FAIL}❌ Error exporting data: {e}{Colors.ENDC}")
+        print(f"{Colors.FAIL}❌ Error {operation}ing data: {e}{Colors.ENDC}")
+
+def cli_export():
+    """CLI interface for exporting health data to JSON format."""
+    cli_export_import("export", "json")
 
 def cli_import():
     """CLI interface for importing health data from JSON format."""
-    print(f"\n{Colors.BLUE}📥 Import Data{Colors.ENDC}")
-    
-    try:
-        use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
-        
-        if use_custom in ['y', 'yes']:
-            custom_path = input(f"Enter file path (default {EXPORT_PATH}): ").strip()
-            import_path = Path(custom_path) if custom_path else EXPORT_PATH
-        else:
-            import_path = EXPORT_PATH
-        
-        if not import_path.exists():
-            print(f"{Colors.WARNING}⚠️ File not found: {import_path}{Colors.ENDC}")
-            return
-        
-        count = import_json(import_path)
-        print(f"{Colors.GREEN}✅ Imported {count} new records{Colors.ENDC}")
-        
-    except Exception as e:
-        print(f"{Colors.FAIL}❌ Error importing data: {e}{Colors.ENDC}")
+    cli_export_import("import", "json")
 
 def cli_export_csv():
     """CLI interface for exporting health data to CSV format."""
-    print(f"\n{Colors.BLUE}📊 Export Data to CSV{Colors.ENDC}")
-    
-    try:
-        use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
-        
-        if use_custom in ['y', 'yes']:
-            custom_path = input(f"Enter file path (default {CSV_EXPORT_PATH}): ").strip()
-            export_path = Path(custom_path) if custom_path else CSV_EXPORT_PATH
-        else:
-            export_path = CSV_EXPORT_PATH
-        
-        count = export_csv(export_path)
-        print(f"{Colors.GREEN}✅ Exported {count} records to {export_path} 📊{Colors.ENDC}")
-        
-        if count > 0:
-            file_size = export_path.stat().st_size / 1024
-            print(f"  📁 File size: {file_size:.1f} KB")
-            print(f"  💡 Tip: You can open this file in Excel, Google Sheets, or any spreadsheet application!")
-        
-    except Exception as e:
-        print(f"{Colors.FAIL}❌ Error exporting data: {e}{Colors.ENDC}")
+    cli_export_import("export", "csv")
 
 def cli_import_csv():
     """CLI interface for importing health data from CSV format."""
-    print(f"\n{Colors.BLUE}📋 Import Data from CSV{Colors.ENDC}")
-    
-    try:
-        use_custom = input("Use custom file path? (y/n, default n): ").strip().lower()
-        
-        if use_custom in ['y', 'yes']:
-            custom_path = input(f"Enter file path (default {CSV_EXPORT_PATH}): ").strip()
-            import_path = Path(custom_path) if custom_path else CSV_EXPORT_PATH
-        else:
-            import_path = CSV_EXPORT_PATH
-        
-        if not import_path.exists():
-            print(f"{Colors.WARNING}⚠️ File not found: {import_path}{Colors.ENDC}")
-            return
-        
-        count = import_csv(import_path)
-        print(f"{Colors.GREEN}✅ Imported {count} new records{Colors.ENDC}")
-        
-    except Exception as e:
-        print(f"{Colors.FAIL}❌ Error importing data: {e}{Colors.ENDC}")
+    cli_export_import("import", "csv")
 
-def cli_seed():
-    """CLI interface for generating fake demo health data.
+def cli_data_operation(operation_type):
+    """Función unificada para operaciones de datos (demo, sample, clear)."""
+    operations = {
+        "seed": {
+            "title": "🎲 Generate Demo Data",
+            "warning_color": Colors.WARNING,
+            "description": "Generate realistic fake health tracking data for testing.",
+            "ranges": "Steps: 2,000-15,000, Water: 1.0-4.0L, Calories: 1,200-3,000",
+            "prompt_input": True,
+            "confirmation": "Generate {n} days of fake data?",
+            "processing": "🎲 Generating fake data...",
+            "success": "✅ Generated {count} fake entries 🎲"
+        },
+        "sample": {
+            "title": "🌟 Initialize Sample Data",
+            "warning_color": Colors.CYAN,
+            "description": "Create a week of realistic sample health data to get you started.\nThis is perfect for new users to see how the application works.",
+            "ranges": None,
+            "prompt_input": False,
+            "confirmation": "Initialize sample data? This will overwrite any existing data for the sample dates.",
+            "processing": "🌟 Initializing sample data...",
+            "success": "✅ Initialized {count} sample entries 🌟\n💡 You now have a week of sample data to explore the application!"
+        },
+        "clear": {
+            "title": "🗑️ Clear All Data",
+            "warning_color": Colors.FAIL,
+            "description": "⚠️  WARNING: This will permanently delete ALL your health data!\nThis action cannot be undone. Make sure to export your data first if you want to keep it.",
+            "ranges": None,
+            "prompt_input": False,
+            "confirmation": "Are you sure you want to delete all data?",
+            "processing": "🗑️ Clearing all data...",
+            "success": "✅ Deleted {count} entries\n💡 Your database is now empty and ready for fresh data."
+        }
+    }
     
-    Generates realistic fake health tracking data for testing and demonstration
-    purposes using the Faker library. Creates entries for recent dates with
-    randomized but realistic values for steps, water, calories, and mood.
-    
-    Features:
-    - Configurable number of days (1-30)
-    - Realistic random values within healthy ranges
-    - Confirmation prompt to prevent accidental data generation
-    - Uses INSERT OR IGNORE to avoid overwriting existing data
-    
-    Data ranges:
-    - Steps: 2,000 - 15,000
-    - Water: 1.0L - 4.0L  
-    - Calories: 1,200 - 3,000
-    - Mood: Random emoji selection
-    
-    Args:
-        None (interactive CLI prompts)
-        
-    Returns:
-        None (prints generation results)
-    """
-    print(f"\n{Colors.WARNING}🎲 Generate Demo Data{Colors.ENDC}")
+    op = operations[operation_type]
+    print(f"\n{op['warning_color']}{op['title']}{Colors.ENDC}")
     
     try:
-        n = safe_input("How many days of data to generate? (1-30): ", int, validator=lambda x: 1 <= x <= 30)
-        if n is None: return
+        print(op["description"])
+        if op["ranges"]:
+            print(f"\nData ranges: {op['ranges']}")
         
-        confirm = input(f"⚠️ Generate {n} days of fake data? (yes/no): ").strip().lower()
+        n = None
+        if op["prompt_input"]:
+            n = safe_input("How many days of data to generate? (1-30): ", int, validator=lambda x: 1 <= x <= 30)
+            if n is None: return
+        
+        confirm_text = op["confirmation"].format(n=n) if n else op["confirmation"]
+        confirm = input(f"⚠️ {confirm_text} (yes/no): ").strip().lower()
         if confirm not in ['yes', 'y']:
             print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
             return
         
-        print("🎲 Generating fake data...")
-        count = seed_fake(n)
-        print(f"{Colors.GREEN}✅ Generated {count} fake entries 🎲{Colors.ENDC}")
+        if operation_type == "clear":
+            confirm2 = input("Type 'DELETE ALL' to confirm: ").strip()
+            if confirm2 != 'DELETE ALL':
+                print(f"{Colors.CYAN}Operation cancelled - confirmation phrase not matched{Colors.ENDC}")
+                return
+        
+        print(op["processing"])
+        
+        if operation_type == "seed":
+            count = seed_fake(n)
+        elif operation_type == "sample":
+            count = initialize_sample_data()
+        else:  # clear
+            count = clear_all_data()
+        
+        success_msg = op["success"].format(count=count)
+        for line in success_msg.split('\n'):
+            print(f"{Colors.GREEN if line.startswith('✅') else Colors.BLUE}{line}{Colors.ENDC}")
         
     except Exception as e:
-        print(f"{Colors.FAIL}❌ Error generating data: {e}{Colors.ENDC}")
+        print(f"{Colors.FAIL}❌ Error with {operation_type} operation: {e}{Colors.ENDC}")
+
+def cli_seed():
+    """CLI interface for generating fake demo health data."""
+    cli_data_operation("seed")
 
 def cli_initialize_data():
     """CLI interface for initializing sample health data."""
-    print(f"\n{Colors.CYAN}🌟 Initialize Sample Data{Colors.ENDC}")
-    
-    try:
-        print("This will create a week of realistic sample health data to get you started.")
-        print("This is perfect for new users to see how the application works.")
-        
-        confirm = input(f"⚠️ Initialize sample data? This will overwrite any existing data for the sample dates. (yes/no): ").strip().lower()
-        if confirm not in ['yes', 'y']:
-            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
-            return
-        
-        print("🌟 Initializing sample data...")
-        count = initialize_sample_data()
-        print(f"{Colors.GREEN}✅ Initialized {count} sample entries 🌟{Colors.ENDC}")
-        print(f"{Colors.BLUE}💡 You now have a week of sample data to explore the application!{Colors.ENDC}")
-        
-    except Exception as e:
-        print(f"{Colors.FAIL}❌ Error initializing data: {e}{Colors.ENDC}")
+    cli_data_operation("sample")
 
 def cli_clear_data():
     """CLI interface for clearing all health data."""
-    print(f"\n{Colors.FAIL}🗑️ Clear All Data{Colors.ENDC}")
-    
-    try:
-        print("⚠️  WARNING: This will permanently delete ALL your health data!")
-        print("This action cannot be undone. Make sure to export your data first if you want to keep it.")
-        
-        confirm1 = input("Are you sure you want to delete all data? (yes/no): ").strip().lower()
-        if confirm1 not in ['yes', 'y']:
-            print(f"{Colors.CYAN}Operation cancelled{Colors.ENDC}")
-            return
-        
-        confirm2 = input("Type 'DELETE ALL' to confirm: ").strip()
-        if confirm2 != 'DELETE ALL':
-            print(f"{Colors.CYAN}Operation cancelled - confirmation phrase not matched{Colors.ENDC}")
-            return
-        
-        print("🗑️ Clearing all data...")
-        count = clear_all_data()
-        print(f"{Colors.GREEN}✅ Deleted {count} entries{Colors.ENDC}")
-        print(f"{Colors.BLUE}💡 Your database is now empty and ready for fresh data.{Colors.ENDC}")
-        
-    except Exception as e:
-        print(f"{Colors.FAIL}❌ Error clearing data: {e}{Colors.ENDC}")
+    cli_data_operation("clear")
 
 
 class NovaFitGUI:
@@ -1666,67 +1568,39 @@ class NovaFitGUI:
         self.steps_var.trace("w", self.validate_steps)
         self.water_var.trace("w", self.validate_water)
     
-    def validate_steps(self, *args):
-        """Provide real-time validation feedback for steps input.
-        
-        Updates the visual status indicator next to the steps field based
-        on the current input value compared to daily step goals.
-        
-        Visual indicators:
-        - 🎯 Green: Meets or exceeds step goal (10,000 steps)
-        - 👍 Orange: Meets half of step goal (5,000+ steps)  
-        - ❌ Red: Invalid input (non-numeric)
-        - Empty: No input or below half goal
+    def validate_input(self, input_type, value_str, status_widget, goal):
+        """Validación unificada para diferentes tipos de entrada.
         
         Args:
-            *args: Variable arguments from Tkinter trace callback (unused).
+            input_type: "steps" o "water"
+            value_str: Valor de entrada como string
+            status_widget: Widget para mostrar el estado
+            goal: Meta diaria para comparar
         """
         try:
-            steps_text = self.steps_var.get()
-            if not steps_text:
-                self.steps_status.config(text="", foreground="gray")
+            if not value_str:
+                status_widget.config(text="", foreground="gray")
                 return
                 
-            steps = int(steps_text)
-            if steps >= CONFIG["step_goal"]:
-                self.steps_status.config(text="🎯", foreground="green")
-            elif steps >= CONFIG["step_goal"] // 2:
-                self.steps_status.config(text="👍", foreground="orange")
+            value = int(value_str) if input_type == "steps" else float(value_str)
+            half_goal = goal // 2 if input_type == "steps" else goal / 2
+            
+            if value >= goal:
+                status_widget.config(text="🎯", foreground="green")
+            elif value >= half_goal:
+                status_widget.config(text="👍", foreground="orange")
             else:
-                self.steps_status.config(text="", foreground="gray")
+                status_widget.config(text="", foreground="gray")
         except ValueError:
-            self.steps_status.config(text="❌", foreground="red")
+            status_widget.config(text="❌", foreground="red")
+    
+    def validate_steps(self, *args):
+        """Provide real-time validation feedback for steps input."""
+        self.validate_input("steps", self.steps_var.get(), self.steps_status, CONFIG["step_goal"])
     
     def validate_water(self, *args):
-        """Provide real-time validation feedback for water input.
-        
-        Updates the visual status indicator next to the water field based
-        on the current input value compared to daily hydration goals.
-        
-        Visual indicators:
-        - 🎯 Green: Meets or exceeds water goal (2.0L)
-        - 👍 Orange: Meets half of water goal (1.0L+)
-        - ❌ Red: Invalid input (non-numeric)  
-        - Empty: No input or below half goal
-        
-        Args:
-            *args: Variable arguments from Tkinter trace callback (unused).
-        """
-        try:
-            water_text = self.water_var.get()
-            if not water_text:
-                self.water_status.config(text="", foreground="gray")
-                return
-                
-            water = float(water_text)
-            if water >= CONFIG["water_goal"]:
-                self.water_status.config(text="🎯", foreground="green")
-            elif water >= CONFIG["water_goal"] / 2:
-                self.water_status.config(text="👍", foreground="orange")
-            else:
-                self.water_status.config(text="", foreground="gray")
-        except ValueError:
-            self.water_status.config(text="❌", foreground="red")
+        """Provide real-time validation feedback for water input."""
+        self.validate_input("water", self.water_var.get(), self.water_status, CONFIG["water_goal"])
     
     def check_achievements(self, steps, water):
         """Check for goal achievements and display notifications.
