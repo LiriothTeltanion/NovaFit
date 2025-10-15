@@ -20,7 +20,7 @@ import os
 # SSL CONFIGURATION - Fix SSL certificate issues
 # =============================================================================
 def configure_ssl():
-    """Configurar SSL de forma simplificada."""
+    """Configure SSL."""
     os.environ['PYTHONHTTPSVERIFY'] = '0'
     
     # Remove problematic SSL environment variables set by PostgreSQL
