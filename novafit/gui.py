@@ -22,7 +22,7 @@ from pathlib import Path
 # --- GUI Class ---
 class NovaFitGUI:
 	def apply_dark_theme(self):
-		"""Aplica un tema moderno oscuro con colores y gradientes mejorados."""
+		"""Apply a modern dark theme with improved colors and gradients."""
 		self.style.theme_use('clam')
 		colors = {
 			'bg_primary': '#0d1117',
@@ -74,7 +74,7 @@ class NovaFitGUI:
 			self.progress_canvas.configure(bg=colors['bg_tertiary'], highlightbackground=colors['border'], highlightthickness=1)
 
 	def apply_light_theme(self):
-		"""Aplica un tema moderno claro con colores mejorados."""
+		"""Apply a modern light theme with improved colors."""
 		self.style.theme_use('clam')
 		colors = {
 			'bg_primary': '#ffffff',

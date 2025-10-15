@@ -166,7 +166,7 @@ def confirm_action(message: str, default: bool = False) -> bool:
     if not response:
         return default
     
-    return response in ['y', 'yes', 'si', 'sí']
+    return response in ['y', 'yes']
 
 
 # =============================================================================
