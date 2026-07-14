@@ -1,174 +1,182 @@
-# NovaFit — Mini Health Tracker
+<div align="center">
 
-![NovaFit Demo](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+# 🏃 NovaFit
 
-A simple daily health metrics tracker with enhanced CLI menu and professional dark-themed GUI built for the Developers Institute Hackathon.
+### Local-first health tracking through a Python CLI and Tkinter desktop interface
 
-## ✨ Features
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Quality](https://img.shields.io/github/actions/workflow/status/LiriothTeltanion/NovaFit/quality.yml?style=for-the-badge&label=smoke%20tests)](https://github.com/LiriothTeltanion/NovaFit/actions)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-### 🖥️ **Enhanced CLI Interface**
-- 🎨 **Colorized Menu**: Beautiful color-coded interface with emojis
-- 📝 **Smart Data Entry**: Enhanced validation and user-friendly prompts
-- ⚡ **Quick Entry**: Fast data entry for today with smart defaults
-- 🗑️ **Delete Entries**: Remove entries by date with confirmation
-- 🔍 **Date Range Search**: Find entries within specific date ranges
-- 📊 **Advanced Dashboard**: Comprehensive stats with trends analysis
-- 🌤️ **Weather Integration**: Multi-city weather lookup with better UX
-- 📤 **Data Export**: Export to both JSON and CSV formats
-- 📥 **Data Import**: Import from JSON and CSV files
-- 🎲 **Demo Data**: Generate realistic test data with Faker
-- 🌟 **Sample Data**: Initialize with a week of sample entries
-- 🗑️ **Data Management**: Clear all data with double confirmation
-- 🧹 **Clear Screen**: Keep your terminal organized
-- 🛡️ **Input Validation**: Robust error handling and data validation
-- ❓ **Help System**: Built-in help and user guidance
+**Steps · water · calories · mood · trends · import/export · weather**
 
-### 🖼️ **Professional GUI Interface**
-- 📑 **Tabbed Layout**: Organized into Add Entry, View Data, Dashboard, and Tools
-- 📅 **Date Picker**: Easy date selection with validation
-- 🎚️ **Interactive Sliders**: Visual input for steps and water
-- 📊 **Visual Dashboard**: Rich statistics display with goal tracking
-- 🎲 **Demo Data Generator**: Quick test data creation
-- 📁 **File Dialogs**: Professional import/export with file selection
-- 🌤️ **Weather Widget**: Integrated weather lookup
-- 📈 **Data Visualization**: Enhanced treeview for viewing entries
-- 🌙 **Enhanced Dark Theme**: Professional dark mode with custom styling
-- 🎨 **Theme Toggle**: Switch between light and dark themes with live preview
-- ✨ **Modern Styling**: Improved contrast and readability in all modes
-
-### 💾 **Core Health Tracking**
-- 📊 **Track Daily Metrics**: steps, water intake, calories, mood
-- 💾 **SQLite Database**: Reliable local data storage
-- 📁 **JSON Import/Export**: Easy data backup and sharing
-- 📄 **CSV Export/Import**: Spreadsheet-compatible data format
-- 🎯 **Goal Tracking**: Monitor progress toward daily targets
-- 📈 **Trend Analysis**: Compare recent performance with historical data
-- 🌟 **Sample Data**: Pre-loaded realistic examples for new users
-- 🎲 **Demo Generation**: Create test data with Faker library
-
-## 🚀 Quick Start
-
-### Installation
-```bash
-pip install -r requirements.txt
-```
-
-### Usage
-```bash
-# Interactive CLI
-python -m novafit.cli
-
-# Professional GUI
-python -m novafit.gui
-
-# Generate demo data (7 entries) from CLI
-python -m novafit.cli --seed 7
-
-# Windows Quick Launch
-./run_cli.bat  # Launch CLI
-./run_gui.bat  # Launch GUI
-```
-
-## 📋 Menu Options
-
-### 🖥️ **Enhanced CLI Menu**
-```
-NovaFit — Health Tracker
-========================================
-📝 Data:
-  1) ➕ Add new entry
-  2) ⚡ Quick entry for today
-  3) 📋 List recent entries
-  4) 🗑️ Delete entry by date
-📊 Analytics:
-  5) 📈 Dashboard
-  6) 🔍 Search entries
-🌐 External:
-  7) 🌤️ Weather Report
-💾 Import/Export:
-  8) 📤 Export to JSON
-  9) 📥 Import from JSON
-  10) 📊 Export to CSV
-  11) 📋 Import from CSV
-🛠️ Tools:
-  12) 🎲 Generate demo data
-  13) 🌟 Initialize sample data
-  14) 🗑️ Clear all data
-  15) 🖼️ Open GUI Interface
-  16) 🧹 Clear screen
-  17) ❓ Show help
-  0) 👋 Exit
-```
-
-### 🖼️ **GUI Tabs**
-- **➕ Add Entry**: Interactive form with sliders and validation
-- **📋 View Entries**: Sortable table with all your health data
-- **📊 Dashboard**: Visual statistics and goal tracking
-- **🛠️ Tools**: Import/export (JSON/CSV), demo data, sample data initialization, clear all data, weather lookup, and theme settings
-
-## 🗂️ Data Structure
-
-**Database**: `./data/novafit.db` (SQLite)
-```sql
-CREATE TABLE logs (
-    id INTEGER PRIMARY KEY,
-    date TEXT UNIQUE,
-    steps INTEGER,
-    water_l REAL,
-    calories INTEGER,
-    mood TEXT
-);
-```
-
-**Export**: `./data/novafit_export.json`
-```json
-{
-  "metadata": {
-    "export_date": "2025-10-15 10:30:00",
-    "total_entries": 7,
-    "application": "NovaFit Health Tracker",
-    "version": "1.0"
-  },
-  "health_data": [
-    {
-      "date": "2025-10-14",
-      "steps": 8500,
-      "water_l": 2.5,
-      "calories": 2000,
-      "mood": "😊"
-    }
-  ]
-}
-```
-
-**CSV Export**: `./data/novafit_export.csv`
-```csv
-Date,Steps,Water (L),Calories,Mood
-2025-10-14,8500,2.5,2000,😊
-2025-10-13,12000,3.0,2200,💪
-```
-
-## 🌟 Hackathon Requirements
-
-✅ **Tech Stack**: Python, JSON, SQLite Database, Files, Requests API, Faker  
-✅ **Open Source**: MIT License  
-✅ **User Friendly**: Beginner-friendly code and interface  
-✅ **Dual Interface**: Both CLI and GUI implementations  
-✅ **Complete Solution**: All specified features implemented  
-✅ **Data Portability**: Multiple export formats (JSON, CSV)  
-✅ **Sample Data**: Pre-loaded examples and demo data generation  
-
-## 👤 Author
-
-**Kevin 'Lirioth' Cusnir**  
-📅 October 14, 2025  
-🌍 TZ: Asia/Jerusalem
-
-## 📄 License
-
-MIT License - See [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
+</div>
 
 ---
 
-*Built with ❤️ for the Developers Institute Hackathon*
+## ✨ What NovaFit is
+
+NovaFit is a small offline-friendly health tracker created for a Developers
+Institute hackathon. It stores daily metrics in a local SQLite database and
+offers two interfaces over the same data:
+
+- 🖥️ an interactive command-line application;
+- 🪟 a Tkinter desktop GUI;
+- 📊 dashboards and goal progress;
+- 📁 JSON and CSV import/export;
+- 🎲 sample and Faker-generated data;
+- 🌦️ optional current weather from Open-Meteo.
+
+The health database and personal exports stay inside the local `data/` folder
+and are ignored by Git.
+
+> **Important:** NovaFit is a local Python application, not a browser app.
+> GitHub Pages cannot execute Python or Tkinter. The GitHub repository is the
+> source and documentation; a public live demo would require a separate web
+> frontend.
+
+## 🚀 Windows quick start
+
+### CLI
+
+Double-click:
+
+```text
+run_cli.bat
+```
+
+### GUI
+
+Double-click:
+
+```text
+run_gui.bat
+```
+
+On first launch, the scripts call `setup.bat`, create `.venv`, install the
+dependencies and then start NovaFit.
+
+## 💻 Manual setup
+
+```powershell
+git clone https://github.com/LiriothTeltanion/NovaFit.git
+cd NovaFit
+
+py -3 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+
+# CLI
+.venv\Scripts\python -m novafit.cli
+
+# GUI
+.venv\Scripts\python -m novafit.gui
+```
+
+Python 3.10 or newer is recommended.
+
+## 🧪 Validate the repository
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\check_novafit.ps1 -InstallDependencies
+```
+
+The diagnostic script verifies required files, compiles the package, runs smoke
+tests and explains the GitHub Pages limitation.
+
+Equivalent manual checks:
+
+```powershell
+.venv\Scripts\python -m compileall -q novafit
+.venv\Scripts\python -m unittest discover -s tests -v
+```
+
+GitHub Actions runs the same smoke checks on pushes and pull requests.
+
+## 🧭 CLI capabilities
+
+```text
+📝 Add or update daily entries
+⚡ Quick entry for today
+📋 List recent entries
+🗑️ Delete an entry
+📈 View dashboard summaries
+🔍 Search a date range
+🌦️ Fetch weather for supported Israeli cities
+📤 Export JSON or CSV
+📥 Import JSON or CSV
+🎲 Generate demonstration data
+🌟 Load sample data
+```
+
+## 🗂️ Project structure
+
+```text
+NovaFit/
+├─ novafit/
+│  ├─ __init__.py
+│  ├─ cli.py
+│  ├─ gui.py
+│  ├─ config.py
+│  ├─ database.py
+│  ├─ export.py
+│  ├─ utils.py
+│  └─ weather.py
+├─ tests/
+│  └─ test_smoke.py
+├─ .github/workflows/
+│  └─ quality.yml
+├─ setup.bat
+├─ run_cli.bat
+├─ run_gui.bat
+├─ check_novafit.ps1
+├─ requirements.txt
+└─ README.md
+```
+
+## 💾 Local data
+
+NovaFit creates files under `data/`, including:
+
+- `novafit.db` — SQLite health log;
+- `config.json` — local preferences;
+- JSON/CSV exports selected by the user.
+
+These files are intentionally excluded by `.gitignore`. Commit only fictional
+sample data that is explicitly safe to share.
+
+## 🔒 Network and privacy notes
+
+- Health logs are stored locally.
+- Weather lookup is optional.
+- Weather requests use normal HTTPS certificate verification.
+- NovaFit does not require an API key for Open-Meteo.
+- Do not commit real health exports or the local SQLite database.
+
+## 🛠️ Current status
+
+This repository was restored after a commit accidentally removed the complete
+`novafit/` package while leaving launchers and documentation behind. The
+restoration reintroduces the application modules, adds repeatable diagnostics
+and removes the previous TLS-verification bypass.
+
+The project remains an educational desktop application. Before presenting it
+as a production health product, it would need broader automated tests,
+accessibility review, packaging, data migrations and a clearer privacy policy.
+
+## 🗺️ Practical roadmap
+
+1. Package a signed Windows executable.
+2. Add database migration tests and import-validation tests.
+3. Add charts to the GUI with a lightweight plotting layer.
+4. Separate user-facing text for English, Spanish and Hebrew.
+5. Build an optional web companion instead of trying to run Tkinter on Pages.
+6. Publish versioned releases only after automated checks pass.
+
+## 👤 Author
+
+**Kevin Cusnir · Lirioth Teltanion**  
+Developers Institute full-stack project · Beersheba, Israel
+
+## 📄 License
+
+MIT — see `LICENSE`.

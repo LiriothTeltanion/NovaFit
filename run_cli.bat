@@ -1,19 +1,33 @@
 @echo off
-setlocal
-set CURRENT_DIR=%~dp0
-cd /d %CURRENT_DIR%
-if not exist "%CURRENT_DIR%novafit" (
-	echo ERROR: Run this file from the NovaFit folder where the 'novafit' folder is located.
-	echo.
-	echo Press any key to close...
-	pause >nul
-	exit /b
+setlocal EnableExtensions
+chcp 65001 >nul
+cd /d "%~dp0"
+title NovaFit CLI
+
+if not exist "novafit\cli.py" (
+  echo ❌ NovaFit source files are missing.
+  echo Expected: %CD%\novafit\cli.py
+  pause
+  exit /b 1
 )
-echo ========================================
-echo      NovaFit - CLI Interface
-echo ========================================
+
+if not exist ".venv\Scripts\python.exe" (
+  call "%~dp0setup.bat"
+  if errorlevel 1 (
+    pause
+    exit /b 1
+  )
+)
+
 echo.
-python -m novafit.cli
+echo 🏃 Starting NovaFit CLI...
 echo.
-echo Press any key to close...
-pause >nul
+".venv\Scripts\python.exe" -m novafit.cli %*
+set "EXIT_CODE=%ERRORLEVEL%"
+
+if not "%EXIT_CODE%"=="0" (
+  echo.
+  echo ❌ NovaFit CLI stopped with exit code %EXIT_CODE%.
+  pause
+)
+exit /b %EXIT_CODE%
