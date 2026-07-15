@@ -2,7 +2,7 @@
 
 ## Goal
 
-NovaFit 4.0 allows several people or several personal contexts to share one local installation without mixing records.
+NovaFit 4.1 allows several people or several personal contexts to share one local installation without mixing records.
 
 ## Profile fields
 

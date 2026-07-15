@@ -2,12 +2,14 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/hebrew-rtl-command-center.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.0" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.1" />
 </picture>
 
-# NovaFit Ultimate 4.0 💙
+# NovaFit Ultimate 4.1 💙
 
 ### מערכת מקומית לתיעוד, ניתוח ומוטיבציה · פרופילים מרובים · אנגלית/ספרדית/עברית · 12 ערכות נושא
+
+[![איכות NovaFit](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
 
 [English](README.md) · [Español](README_ES.md) · [עברית](README_HE.md)
 
@@ -21,20 +23,22 @@
 
 NovaFit היא אפליקציית שולחן עבודה ושורת פקודה מקומית. היא שומרת צעדים, מים, קלוריות אופציונליות, מצב רוח והערות פרטיות ב־SQLite במכשיר שלך.
 
-גרסה 4.0 כוללת:
+גרסה **4.1.0** כוללת:
 
 - פרופילי משתמשים מבודדים;
-- מעבר בין אנגלית, ספרדית ועברית;
-- ממשק RTL אמיתי בעברית;
+- טקסט מלא באנגלית, ספרדית ועברית;
+- מבנה RTL אמיתי בפאנלים, טפסים, כרטיסים וטבלאות;
 - 12 ערכות נושא;
 - ארבע תצוגות ניתוח;
 - מרכז מוטיבציה והתאוששות;
 - מאמן פעילות ונתונים;
-- אייקונים מותאמי ערכת נושא;
-- גיבויי JSON/CSV;
+- אייקונים חדים עם מצב פעיל ומצב מעומעם;
+- אנימציות יעילות שנעצרות כשהמסך מוסתר ותומכות בהפחתת תנועה;
+- תרשימים רספונסיביים ללא חפיפות;
+- ייצוא JSON/CSV וגיבוי ZIP מלא עם בדיקת שלמות;
 - דוחות HTML ללא שרת;
 - CLI מורחב;
-- תיקון סביבת Windows אוטומטי;
+- הפעלה, תיקון ואימות מלאים בלחיצה אחת ב־Windows;
 - בדיקה ששומרת על מסד הנתונים האישי.
 
 > NovaFit מספקת מידע כללי ותיאורי בלבד. היא אינה ייעוץ רפואי, אבחון, טיפול או תוכנית אימון מקצועית.
@@ -145,23 +149,19 @@ python -m novafit.cli \
 
 ---
 
-## 🪟 התקנה ב־Windows
+## 🪟 הפעלה בלחיצה אחת ב־Windows
 
-1. חלץ לתיקייה קצרה, למשל `C:\NovaFit-Ultimate`.
-2. הפעל `REPAIR_AND_VERIFY.bat`.
-3. לאחר הצלחה, הפעל `run_novafit.bat`.
+1. אפשר להשאיר את הפרויקט במיקום הנוכחי ב־OneDrive.
+2. לחץ פעמיים על `run_novafit.bat` כדי לתקן את הסביבה בעת הצורך ולפתוח את NovaFit.
+3. לפני פרסום, לחץ פעמיים על `VERIFY_ALL.bat` כדי להריץ את כל בדיקות האיכות.
 
-הבודק יוצר `.venv`, מתקין תלויות, בודק `Asia/Jerusalem`, מריץ **74 בדיקות** ומבצע smoke workflow מבודד.
+הבודק יוצר `.venv`, מתקין תלויות, בודק `Asia/Jerusalem`, מגלה את כל הבדיקות הנוכחיות, מאמת תיעוד ונכסים, מריץ Ruff/Pyright ומבצע smoke workflow מבודד.
 
 ---
 
 ## 🧪 תוצאה שנבדקה
 
-```text
-74 בדיקות
-74 עברו
-0 נכשלו
-```
+התג בראש הדף מציג את מצב ה־commit הנוכחי ב־`main`. הגרסה, מספר הבדיקות שהתגלו, ערכות הנושא וגודל הנכסים נוצרים אוטומטית בקובץ [PROJECT_FACTS.md](docs/PROJECT_FACTS.md), ולכן אין במסמך מספר ישן שנכתב ידנית.
 
 נבדקו גם SQLite, מיגרציה, JSON/CSV, תרשימי PNG, דוח HTML, פרופילים, עברית RTL, המלצות, CLI והתנהגות ההפצה.
 
@@ -185,5 +185,7 @@ python -m novafit.cli \
 ## 📄 רישיון
 
 MIT — ראו [LICENSE](LICENSE).
+
+**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

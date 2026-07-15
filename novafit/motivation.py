@@ -15,6 +15,7 @@ from typing import Iterable
 
 from .analytics import DashboardStats, calculate_dashboard
 from .config import AppSettings
+from .i18n import normalize_language, tr
 from .models import HealthEntry
 
 
@@ -72,16 +73,7 @@ class MotivationSnapshot:
     achievements: tuple[Achievement, ...]
 
 
-SPARKS = (
-    "Small records become strong evidence when you keep showing up.",
-    "A calm system beats a perfect day. Build the next repeatable step.",
-    "Progress is easier to trust when you can see it clearly.",
-    "Consistency is not intensity every day; it is returning with intention.",
-    "Your data is a mirror, not a judge. Use it to choose the next useful action.",
-    "One honest entry today protects the story your future self will need.",
-    "Momentum grows when the next action is small enough to begin now.",
-    "Build steadily, recover deliberately, and let the evidence accumulate.",
-)
+SPARK_KEYS = tuple(f"spark_{index}" for index in range(1, 9))
 
 
 def build_motivation_snapshot(
@@ -110,30 +102,31 @@ def build_motivation_snapshot(
         'Begin with one honest record.'
     """
     settings.validate()
+    language = normalize_language(settings.language)
     rows = list(entries)
     stats = calculate_dashboard(rows, settings)
     current_date = today or date.today()
-    spark_index = (current_date.toordinal() + stats.entry_count + spark_offset) % len(SPARKS)
-    spark = SPARKS[spark_index]
+    spark_index = (current_date.toordinal() + stats.entry_count + spark_offset) % len(SPARK_KEYS)
+    spark = tr(language, SPARK_KEYS[spark_index])
 
     if stats.entry_count == 0:
         return MotivationSnapshot(
-            headline="Begin with one honest record.",
-            message="NovaFit has no history yet. One entry is enough to unlock your first dashboard and badge.",
+            headline=tr(language, "motivation_empty_headline"),
+            message=tr(language, "motivation_empty_message"),
             daily_spark=spark,
-            micro_action="Record today's steps, water, mood, and one private note.",
-            weekly_challenge="Track three days this week. Accuracy matters more than perfection.",
-            next_milestone="First tracked day",
+            micro_action=tr(language, "motivation_empty_action"),
+            weekly_challenge=tr(language, "motivation_empty_challenge"),
+            next_milestone=tr(language, "motivation_first_milestone"),
             milestone_progress_pct=0,
             celebration_level=0,
-            achievements=_achievements(stats),
+            achievements=_achievements(stats, language),
         )
 
-    headline = _headline(stats)
-    message = _message(stats)
-    micro_action = _micro_action(stats, settings)
-    challenge = _weekly_challenge(stats)
-    milestone, progress = _next_milestone(stats)
+    headline = _headline(stats, language)
+    message = _message(stats, language)
+    micro_action = _micro_action(stats, settings, language)
+    challenge = _weekly_challenge(stats, language)
+    milestone, progress = _next_milestone(stats, language)
     celebration = 3 if stats.consistency_score >= 85 else 2 if stats.consistency_score >= 65 else 1
     return MotivationSnapshot(
         headline=headline,
@@ -144,7 +137,7 @@ def build_motivation_snapshot(
         next_milestone=milestone,
         milestone_progress_pct=progress,
         celebration_level=celebration,
-        achievements=_achievements(stats),
+        achievements=_achievements(stats, language),
     )
 
 
@@ -162,58 +155,65 @@ def format_motivation(snapshot: MotivationSnapshot, settings: AppSettings) -> st
         >>> "MOTIVATION CENTER" in format_motivation(build_motivation_snapshot([], AppSettings()), AppSettings())
         True
     """
+    language = normalize_language(settings.language)
     earned = sum(item.earned for item in snapshot.achievements)
-    mission = settings.personal_why.strip() or "Define your personal why in the desktop Motivation Center."
+    mission = settings.personal_why.strip() or tr(language, "motivation_define_why")
     focus = settings.weekly_focus.strip() or snapshot.weekly_challenge
     return "\n".join(
         (
-            "NOVA MOTIVATION CENTER & RECOVERY LAB",
+            tr(language, "motivation_report_title"),
             "=" * 42,
             snapshot.headline,
             snapshot.message,
             "",
-            f"Daily spark: {snapshot.daily_spark}",
-            f"Next action: {snapshot.micro_action}",
-            f"Weekly focus: {focus}",
-            f"Next milestone: {snapshot.next_milestone} ({snapshot.milestone_progress_pct}%)",
-            f"Achievements: {earned}/{len(snapshot.achievements)}",
-            f"Personal why: {mission}",
+            f"{tr(language, 'daily_spark')}: {snapshot.daily_spark}",
+            f"{tr(language, 'next_action')}: {snapshot.micro_action}",
+            f"{tr(language, 'motivation_weekly_focus')}: {focus}",
+            f"{tr(language, 'motivation_next_milestone')}: {snapshot.next_milestone} ({snapshot.milestone_progress_pct}%)",
+            f"{tr(language, 'motivation_constellation')}: {earned}/{len(snapshot.achievements)}",
+            f"{tr(language, 'personal_why')}: {mission}",
             "",
-            "This is encouragement from your own tracking data, not medical advice.",
+            tr(language, "motivation_scope"),
         )
     )
 
 
-def _headline(stats: DashboardStats) -> str:
+def _headline(stats: DashboardStats, language: str) -> str:
     if stats.current_streak_days >= 14:
-        return f"A {stats.current_streak_days}-day rhythm is real momentum."
+        return tr(language, "motivation_headline_streak", days=stats.current_streak_days)
     if stats.consistency_score >= 80:
-        return "Your system is becoming dependable."
+        return tr(language, "motivation_headline_dependable")
     if stats.recent_step_change_pct is not None and stats.recent_step_change_pct > 8:
-        return "Your recent movement trend is climbing."
+        return tr(language, "motivation_headline_climbing")
     if stats.active_last_7_days >= 5:
-        return "You kept returning this week."
-    return "The next useful day can change the pattern."
+        return tr(language, "motivation_headline_returning")
+    return tr(language, "motivation_headline_next")
 
 
-def _message(stats: DashboardStats) -> str:
-    return (
-        f"You have {stats.entry_count} tracked day(s), {stats.current_streak_days} in the current streak, "
-        f"and a transparent routine score of {stats.consistency_score}/100. "
-        f"Both configured goals were met on {stats.perfect_goal_days} tracked day(s)."
+def _message(stats: DashboardStats, language: str) -> str:
+    return tr(
+        language,
+        "motivation_message",
+        entries=stats.entry_count,
+        streak=stats.current_streak_days,
+        score=stats.consistency_score,
+        perfect=stats.perfect_goal_days,
     )
 
 
-def _micro_action(stats: DashboardStats, settings: AppSettings) -> str:
+def _micro_action(stats: DashboardStats, settings: AppSettings, language: str) -> str:
     candidates = (
-        (stats.tracking_coverage_pct, "Protect the record: add today's entry before the day ends."),
-        (stats.step_goal_rate_pct, f"Choose one realistic movement block toward {settings.step_goal:,} steps."),
-        (stats.water_goal_rate_pct, f"Make the next glass visible and work toward {settings.water_goal_l:.1f} L."),
+        (stats.tracking_coverage_pct, tr(language, "motivation_action_tracking")),
+        (stats.step_goal_rate_pct, tr(language, "motivation_action_steps", goal=f"{settings.step_goal:,}")),
+        (
+            stats.water_goal_rate_pct,
+            tr(language, "motivation_action_water", goal=f"{settings.water_goal_l:.1f}"),
+        ),
     )
     return min(candidates, key=lambda item: item[0])[1]
 
 
-def _weekly_challenge(stats: DashboardStats) -> str:
+def _weekly_challenge(stats: DashboardStats, language: str) -> str:
     weakest = min(
         (
             (stats.tracking_coverage_pct, "tracking"),
@@ -223,38 +223,42 @@ def _weekly_challenge(stats: DashboardStats) -> str:
         key=lambda item: item[0],
     )[1]
     if weakest == "tracking":
-        return "Complete five short check-ins across the next seven days."
+        return tr(language, "motivation_challenge_tracking")
     if weakest == "steps":
-        return "Add one intentional walk or movement break on four days this week."
-    return "Use a visible hydration cue and record the result on five days this week."
+        return tr(language, "motivation_challenge_steps")
+    return tr(language, "motivation_challenge_water")
 
 
-def _next_milestone(stats: DashboardStats) -> tuple[str, int]:
+def _next_milestone(stats: DashboardStats, language: str) -> tuple[str, int]:
     for target in (3, 7, 14, 30, 60, 90, 180, 365):
         if stats.entry_count < target:
-            return f"{target} tracked days", min(99, round((stats.entry_count / target) * 100))
+            return tr(language, "motivation_milestone_days", target=target), min(
+                99, round((stats.entry_count / target) * 100)
+            )
     for target in (3, 7, 14, 30, 60):
         if stats.current_streak_days < target:
-            return f"{target}-day tracking streak", min(99, round((stats.current_streak_days / target) * 100))
-    return "365-day archive complete", 100
+            return tr(language, "motivation_milestone_streak", target=target), min(
+                99, round((stats.current_streak_days / target) * 100)
+            )
+    return tr(language, "motivation_archive_complete"), 100
 
 
-def _achievements(stats: DashboardStats) -> tuple[Achievement, ...]:
+def _achievements(stats: DashboardStats, language: str) -> tuple[Achievement, ...]:
     specifications = (
-        ("First Signal", "Track the first day.", stats.entry_count, 1, "🌱"),
-        ("Week Builder", "Collect seven tracked days.", stats.entry_count, 7, "🧱"),
-        ("Month of Evidence", "Collect thirty tracked days.", stats.entry_count, 30, "🗓️"),
-        ("Rhythm Keeper", "Reach a seven-day tracking streak.", stats.longest_tracking_streak_days, 7, "🔥"),
-        ("Goal Fusion", "Meet both goals on seven dates.", stats.perfect_goal_days, 7, "✨"),
-        ("Momentum 75", "Reach a routine score of 75.", stats.consistency_score, 75, "🚀"),
+        ("achievement_first_title", "achievement_first_body", stats.entry_count, 1, "🌱"),
+        ("achievement_week_title", "achievement_week_body", stats.entry_count, 7, "🧱"),
+        ("achievement_month_title", "achievement_month_body", stats.entry_count, 30, "🗓️"),
+        ("achievement_rhythm_title", "achievement_rhythm_body", stats.longest_tracking_streak_days, 7, "🔥"),
+        ("achievement_goals_title", "achievement_goals_body", stats.perfect_goal_days, 7, "✨"),
+        ("achievement_momentum_title", "achievement_momentum_body", stats.consistency_score, 75, "🚀"),
     )
     return tuple(
         Achievement(
-            title=title,
-            description=description,
+            title=tr(language, title_key),
+            description=tr(language, description_key),
             earned=value >= target,
             progress_pct=min(100, round((value / target) * 100)) if target else 100,
             icon=icon,
         )
-        for title, description, value, target, icon in specifications
+        for title_key, description_key, value, target, icon in specifications
     )

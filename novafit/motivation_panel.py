@@ -15,6 +15,7 @@ from tkinter import ttk
 
 from .analytics import DashboardStats
 from .config import AppSettings
+from .i18n import direction_for, normalize_language, tr
 from .models import HealthEntry
 from .motivation import MotivationSnapshot, build_motivation_snapshot
 from .ui_components import FocusBreathingCanvas, MotivationGalaxyCanvas
@@ -51,6 +52,8 @@ class MotivationCenterPanel(ttk.Frame):
         self._stats = DashboardStats.empty()
         self._snapshot = build_motivation_snapshot([], settings)
         self._spark_offset = 0
+        self.language = normalize_language(settings.language)
+        self._rtl = direction_for(self.language) == "rtl"
 
         self.headline_var = tk.StringVar()
         self.message_var = tk.StringVar()
@@ -63,8 +66,8 @@ class MotivationCenterPanel(ttk.Frame):
         self.reward_note_var = tk.StringVar(value=settings.reward_note)
         self.metric_vars = {
             "momentum": tk.StringVar(value="0/100"),
-            "streak": tk.StringVar(value="0 days"),
-            "perfect": tk.StringVar(value="0 days"),
+            "streak": tk.StringVar(value=tr(self.language, "day_count", count=0)),
+            "perfect": tk.StringVar(value=tr(self.language, "day_count", count=0)),
             "earned": tk.StringVar(value="0/6"),
         }
         self._build_scroll_shell()
@@ -95,11 +98,21 @@ class MotivationCenterPanel(ttk.Frame):
         scrollbar.grid(row=0, column=1, sticky="ns")
 
         self.content = ttk.Frame(self.scroll_canvas, style="Panel.TFrame", padding=(4, 4, 10, 14))
-        self._window_id = self.scroll_canvas.create_window((0, 0), window=self.content, anchor="nw")
+        self._window_id = self.scroll_canvas.create_window(
+            (0, 0),
+            window=self.content,
+            anchor="ne" if self._rtl else "nw",
+        )
         self.content.bind("<Configure>", self._update_scroll_region, add="+")
         self.scroll_canvas.bind("<Configure>", self._resize_content, add="+")
-        self.scroll_canvas.bind("<Enter>", lambda _event: self.scroll_canvas.bind_all("<MouseWheel>", self._on_mousewheel), add="+")
-        self.scroll_canvas.bind("<Leave>", lambda _event: self.scroll_canvas.unbind_all("<MouseWheel>"), add="+")
+        self.scroll_canvas.bind(
+            "<Enter>",
+            lambda _event: self.scroll_canvas.bind_all("<MouseWheel>", self._on_mousewheel),
+            add="+",
+        )
+        self.scroll_canvas.bind(
+            "<Leave>", lambda _event: self.scroll_canvas.unbind_all("<MouseWheel>"), add="+"
+        )
 
     def _build_content(self) -> None:
         """Build Motivation Center cards inside the scroll container.
@@ -111,100 +124,178 @@ class MotivationCenterPanel(ttk.Frame):
             >>> panel._build_content()  # doctest: +SKIP
         """
         self.content.columnconfigure(0, weight=1)
+        anchor = "e" if self._rtl else "w"
+        justify = "right" if self._rtl else "left"
+        start_side = "right" if self._rtl else "left"
         palette = self._palette_provider()
         self.galaxy = MotivationGalaxyCanvas(
             self.content,
             palette,
             reduced_motion=self.settings.reduce_motion,
             height=145,
+            language=self.language,
         )
         self.galaxy.grid(row=0, column=0, sticky="ew", pady=(0, 12))
 
         hero = ttk.Frame(self.content, style="Card.TFrame", padding=18)
         hero.grid(row=1, column=0, sticky="ew", pady=(0, 12))
         hero.columnconfigure(0, weight=1)
-        ttk.Label(hero, textvariable=self.headline_var, style="CardValue.TLabel", font=("Segoe UI", 18, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(hero, textvariable=self.message_var, style="CardTitle.TLabel", wraplength=900, justify="left").grid(row=1, column=0, sticky="w", pady=(8, 8))
+        ttk.Label(
+            hero,
+            textvariable=self.headline_var,
+            style="CardValue.TLabel",
+            font=("Segoe UI", 18, "bold"),
+            anchor=anchor,
+            justify=justify,
+        ).grid(row=0, column=0, sticky="ew")
+        ttk.Label(
+            hero,
+            textvariable=self.message_var,
+            style="CardTitle.TLabel",
+            wraplength=900,
+            justify=justify,
+            anchor=anchor,
+        ).grid(row=1, column=0, sticky="ew", pady=(8, 8))
         spark_row = ttk.Frame(hero, style="Card.TFrame")
         spark_row.grid(row=2, column=0, sticky="ew")
-        spark_row.columnconfigure(0, weight=1)
-        ttk.Label(spark_row, textvariable=self.spark_var, style="Panel.TLabel", wraplength=780, justify="left").grid(row=0, column=0, sticky="w")
-        ttk.Button(spark_row, text="New spark", command=self._new_spark).grid(row=0, column=1, padx=(14, 0))
-        ttk.Button(spark_row, text="Celebrate", style="Accent.TButton", command=self._celebrate).grid(row=0, column=2, padx=(8, 0))
+        spark_column = 2 if self._rtl else 0
+        celebrate_column = 0 if self._rtl else 2
+        spark_row.columnconfigure(spark_column, weight=1)
+        ttk.Label(
+            spark_row,
+            textvariable=self.spark_var,
+            style="Panel.TLabel",
+            wraplength=780,
+            justify=justify,
+            anchor=anchor,
+        ).grid(row=0, column=spark_column, sticky="ew")
+        ttk.Button(
+            spark_row,
+            text=tr(self.language, "motivation_new_spark"),
+            command=self._new_spark,
+        ).grid(row=0, column=1, padx=8)
+        ttk.Button(
+            spark_row,
+            text=tr(self.language, "motivation_celebrate"),
+            style="Accent.TButton",
+            command=self._celebrate,
+        ).grid(row=0, column=celebrate_column)
 
         body = ttk.Frame(self.content, style="Panel.TFrame")
         body.grid(row=2, column=0, sticky="ew")
-        body.columnconfigure(0, weight=3)
-        body.columnconfigure(1, weight=2)
+        main_column = 1 if self._rtl else 0
+        purpose_column = 0 if self._rtl else 1
+        body.columnconfigure(main_column, weight=3)
+        body.columnconfigure(purpose_column, weight=2)
         left = ttk.Frame(body, style="Panel.TFrame")
         right = ttk.Frame(body, style="Panel.TFrame")
-        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
-        right.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+        left.grid(row=0, column=main_column, sticky="nsew", padx=6)
+        right.grid(row=0, column=purpose_column, sticky="nsew", padx=6)
 
         cards = ttk.Frame(left, style="Panel.TFrame")
         cards.pack(fill="x", pady=(0, 10))
-        for index, (key, title) in enumerate((
-            ("momentum", "Momentum"),
-            ("streak", "Current streak"),
-            ("perfect", "Combined-goal days"),
-            ("earned", "Badges earned"),
-        )):
-            cards.columnconfigure(index, weight=1)
+        for index, (key, title) in enumerate(
+            (
+                ("momentum", "motivation_momentum"),
+                ("streak", "motivation_current_streak"),
+                ("perfect", "motivation_combined_days"),
+                ("earned", "motivation_badges_earned"),
+            )
+        ):
+            column = 3 - index if self._rtl else index
+            cards.columnconfigure(column, weight=1)
             card = ttk.Frame(cards, style="Card.TFrame", padding=14)
-            card.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 5, 0))
-            ttk.Label(card, text=title.upper(), style="CardTitle.TLabel").pack(anchor="w")
-            ttk.Label(card, textvariable=self.metric_vars[key], style="CardValue.TLabel").pack(anchor="w", pady=(6, 0))
+            card.grid(row=0, column=column, sticky="nsew", padx=3)
+            ttk.Label(card, text=tr(self.language, title).upper(), style="CardTitle.TLabel").pack(
+                anchor=anchor
+            )
+            ttk.Label(card, textvariable=self.metric_vars[key], style="CardValue.TLabel").pack(
+                anchor=anchor, pady=(6, 0)
+            )
 
         mission = ttk.Frame(left, style="Card.TFrame", padding=18)
         mission.pack(fill="x", pady=(0, 10))
-        ttk.Label(mission, text="NEXT USEFUL ACTION", style="CardTitle.TLabel").pack(anchor="w")
-        ttk.Label(mission, textvariable=self.action_var, style="Panel.TLabel", wraplength=720, justify="left").pack(anchor="w", pady=(6, 12))
-        ttk.Label(mission, text="THIS WEEK'S CHALLENGE", style="CardTitle.TLabel").pack(anchor="w")
-        ttk.Label(mission, textvariable=self.challenge_var, style="Panel.TLabel", wraplength=720, justify="left").pack(anchor="w", pady=(6, 12))
-        ttk.Label(mission, text="NEXT MILESTONE", style="CardTitle.TLabel").pack(anchor="w")
-        ttk.Label(mission, textvariable=self.milestone_var, style="Panel.TLabel").pack(anchor="w", pady=(6, 5))
+        ttk.Label(
+            mission, text=tr(self.language, "motivation_next_action").upper(), style="CardTitle.TLabel"
+        ).pack(anchor=anchor)
+        ttk.Label(
+            mission, textvariable=self.action_var, style="Panel.TLabel", wraplength=720, justify=justify
+        ).pack(anchor=anchor, pady=(6, 12))
+        ttk.Label(
+            mission, text=tr(self.language, "motivation_week_challenge").upper(), style="CardTitle.TLabel"
+        ).pack(anchor=anchor)
+        ttk.Label(
+            mission, textvariable=self.challenge_var, style="Panel.TLabel", wraplength=720, justify=justify
+        ).pack(anchor=anchor, pady=(6, 12))
+        ttk.Label(
+            mission, text=tr(self.language, "motivation_next_milestone").upper(), style="CardTitle.TLabel"
+        ).pack(anchor=anchor)
+        ttk.Label(mission, textvariable=self.milestone_var, style="Panel.TLabel", justify=justify).pack(
+            anchor=anchor, pady=(6, 5)
+        )
         self.milestone_progress = ttk.Progressbar(mission, maximum=100)
         self.milestone_progress.pack(fill="x")
 
         badge_shell = ttk.Frame(left, style="Card.TFrame", padding=18)
         badge_shell.pack(fill="x")
-        ttk.Label(badge_shell, text="ACHIEVEMENT CONSTELLATION", style="CardValue.TLabel").pack(anchor="w", pady=(0, 10))
+        ttk.Label(
+            badge_shell, text=tr(self.language, "motivation_constellation").upper(), style="CardValue.TLabel"
+        ).pack(anchor=anchor, pady=(0, 10))
         self.badge_frame = ttk.Frame(badge_shell, style="Card.TFrame")
         self.badge_frame.pack(fill="x")
 
         purpose = ttk.Frame(right, style="Card.TFrame", padding=18)
         purpose.pack(fill="x", pady=(0, 10))
-        ttk.Label(purpose, text="PURPOSE BOARD", style="CardValue.TLabel").pack(anchor="w")
-        ttk.Label(purpose, text="Keep these short, private, and personally meaningful.", style="CardTitle.TLabel").pack(anchor="w", pady=(4, 10))
+        ttk.Label(
+            purpose, text=tr(self.language, "motivation_purpose_board").upper(), style="CardValue.TLabel"
+        ).pack(anchor=anchor)
+        ttk.Label(
+            purpose,
+            text=tr(self.language, "motivation_purpose_hint"),
+            style="CardTitle.TLabel",
+            justify=justify,
+        ).pack(anchor=anchor, pady=(4, 10))
         for label, variable in (
-            ("Why this matters", self.personal_why_var),
-            ("Weekly focus", self.weekly_focus_var),
-            ("Reward / recovery note", self.reward_note_var),
+            (tr(self.language, "motivation_personal_why"), self.personal_why_var),
+            (tr(self.language, "motivation_weekly_focus"), self.weekly_focus_var),
+            (tr(self.language, "motivation_reward_note"), self.reward_note_var),
         ):
-            ttk.Label(purpose, text=label, style="CardTitle.TLabel").pack(anchor="w", pady=(7, 3))
-            ttk.Entry(purpose, textvariable=variable).pack(fill="x")
-        ttk.Button(purpose, text="Save purpose board", style="Accent.TButton", command=self._save_purpose).pack(fill="x", pady=(14, 0))
+            ttk.Label(purpose, text=label, style="CardTitle.TLabel").pack(anchor=anchor, pady=(7, 3))
+            ttk.Entry(purpose, textvariable=variable, justify=justify).pack(fill="x")
+        ttk.Button(
+            purpose,
+            text=tr(self.language, "motivation_save_purpose"),
+            style="Accent.TButton",
+            command=self._save_purpose,
+        ).pack(fill="x", pady=(14, 0))
 
         reset_card = ttk.Frame(right, style="Card.TFrame", padding=18)
         reset_card.pack(fill="x")
-        ttk.Label(reset_card, text="60-SECOND FOCUS RESET", style="CardValue.TLabel").pack(anchor="w")
+        ttk.Label(
+            reset_card, text=tr(self.language, "motivation_focus_reset").upper(), style="CardValue.TLabel"
+        ).pack(anchor=anchor)
         ttk.Label(
             reset_card,
-            text="A visual pause for attention and pacing. It is not a medical breathing exercise.",
+            text=tr(self.language, "motivation_focus_hint"),
             style="CardTitle.TLabel",
             wraplength=360,
-            justify="left",
-        ).pack(anchor="w", pady=(5, 10))
+            justify=justify,
+        ).pack(anchor=anchor, pady=(5, 10))
         self.focus_canvas = FocusBreathingCanvas(
             reset_card,
             palette,
             reduced_motion=self.settings.reduce_motion,
+            language=self.language,
         )
         self.focus_canvas.pack(pady=(4, 10))
         controls = ttk.Frame(reset_card, style="Card.TFrame")
         controls.pack(fill="x")
-        ttk.Button(controls, text="Start reset", command=self.focus_canvas.start).pack(side="left", expand=True, fill="x", padx=(0, 4))
-        ttk.Button(controls, text="Stop", command=self.focus_canvas.stop).pack(side="left", expand=True, fill="x", padx=(4, 0))
+        ttk.Button(
+            controls, text=tr(self.language, "motivation_start_reset"), command=self.focus_canvas.start
+        ).pack(side=start_side, expand=True, fill="x", padx=4)
+        ttk.Button(controls, text=tr(self.language, "stop"), command=self.focus_canvas.stop).pack(
+            side=start_side, expand=True, fill="x", padx=4
+        )
 
     def refresh(
         self,
@@ -228,6 +319,10 @@ class MotivationCenterPanel(ttk.Frame):
         self._entries = list(entries)
         self._stats = stats
         self.settings = settings
+        self.language = normalize_language(settings.language)
+        self._rtl = direction_for(self.language) == "rtl"
+        self.galaxy.set_language(self.language)
+        self.focus_canvas.set_language(self.language)
         self._snapshot = build_motivation_snapshot(
             self._entries,
             settings,
@@ -241,8 +336,8 @@ class MotivationCenterPanel(ttk.Frame):
         self.milestone_var.set(self._snapshot.next_milestone)
         self.milestone_progress["value"] = self._snapshot.milestone_progress_pct
         self.metric_vars["momentum"].set(f"{stats.consistency_score}/100")
-        self.metric_vars["streak"].set(f"{stats.current_streak_days} days")
-        self.metric_vars["perfect"].set(f"{stats.perfect_goal_days} days")
+        self.metric_vars["streak"].set(tr(self.language, "day_count", count=stats.current_streak_days))
+        self.metric_vars["perfect"].set(tr(self.language, "day_count", count=stats.perfect_goal_days))
         earned = sum(item.earned for item in self._snapshot.achievements)
         self.metric_vars["earned"].set(f"{earned}/{len(self._snapshot.achievements)}")
         self.personal_why_var.set(settings.personal_why)
@@ -265,29 +360,46 @@ class MotivationCenterPanel(ttk.Frame):
         self.scroll_canvas.configure(background=palette["bg"])
         self.galaxy.set_palette(palette)
         self.galaxy.set_reduced_motion(self.settings.reduce_motion)
+        self.galaxy.set_language(self.language)
         self.focus_canvas.set_palette(palette)
         self.focus_canvas.set_reduced_motion(self.settings.reduce_motion)
+        self.focus_canvas.set_language(self.language)
 
     def _render_badges(self, snapshot: MotivationSnapshot) -> None:
+        anchor = "e" if self._rtl else "w"
+        justify = "right" if self._rtl else "left"
         for child in self.badge_frame.winfo_children():
             child.destroy()
         for index, badge in enumerate(snapshot.achievements):
-            self.badge_frame.columnconfigure(index % 3, weight=1)
+            column = 2 - (index % 3) if self._rtl else index % 3
+            self.badge_frame.columnconfigure(column, weight=1)
             card = ttk.Frame(self.badge_frame, style="Card.TFrame", padding=10)
-            card.grid(row=index // 3, column=index % 3, sticky="nsew", padx=4, pady=4)
-            state = "EARNED" if badge.earned else f"{badge.progress_pct}%"
-            ttk.Label(card, text=f"{badge.icon}  {badge.title}", style="Panel.TLabel", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-            ttk.Label(card, text=badge.description, style="CardTitle.TLabel", wraplength=190, justify="left").pack(anchor="w", pady=(5, 7))
-            ttk.Label(card, text=state, style="CardValue.TLabel").pack(anchor="w")
+            card.grid(row=index // 3, column=column, sticky="nsew", padx=4, pady=4)
+            state = tr(self.language, "earned").upper() if badge.earned else f"{badge.progress_pct}%"
+            ttk.Label(
+                card,
+                text=f"{badge.icon}  {badge.title}",
+                style="Panel.TLabel",
+                font=("Segoe UI", 9, "bold"),
+                justify=justify,
+            ).pack(anchor=anchor)
+            ttk.Label(
+                card,
+                text=badge.description,
+                style="CardTitle.TLabel",
+                wraplength=190,
+                justify=justify,
+            ).pack(anchor=anchor, pady=(5, 7))
+            ttk.Label(card, text=state, style="CardValue.TLabel").pack(anchor=anchor)
 
     def _new_spark(self) -> None:
         self._spark_offset += 1
         self.refresh(self._entries, self._stats, self.settings)
-        self._status_callback("A new grounded motivation spark is ready. 💙")
+        self._status_callback(tr(self.language, "motivation_new_spark_ready"))
 
     def _celebrate(self) -> None:
         self.galaxy.celebrate()
-        self._status_callback("Celebrate the evidence, then choose the next small action. ✨")
+        self._status_callback(tr(self.language, "motivation_celebrate_status"))
 
     def _save_purpose(self) -> None:
         self._save_callback(
@@ -301,6 +413,7 @@ class MotivationCenterPanel(ttk.Frame):
 
     def _resize_content(self, event: tk.Event[tk.Misc]) -> None:
         self.scroll_canvas.itemconfigure(self._window_id, width=event.width)
+        self.scroll_canvas.coords(self._window_id, event.width if self._rtl else 0, 0)
 
     def _on_mousewheel(self, event: tk.Event[tk.Misc]) -> None:
         delta = -1 if event.delta > 0 else 1

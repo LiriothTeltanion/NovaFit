@@ -14,6 +14,7 @@ from datetime import date, timedelta
 from statistics import mean
 from typing import Any, Iterable, Sequence
 
+from . import __version__
 from .config import AppSettings
 from .models import HealthEntry
 
@@ -45,6 +46,8 @@ class DashboardStats:
         best_weekday: Weekday with the highest average steps.
         active_last_7_days: Number of tracked days in the latest seven-day window.
         latest_date: Most recent tracked date.
+        days_since_latest: Calendar-day age of the newest record.
+        is_stale: Whether the newest record is older than seven days.
 
     Example:
         >>> DashboardStats.empty().consistency_score
@@ -71,6 +74,8 @@ class DashboardStats:
     best_weekday: str | None
     active_last_7_days: int
     latest_date: str | None
+    days_since_latest: int | None
+    is_stale: bool
 
     @classmethod
     def empty(cls) -> "DashboardStats":
@@ -107,6 +112,8 @@ class DashboardStats:
             best_weekday=None,
             active_last_7_days=0,
             latest_date=None,
+            days_since_latest=None,
+            is_stale=False,
         )
 
     @property
@@ -204,12 +211,15 @@ class CalendarMatrix:
 def calculate_dashboard(
     entries: Iterable[HealthEntry],
     settings: AppSettings | None = None,
+    *,
+    as_of: date | None = None,
 ) -> DashboardStats:
     """Calculate reusable summary statistics from health entries.
 
     Args:
         entries: Any iterable of validated records.
         settings: Goal preferences; defaults are used when omitted.
+        as_of: Calendar date that defines current and recent activity.
 
     Returns:
         A complete dashboard summary.
@@ -223,6 +233,7 @@ def calculate_dashboard(
         1
     """
     active_settings = (settings or AppSettings()).validate()
+    reference_date = as_of or date.today()
     rows = _sorted_unique(entries)
     if not rows:
         return DashboardStats.empty()
@@ -232,24 +243,22 @@ def calculate_dashboard(
     mood_counts = Counter(item.mood for item in rows if item.mood)
     first_date = rows[0].entry_date
     latest_date = rows[-1].entry_date
+    days_since_latest = max(0, (reference_date - latest_date).days)
     represented_days = max(1, (latest_date - first_date).days + 1)
     coverage = min(100.0, (len(rows) / represented_days) * 100)
 
     step_goal_days = sum(item.steps >= active_settings.step_goal for item in rows)
     water_goal_days = sum(item.water_l >= active_settings.water_goal_l for item in rows)
     perfect_goal_days = sum(_meets_both_goals(item, active_settings) for item in rows)
-    recent_window_start = latest_date - timedelta(days=6)
-    active_last_7 = sum(item.entry_date >= recent_window_start for item in rows)
+    recent_window_start = reference_date - timedelta(days=6)
+    active_last_7 = sum(recent_window_start <= item.entry_date <= reference_date for item in rows)
 
     # 💡 This is a transparent routine score, not a medical or fitness assessment.
     step_rate = (step_goal_days / len(rows)) * 100
     water_rate = (water_goal_days / len(rows)) * 100
     recent_rate = (active_last_7 / 7) * 100
     consistency_score = round(
-        (coverage * 0.30)
-        + (step_rate * 0.25)
-        + (water_rate * 0.25)
-        + (recent_rate * 0.20)
+        (coverage * 0.30) + (step_rate * 0.25) + (water_rate * 0.25) + (recent_rate * 0.20)
     )
 
     return DashboardStats(
@@ -261,7 +270,7 @@ def calculate_dashboard(
         step_goal_days=step_goal_days,
         water_goal_days=water_goal_days,
         perfect_goal_days=perfect_goal_days,
-        current_streak_days=calculate_tracking_streak(rows),
+        current_streak_days=calculate_tracking_streak(rows, as_of=reference_date),
         longest_tracking_streak_days=calculate_longest_tracking_streak(rows),
         longest_goal_streak_days=calculate_longest_goal_streak(rows, active_settings),
         best_steps=best.steps,
@@ -273,14 +282,22 @@ def calculate_dashboard(
         best_weekday=_best_weekday(rows),
         active_last_7_days=active_last_7,
         latest_date=latest_date.isoformat(),
+        days_since_latest=days_since_latest,
+        is_stale=days_since_latest > 7,
     )
 
 
-def calculate_tracking_streak(entries: Iterable[HealthEntry]) -> int:
+def calculate_tracking_streak(
+    entries: Iterable[HealthEntry],
+    *,
+    as_of: date | None = None,
+) -> int:
     """Calculate consecutive tracked dates ending at the newest record.
 
     Args:
         entries: Health entries in any order.
+        as_of: Date that defines whether the streak is still current. A newest
+            record from today or yesterday keeps the streak active.
 
     Returns:
         Number of consecutive calendar days represented at the end of the data.
@@ -290,11 +307,17 @@ def calculate_tracking_streak(entries: Iterable[HealthEntry]) -> int:
 
     Example:
         >>> rows = [HealthEntry.build('2026-07-14', 1, 1), HealthEntry.build('2026-07-15', 1, 1)]
-        >>> calculate_tracking_streak(rows)
+        >>> calculate_tracking_streak(rows, as_of=date(2026, 7, 16))
         2
     """
-    unique_dates = sorted({item.entry_date for item in entries}, reverse=True)
+    reference_date = as_of or date.today()
+    unique_dates = sorted(
+        {item.entry_date for item in entries if item.entry_date <= reference_date},
+        reverse=True,
+    )
     if not unique_dates:
+        return 0
+    if unique_dates[0] < reference_date - timedelta(days=1):
         return 0
     streak = 1
     expected = unique_dates[0] - timedelta(days=1)
@@ -425,8 +448,7 @@ def build_daily_series(
     if not 1 <= days <= 365:
         raise ValueError("Days must be between 1 and 365.")
     rows = _sorted_unique(entries)
-    inferred_end = max((item.entry_date for item in rows), default=date.today())
-    final_day = end_date or inferred_end
+    final_day = end_date or date.today()
     by_date = {item.entry_date: item for item in rows}
 
     series: list[dict[str, Any]] = []
@@ -622,6 +644,18 @@ def build_insight_lines(stats: DashboardStats, settings: AppSettings) -> list[st
             "The routine score is a transparent habit signal, not medical advice.",
         ]
 
+    if stats.is_stale:
+        freshness = (
+            f"Your newest record is {stats.days_since_latest} days old; current streak and recent activity "
+            f"remain paused until you add a fresh entry. Historical tracking coverage is "
+            f"{stats.tracking_coverage_pct:.0f}%."
+        )
+    else:
+        freshness = (
+            f"Recent tracking covers {stats.active_last_7_days} of the last 7 calendar days; historical "
+            f"coverage is {stats.tracking_coverage_pct:.0f}%."
+        )
+
     trend = (
         "A 14-record history unlocks recent-versus-previous trend comparison."
         if stats.recent_step_change_pct is None
@@ -634,10 +668,11 @@ def build_insight_lines(stats: DashboardStats, settings: AppSettings) -> list[st
     )
     return [
         f"Both primary goals were reached on {stats.perfect_goal_rate_pct:.0f}% of tracked days.",
-        f"Tracking coverage is {stats.tracking_coverage_pct:.0f}% with a longest streak of {stats.longest_tracking_streak_days} day(s).",
+        freshness,
         trend,
         f"{rhythm} Most recorded mood: {stats.dominant_mood or 'not available'}.",
     ]
+
 
 def format_dashboard(stats: DashboardStats, settings: AppSettings) -> str:
     """Format dashboard values as a compact terminal report.
@@ -669,7 +704,7 @@ def format_dashboard(stats: DashboardStats, settings: AppSettings) -> str:
 
     return "\n".join(
         [
-            "NovaFit Ultimate 4.0 — Wellness Command Center",
+            f"NovaFit Ultimate {__version__} — Wellness Command Center",
             "=" * 56,
             f"Tracked days: {stats.entry_count} | coverage {stats.tracking_coverage_pct:.0f}%",
             f"Routine consistency score: {stats.consistency_score}/100",
@@ -681,6 +716,7 @@ def format_dashboard(stats: DashboardStats, settings: AppSettings) -> str:
             f"Water goal success: {stats.water_goal_days}/{stats.entry_count} ({stats.water_goal_rate_pct:.0f}%)",
             f"Perfect goal days: {stats.perfect_goal_days}/{stats.entry_count} ({stats.perfect_goal_rate_pct:.0f}%)",
             f"Current tracking streak: {stats.current_streak_days} day(s)",
+            f"Data freshness: {stats.days_since_latest} day(s) since the newest record",
             f"Longest tracking streak: {stats.longest_tracking_streak_days} day(s)",
             f"Longest combined-goal streak: {stats.longest_goal_streak_days} day(s)",
             f"Best day: {stats.best_steps:,} steps on {stats.best_date}",

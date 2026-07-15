@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import unittest
 
+from novafit.config import AppSettings
 from novafit.models import HealthEntry
 from novafit.validation import parse_iso_date
 
@@ -37,6 +38,18 @@ class ValidationTests(unittest.TestCase):
         self.assertIsNone(entry.calories)
         self.assertIsNone(entry.mood)
         self.assertIsNone(entry.note)
+
+    def test_rejects_non_finite_measurements(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite"):
+            HealthEntry.build("2026-07-15", 1_000, float("nan"))
+        with self.assertRaisesRegex(ValueError, "finite"):
+            AppSettings(water_goal_l=float("inf")).validate()
+
+    def test_rejects_fractional_or_boolean_whole_numbers(self) -> None:
+        with self.assertRaisesRegex(ValueError, "whole number"):
+            HealthEntry.build("2026-07-15", 123.5, 2.0)
+        with self.assertRaisesRegex(ValueError, "whole number"):
+            HealthEntry.build("2026-07-15", True, 2.0)
 
 
 if __name__ == "__main__":

@@ -1,26 +1,35 @@
 @echo off
 setlocal EnableExtensions
-cd /d "%~dp0"
+pushd "%~dp0"
+title NovaFit Complete Backup
+set "PYTHONUTF8=1"
 
-if not exist ".venv\Scripts\python.exe" (
-  call setup_windows.bat
-  if errorlevel 1 exit /b 1
+set "NEEDS_REPAIR=0"
+if not exist ".venv\Scripts\python.exe" set "NEEDS_REPAIR=1"
+if "%NEEDS_REPAIR%"=="0" (
+  ".venv\Scripts\python.exe" -c "from novafit.backup import create_complete_backup" >nul 2>nul
+  if errorlevel 1 set "NEEDS_REPAIR=1"
+)
+if "%NEEDS_REPAIR%"=="1" (
+  set "NOVAFIT_NO_PAUSE=1"
+  call bootstrap_windows.bat
+  if errorlevel 1 goto :failed
 )
 
-call ".venv\Scripts\activate.bat"
-set "PYTHONUTF8=1"
-python -m novafit.cli --export-json data\novafit_export.json
-if errorlevel 1 goto :failed
-python -m novafit.cli --export-csv data\novafit_export.csv
+if not exist "data\backups" mkdir "data\backups"
+".venv\Scripts\python.exe" -m novafit.cli --backup "data\backups"
 if errorlevel 1 goto :failed
 echo.
-echo Backups are available inside the data folder.
-start "" "data"
+echo Complete all-profile backup created and verified. [OK]
+echo Backup folder: %CD%\data\backups
+start "" "data\backups"
+popd
 pause
 exit /b 0
 
 :failed
 echo.
-echo Backup export failed. Run verify_windows.bat for details.
+echo Complete backup failed. Run VERIFY_ALL.bat for a full diagnosis. [ERROR]
+popd
 pause
 exit /b 1

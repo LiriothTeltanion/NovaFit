@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import unittest
 
-from novafit.i18n import direction_for, language_labels, normalize_language, tr
+from novafit.i18n import TRANSLATIONS, direction_for, language_labels, normalize_language, tr
 
 
 class I18nTests(unittest.TestCase):
@@ -31,6 +31,28 @@ class I18nTests(unittest.TestCase):
         for language in ("en", "es", "he"):
             self.assertTrue(tr(language, "nav_recommendations"))
             self.assertTrue(tr(language, "privacy_body"))
+
+    def test_every_supported_language_has_the_same_keys(self) -> None:
+        english_keys = set(TRANSLATIONS["en"])
+        self.assertEqual(set(TRANSLATIONS["es"]), english_keys)
+        self.assertEqual(set(TRANSLATIONS["he"]), english_keys)
+
+    def test_advanced_hebrew_panels_do_not_fall_back_to_english(self) -> None:
+        expected_hebrew = {
+            "refresh_charts": "רענון",
+            "profile_header": "פרופילים",
+            "motivation_focus_reset": "איפוס",
+            "export_recommendations": "ייצוא",
+            "record_rules": "רישום",
+            "about_body": "יישום",
+        }
+        for key, fragment in expected_hebrew.items():
+            with self.subTest(key=key):
+                self.assertIn(fragment, tr("he", key, profile="קווין", version="4.0"))
+
+    def test_hebrew_dynamic_copy_formats_names_and_paths(self) -> None:
+        self.assertEqual(tr("he", "profile_created", name="קווין"), "הפרופיל קווין נוצר בהצלחה ✅")
+        self.assertIn("C:/NovaFit", tr("he", "dashboard_saved", path="C:/NovaFit"))
 
 
 if __name__ == "__main__":

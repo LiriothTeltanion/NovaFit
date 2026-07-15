@@ -9,6 +9,7 @@ Notes: Minimal deps; comments in ENGLISH; emojis sparingly.
 from __future__ import annotations
 
 import json
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +70,16 @@ class ImportExportTests(unittest.TestCase):
         second = initialize_sample_data(self.target)
         self.assertEqual(first, 7)
         self.assertEqual(second, 0)
+
+    def test_csv_export_neutralizes_spreadsheet_formulas(self) -> None:
+        self.source.upsert(HealthEntry.build("2026-07-16", 1, 1, mood="=HYPERLINK('bad')", note="@danger"))
+        path = self.root / "safe.csv"
+        export_csv(self.source, path)
+        with path.open("r", newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.DictReader(handle))
+        risky = next(row for row in rows if row["Date"] == "2026-07-16")
+        self.assertTrue(risky["Mood"].startswith("'="))
+        self.assertTrue(risky["Note"].startswith("'@"))
 
 
 if __name__ == "__main__":

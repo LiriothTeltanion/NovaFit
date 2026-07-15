@@ -2,12 +2,14 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/novafit-ultimate-gui.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="Banner animado de NovaFit Ultimate 4.0" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="Banner animado de NovaFit Ultimate 4.1" />
 </picture>
 
-# NovaFit Ultimate 4.0 💙
+# NovaFit Ultimate 4.1 💙
 
 ### Inteligencia de bienestar local · perfiles múltiples · EN/ES/HE · 12 temas · recomendaciones explicables · analítica avanzada
+
+[![Calidad de NovaFit](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
 
 [English](README.md) · [Español](README_ES.md) · [עברית](README_HE.md)
 
@@ -17,20 +19,24 @@
 
 ## 🌌 Visión
 
-NovaFit es una aplicación local de escritorio y terminal para registrar pasos, agua, calorías opcionales, estado de ánimo y notas privadas. La edición 4.0 convierte el proyecto restaurado en un **Wellness Intelligence Studio** completo:
+NovaFit es la aplicación local de escritorio y terminal de Kevin “Lirioth” Cusnir para registrar pasos, agua, calorías opcionales, estado de ánimo y notas privadas. La edición **4.1.0** la convierte en un **Wellness Intelligence Studio** más pulido, honesto y mantenible:
 
 - perfiles de usuario aislados;
-- selector de inglés, español y hebreo;
-- interfaz RTL real para hebreo;
+- textos completos en inglés, español y hebreo;
+- composición RTL real en paneles, formularios, tarjetas y tablas;
 - doce temas visuales;
 - cuatro espacios analíticos;
 - Motivation Center;
 - Sport & Data Coach;
-- iconos generados con Pillow;
+- iconos antialias con estados activo y atenuado;
+- animaciones persistentes que se pausan al ocultarse y respetan movimiento reducido;
+- gráficos responsivos sin cruces en ventanas compactas o amplias;
 - SQLite con migración del modelo histórico;
-- JSON, CSV, PNG e informes HTML offline;
+- JSON, CSV, PNG, informes HTML offline y backup ZIP completo verificado;
 - CLI ampliada;
-- reparación automática de entorno en Windows;
+- apertura, reparación y validación completa con un clic en Windows;
+- datos de proyecto y assets generados para sincronizar README y perfil GitHub;
+- releases automáticos desde tags con archivos auditados y checksums SHA-256;
 - auditoría que preserva la base del usuario;
 - empaquetado de release que excluye datos privados.
 
@@ -222,27 +228,23 @@ python -m novafit.cli \
 
 ---
 
-## 🪟 Windows
+## 🪟 Windows con un clic
 
-1. Extrae el ZIP en una ruta corta:
+1. Conserva el repositorio en su ubicación actual de OneDrive o extráelo donde prefieras.
 
-```text
-C:\NovaFit-Ultimate
-```
-
-2. Ejecuta:
-
-```text
-REPAIR_AND_VERIFY.bat
-```
-
-3. Abre:
+2. Haz doble clic en:
 
 ```text
 run_novafit.bat
 ```
 
-El proceso crea `.venv`, instala dependencias binarias, valida Tkinter/Matplotlib/Pillow/tzdata, ejecuta **74 pruebas** y completa un smoke workflow aislado.
+El lanzador crea o repara `.venv` cuando hace falta y abre NovaFit. Para comprobar absolutamente todo antes de publicar, haz doble clic en:
+
+```text
+VERIFY_ALL.bat
+```
+
+La verificación instala dependencias binarias, valida Tkinter/Matplotlib/Pillow/tzdata, descubre todas las pruebas actuales, revisa documentación y assets, ejecuta Ruff/Pyright y completa un smoke workflow aislado.
 
 ---
 
@@ -276,11 +278,7 @@ Módulos destacados:
 
 ## 🧪 Calidad comprobada
 
-```text
-74 pruebas ejecutadas
-74 aprobadas
-0 fallidas
-```
+El badge superior refleja el estado del commit remoto actual en `main`. La versión, cantidad de pruebas descubiertas, temas y tamaño de assets se generan automáticamente en [PROJECT_FACTS.md](docs/PROJECT_FACTS.md), evitando cifras antiguas escritas a mano.
 
 También se verificó:
 
@@ -293,7 +291,7 @@ También se verificó:
 - hebreo RTL;
 - release staging sin bases ni logs.
 
-`74/74` no significa 100% de cobertura de líneas; significa que todas las pruebas implementadas pasaron.
+Superar la suite implementada no significa 100% de cobertura de líneas; es un contrato reproducible validado en Windows y Ubuntu.
 
 ---
 
@@ -322,6 +320,7 @@ También se verificó:
 - [Windows](docs/WINDOWS_GUIDE.md)
 - [Seguridad](docs/SECURITY.md)
 - [Changelog](docs/CHANGELOG.md)
+- [Datos verificados del proyecto](docs/PROJECT_FACTS.md)
 
 ---
 
@@ -337,5 +336,7 @@ MIT. Consulta [LICENSE](LICENSE).
 <div align="center">
 
 **Construye con constancia. Lee los datos con honestidad. Protege la recuperación.** 💙
+
+**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

@@ -24,7 +24,11 @@ class AnalyticsTests(unittest.TestCase):
             HealthEntry.build("2026-07-14", 8000, 1.5, 1800, "Calm"),
             HealthEntry.build("2026-07-15", 12000, 2.5, 2200, "Focused"),
         ]
-        stats = calculate_dashboard(rows, AppSettings(step_goal=10000, water_goal_l=2.0))
+        stats = calculate_dashboard(
+            rows,
+            AppSettings(step_goal=10000, water_goal_l=2.0),
+            as_of=date(2026, 7, 16),
+        )
         self.assertEqual(stats.entry_count, 2)
         self.assertEqual(stats.step_goal_days, 1)
         self.assertEqual(stats.water_goal_days, 1)
@@ -51,6 +55,23 @@ class AnalyticsTests(unittest.TestCase):
         rows = [HealthEntry.build("2026-07-15", 5000, 2)]
         series = build_daily_series(rows, 3, end_date=date(2026, 7, 15))
         self.assertEqual([item["steps"] for item in series], [0, 0, 5000])
+
+    def test_stale_history_is_not_presented_as_current_activity(self) -> None:
+        rows = [
+            HealthEntry.build(date(2025, 10, 9) + timedelta(days=index), 10_000, 2.0) for index in range(7)
+        ]
+        stats = calculate_dashboard(rows, as_of=date(2026, 7, 16))
+        self.assertEqual(stats.current_streak_days, 0)
+        self.assertEqual(stats.active_last_7_days, 0)
+        self.assertTrue(stats.is_stale)
+        self.assertEqual(stats.days_since_latest, 274)
+
+    def test_current_streak_accepts_a_latest_record_from_yesterday(self) -> None:
+        rows = [
+            HealthEntry.build("2026-07-14", 1, 1),
+            HealthEntry.build("2026-07-15", 1, 1),
+        ]
+        self.assertEqual(calculate_tracking_streak(rows, as_of=date(2026, 7, 16)), 2)
 
 
 if __name__ == "__main__":

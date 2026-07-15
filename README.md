@@ -2,17 +2,17 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/novafit-ultimate-gui.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.0 animated wellness intelligence banner" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.1 animated wellness intelligence banner" />
 </picture>
 
-# NovaFit Ultimate 4.0 💙
+# NovaFit Ultimate 4.1 💙
 
-### Local-first wellness intelligence · multi-user profiles · EN/ES/HE · 12 themes · explainable recommendations · ambitious analytics
+### Local-first wellness intelligence · full EN/ES/HE · purposeful motion · verified backups · explainable analytics
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Desktop](https://img.shields.io/badge/Desktop-Tkinter%20%2F%20ttk-2DD4BF?style=for-the-badge)](#-desktop-experience)
 [![Storage](https://img.shields.io/badge/Storage-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#-multi-user-data-model)
-[![Tests](https://img.shields.io/badge/Tests-74%2F74%20passed-22C55E?style=for-the-badge)](#-quality-and-verification)
+[![NovaFit Quality](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
 [![Languages](https://img.shields.io/badge/UI-English%20%C2%B7%20Espa%C3%B1ol%20%C2%B7%20%D7%A2%D7%91%D7%A8%D7%99%D7%AA-F59E0B?style=for-the-badge)](#-three-language-interface)
 [![Privacy](https://img.shields.io/badge/Privacy-Local--first-7C3AED?style=for-the-badge)](#-privacy-and-safety-boundaries)
 
@@ -28,23 +28,26 @@
 
 ## 🌌 Product vision
 
-NovaFit is a private desktop and terminal application for recording daily steps, water, optional calories, mood and notes. Version **4.0.0** evolves the restored health tracker into a portfolio-grade **Wellness Intelligence Studio** with:
+NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application for recording daily steps, water, optional calories, mood and notes. Version **4.1.0** turns it into a more polished, honest and maintainable **Wellness Intelligence Studio** with:
 
 - multiple isolated local user profiles;
-- English, Spanish and Hebrew interface switching;
-- true RTL shell behavior for Hebrew;
+- complete English, Spanish and Hebrew interface copy;
+- true RTL composition across the shell, panels, forms, cards and tables;
 - twelve visual themes;
 - four high-density analytical workspaces;
 - grounded Motivation and Recovery tools;
 - conservative Sport & Data recommendations;
-- theme-aware Pillow icons;
-- a colorful Tkinter/ttk GUI;
+- antialiased theme-aware Pillow icons with active and muted states;
+- persistent, reduced-motion-aware Canvas animation that pauses when hidden;
+- responsive, overlap-safe analytics for compact and wide windows;
 - an expanded automation-friendly CLI;
 - SQLite migrations from the historical single-user schema;
-- JSON and CSV portability;
+- JSON and CSV portability plus verified all-profile ZIP backups;
 - offline visual HTML reports;
 - optional weather lookup with no API key;
-- self-healing Windows setup and verification;
+- one-click Windows launch, self-repair and full verification;
+- generated project facts and asset metadata for README/profile synchronization;
+- tag-driven GitHub Releases with audited Windows/Python archives and SHA-256 checksums;
 - workspace-safe auditing and clean release staging.
 
 > NovaFit is a descriptive tracking and motivation tool. It does not diagnose, prescribe treatment or replace qualified medical or sports guidance.
@@ -55,7 +58,7 @@ NovaFit is a private desktop and terminal application for recording daily steps,
 
 The application tests, smoke checks and profile generation had all passed. The final package audit failed only because it found `NovaFit/data/novafit.db` — a legitimate runtime database created by actual use of the program.
 
-Version 4.0 separates two contexts deliberately:
+Version 4.1 preserves two contexts deliberately:
 
 | Context | Database behavior | Audit behavior |
 |---|---|---|
@@ -366,24 +369,20 @@ python -m novafit.cli --export-csv data/backup.csv
 
 ## 🪟 Windows quickstart
 
-### Recommended clean installation
+### One-click launch
 
-1. Extract the ZIP to a short path such as:
+1. Keep the repository in its current OneDrive location or extract it anywhere you control.
 
-```text
-C:\NovaFit-Ultimate
-```
-
-2. Run:
-
-```text
-REPAIR_AND_VERIFY.bat
-```
-
-3. After verification, run:
+2. Double-click:
 
 ```text
 run_novafit.bat
+```
+
+It creates or repairs `.venv` when necessary and then opens NovaFit. To run every release-quality gate before publishing, double-click:
+
+```text
+VERIFY_ALL.bat
 ```
 
 The repair flow:
@@ -397,7 +396,7 @@ Install binary dependencies
         ↓
 Validate Tkinter + Matplotlib + Pillow + tzdata
         ↓
-Run 74 automated tests
+Run every currently discovered automated test
         ↓
 Run isolated CLI/SQLite/PNG/HTML smoke workflow
 ```
@@ -409,6 +408,7 @@ Run isolated CLI/SQLite/PNG/HTML smoke workflow
 | `setup_windows.bat` | Build environment and verify |
 | `REPAIR_AND_VERIFY.bat` | Repair an incomplete environment and run checks |
 | `run_novafit.bat` | Open the GUI, preparing the environment if needed |
+| `VERIFY_ALL.bat` | Run compile, audit, docs sync, tests, smoke, Ruff and Pyright |
 | `run_cli.bat` | Open the expanded terminal menu |
 | `verify_windows.bat` | Re-run project tests and smoke checks |
 | `export_backup.bat` | Export JSON and CSV |
@@ -529,13 +529,7 @@ The application is not designed for emergencies, diagnosis, medical monitoring, 
 
 ## 🧪 Quality and verification
 
-### Latest measured result
-
-```text
-74 tests run
-74 passed
-0 failed
-```
+The badge above reports the result for the current remote `main` commit. The exact locally discovered test total, version, theme count and asset size are generated in [PROJECT_FACTS.md](docs/PROJECT_FACTS.md), so documentation cannot silently keep an obsolete hand-written number.
 
 The test suite covers:
 
@@ -563,13 +557,13 @@ The test suite covers:
 python scripts/verify.py
 ```
 
-or on Windows:
+or, for the complete local quality gate on Windows:
 
 ```text
-REPAIR_AND_VERIFY.bat
+VERIFY_ALL.bat
 ```
 
-> `74/74 passed` means every implemented automated case passed. It does not claim 100% line or branch coverage.
+Passing the implemented suite is not a claim of complete line or branch coverage. It is a reproducible contract backed by Windows and Ubuntu GitHub Actions.
 
 ---
 
@@ -609,6 +603,7 @@ NovaFit/
 │   ├── gui.py
 │   ├── cli.py
 │   ├── database.py
+│   ├── backup.py
 │   ├── models.py
 │   ├── analytics.py
 │   ├── charts.py
@@ -620,13 +615,17 @@ NovaFit/
 │   ├── i18n.py
 │   ├── themes.py
 │   ├── icon_factory.py
+│   ├── ui_components.py
 │   ├── io_utils.py
 │   ├── reporting.py
 │   └── weather.py
 ├── tests/
 ├── scripts/
+│   └── sync_docs.py
 ├── docs/
 ├── assets/
+│   └── manifest.json
+├── portfolio/project.json
 ├── data/.gitkeep
 ├── pyproject.toml
 ├── requirements.txt
@@ -650,34 +649,41 @@ NovaFit/
 | [ANALYTICS.md](docs/ANALYTICS.md) | Metric formulas and chart semantics |
 | [DATA_MODEL.md](docs/DATA_MODEL.md) | SQLite schema and migrations |
 | [TESTING.md](docs/TESTING.md) | Automated suite and manual gates |
+| [PROJECT_FACTS.md](docs/PROJECT_FACTS.md) | Generated version, tests, themes and public asset facts |
 | [WINDOWS_GUIDE.md](docs/WINDOWS_GUIDE.md) | Setup, repair and launchers |
 | [SECURITY.md](docs/SECURITY.md) | Privacy and technical boundaries |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Release history |
+| [RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) | Local, privacy and automated release gates |
 
 ---
 
 ## 🛣️ Roadmap
 
-### Completed in 4.0
+### Completed in 4.1
 
 - [x] Multi-user profile isolation
 - [x] EN/ES/HE language selector
-- [x] Hebrew RTL shell
+- [x] Full Hebrew copy and RTL panels
 - [x] Twelve themes
-- [x] Theme-aware Pillow icons
+- [x] Antialiased state-aware Pillow icons
+- [x] Efficient, pausable and reduced-motion-aware animation
+- [x] Responsive chart layouts with freshness-aware analytics
+- [x] Verified all-profile backups with SHA-256 integrity
+- [x] One-click launch and full local quality gate
+- [x] Generated docs/assets/profile synchronization contract
 - [x] Sport & Data Coach
 - [x] Training Atlas
 - [x] Workspace-safe audit
 - [x] Strict clean release staging
 - [x] Expanded profile-aware CLI
-- [x] 74 passing automated tests
+- [x] Dynamic test discovery and cross-platform CI matrix
 
 ### Reasonable future work
 
 - [ ] Optional encrypted backup format
 - [ ] Calendar and wearable import adapters with explicit privacy review
 - [ ] Accessibility audit on native Windows scaling modes
-- [ ] More complete translation of chart annotations
+- [ ] Optional native translation of Matplotlib chart annotations
 - [ ] Optional plugin boundary for additional recommendation families
 - [ ] Signed Windows installer after native release testing
 
@@ -699,6 +705,6 @@ MIT License. See [LICENSE](LICENSE).
 
 **Build steadily. Read the data honestly. Protect recovery. Keep ownership of the system.** 💙
 
-**NovaFit Ultimate 4.0 · Wellness Intelligence Studio · 2026-07-15**
+**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

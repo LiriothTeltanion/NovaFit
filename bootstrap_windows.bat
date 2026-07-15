@@ -1,10 +1,11 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 pushd "%~dp0"
-title NovaFit 4.0 Environment Repair
+title NovaFit Environment Repair
+set "PYTHONUTF8=1"
 
 echo ============================================================
-echo   NovaFit 4.0 - Self-Healing Environment Repair
+echo   NovaFit - Self-Healing Environment Repair
 echo ============================================================
 echo.
 
@@ -17,7 +18,6 @@ if exist ".venv\Scripts\python.exe" (
     goto :success
   )
   echo Existing environment is incomplete; it will be rebuilt. WARNING
-  rmdir /s /q ".venv" >nul 2>nul
 )
 
 set "SETUP_OK=0"
@@ -33,7 +33,6 @@ if not errorlevel 1 (
         if not errorlevel 1 set "SETUP_OK=1"
         if "!SETUP_OK!"=="0" (
           echo Python %%V could not complete binary dependency setup; trying another installed version. WARNING
-          rmdir /s /q ".venv" >nul 2>nul
         )
       )
     )

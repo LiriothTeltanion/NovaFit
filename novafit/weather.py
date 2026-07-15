@@ -136,8 +136,13 @@ def get_weather(city: str, *, session: Any = None, timeout: float = 10.0) -> Wea
             import requests
         except ImportError:
             return WeatherReport(
-                city_key.title(), None, None, None, None,
-                "library_error", "Install dependencies with setup_windows.bat.",
+                city_key.title(),
+                None,
+                None,
+                None,
+                None,
+                "library_error",
+                "Install dependencies with setup_windows.bat.",
             )
         session = requests
 

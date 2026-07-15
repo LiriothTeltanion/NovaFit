@@ -25,6 +25,8 @@ from .time_utils import now_local, timestamp_label
 
 LOGGER = logging.getLogger(__name__)
 ImportStrategy = Literal["replace", "skip"]
+MAX_IMPORT_BYTES = 25 * 1024 * 1024
+MAX_IMPORT_ROWS = 100_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,8 +126,8 @@ def export_csv(
                     "Steps": entry.steps,
                     "Water (L)": entry.water_l,
                     "Calories": "" if entry.calories is None else entry.calories,
-                    "Mood": entry.mood or "",
-                    "Note": entry.note or "",
+                    "Mood": _spreadsheet_safe(entry.mood or ""),
+                    "Note": _spreadsheet_safe(entry.note or ""),
                 }
             )
     temporary.replace(destination)
@@ -160,6 +162,7 @@ def import_json(
     """
     if not source.exists():
         raise FileNotFoundError(f"JSON file not found: {source}")
+    _guard_import_file(source)
     payload = json.loads(source.read_text(encoding="utf-8-sig"))
     if isinstance(payload, list):
         rows = payload
@@ -200,10 +203,14 @@ def import_csv(
     """
     if not source.exists():
         raise FileNotFoundError(f"CSV file not found: {source}")
+    _guard_import_file(source)
     with source.open("r", newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
-        rows = [_normalize_csv_row(row) for row in reader]
-    return _import_rows(database, rows, strategy=strategy)
+        return _import_rows(
+            database,
+            (_normalize_csv_row(row) for row in reader),
+            strategy=strategy,
+        )
 
 
 def generate_demo_data(
@@ -356,28 +363,27 @@ def _import_rows(
     if strategy not in {"replace", "skip"}:
         raise ValueError("Import strategy must be 'replace' or 'skip'.")
 
-    imported = 0
-    skipped = 0
     invalid = 0
     errors: list[str] = []
+    valid_entries: list[HealthEntry] = []
     for index, raw in enumerate(rows, start=1):
+        if index > MAX_IMPORT_ROWS:
+            raise ValueError(f"Import cannot exceed {MAX_IMPORT_ROWS:,} rows.")
         if not isinstance(raw, Mapping):
             invalid += 1
             errors.append(f"Row {index}: expected an object.")
             continue
         try:
             entry = HealthEntry.from_mapping(raw)
-            if strategy == "replace":
-                database.upsert(entry)
-                imported += 1
-            elif database.insert_if_missing(entry):
-                imported += 1
-            else:
-                skipped += 1
+            valid_entries.append(entry)
         except (TypeError, ValueError) as exc:
             invalid += 1
             if len(errors) < 10:
                 errors.append(f"Row {index}: {exc}")
+    imported, skipped = database.write_many(
+        valid_entries,
+        replace=strategy == "replace",
+    )
     return ImportResult(imported, skipped, invalid, tuple(errors))
 
 
@@ -386,11 +392,7 @@ def _normalize_csv_row(row: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "date": lowered.get("date") or lowered.get("entry_date"),
         "steps": lowered.get("steps"),
-        "water_l": (
-            lowered.get("water (l)")
-            or lowered.get("water_l")
-            or lowered.get("water")
-        ),
+        "water_l": (lowered.get("water (l)") or lowered.get("water_l") or lowered.get("water")),
         "calories": lowered.get("calories"),
         "mood": lowered.get("mood"),
         "note": lowered.get("note"),
@@ -402,3 +404,20 @@ def _atomic_write_text(destination: Path, content: str) -> None:
     temporary = destination.with_suffix(destination.suffix + ".tmp")
     temporary.write_text(content, encoding="utf-8")
     temporary.replace(destination)
+
+
+def _guard_import_file(source: Path) -> None:
+    """Reject unexpectedly large imports before loading them into memory."""
+    size = source.stat().st_size
+    if size > MAX_IMPORT_BYTES:
+        raise ValueError(
+            f"Import file is {size / (1024 * 1024):.1f} MiB; the safety limit is "
+            f"{MAX_IMPORT_BYTES // (1024 * 1024)} MiB."
+        )
+
+
+def _spreadsheet_safe(value: str) -> str:
+    """Neutralize text that spreadsheet programs could interpret as a formula."""
+    if value and value[0] in {"=", "+", "-", "@"}:
+        return "'" + value
+    return value

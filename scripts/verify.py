@@ -27,6 +27,7 @@ REQUIRED_FILES = (
     "novafit/__main__.py",
     "novafit/cli.py",
     "novafit/gui.py",
+    "novafit/backup.py",
     "novafit/database.py",
     "novafit/analytics.py",
     "novafit/charts.py",
@@ -41,6 +42,12 @@ REQUIRED_FILES = (
     "novafit/time_utils.py",
     "run_novafit.bat",
     "REPAIR_AND_VERIFY.bat",
+    "VERIFY_ALL.bat",
+    "tools/package_audit.py",
+    "scripts/sync_docs.py",
+    "docs/PROJECT_FACTS.md",
+    "portfolio/project.json",
+    "assets/manifest.json",
 )
 REQUIRED_IMPORTS = {
     "matplotlib": "matplotlib",
@@ -63,6 +70,15 @@ def build_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(prog="verify", description="Verify the NovaFit release package.")
     parser.add_argument("--debug", action="store_true", help="Show full Python tracebacks on failure.")
+    parser.add_argument(
+        "--quality",
+        action="store_true",
+        help="Require and run Ruff plus Pyright in addition to runtime verification.",
+    )
+    parser.add_argument(
+        "--skip-tests", action="store_true", help="Skip unit tests (intended for split CI jobs)."
+    )
+    parser.add_argument("--skip-smoke", action="store_true", help="Skip isolated CLI/export smoke tests.")
     return parser
 
 
@@ -116,7 +132,11 @@ def verify_runtime_dependencies() -> None:
     Example:
         >>> verify_runtime_dependencies()  # doctest: +SKIP
     """
-    missing = [distribution for module, distribution in REQUIRED_IMPORTS.items() if importlib.util.find_spec(module) is None]
+    missing = [
+        distribution
+        for module, distribution in REQUIRED_IMPORTS.items()
+        if importlib.util.find_spec(module) is None
+    ]
     if missing:
         joined = ", ".join(missing)
         raise RuntimeError(
@@ -154,6 +174,67 @@ def verify_requirements() -> None:
         raise ValueError(f"Duplicate dependencies: {', '.join(duplicates)}")
 
 
+def verify_static_quality() -> None:
+    """Run the repository's opt-in lint and basic type-analysis gates.
+
+    Raises:
+        RuntimeError: If a development checker is unavailable.
+        subprocess.CalledProcessError: If Ruff or Pyright reports an error.
+    """
+    missing = [module for module in ("ruff", "pyright") if importlib.util.find_spec(module) is None]
+    if missing:
+        raise RuntimeError(
+            "Missing development checks: "
+            f"{', '.join(missing)}. Install requirements-dev.txt or run VERIFY_ALL.bat."
+        )
+    # Start with repository-wide correctness diagnostics that must never be
+    # baselined away, then lint/type-check the safety-critical foundation in
+    # full. Broader style/type adoption can expand this list incrementally.
+    run_command(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--select",
+            "E9,F63,F7,F82",
+            "novafit",
+            "scripts",
+            "tests",
+            "tools",
+        ]
+    )
+    run_command(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "tools",
+            "scripts/verify.py",
+            "scripts/bootstrap_environment.py",
+            "tests/test_bootstrap_environment.py",
+            "tests/test_distribution_contract.py",
+            "tests/test_backup.py",
+        ]
+    )
+    run_command(
+        [
+            sys.executable,
+            "-m",
+            "pyright",
+            "--pythonpath",
+            sys.executable,
+            "novafit/backup.py",
+            "novafit/config.py",
+            "novafit/validation.py",
+            "scripts/bootstrap_environment.py",
+            "scripts/verify.py",
+            "tools/package_audit.py",
+        ]
+    )
+
+
 def smoke_test() -> None:
     """Exercise SQLite, motivation, charts, JSON, and HTML in isolation.
 
@@ -178,19 +259,31 @@ def smoke_test() -> None:
         run_command([sys.executable, "-m", "novafit.cli", "--recommendations", "--language", "es"], env)
         run_command(
             [
-                sys.executable, "-m", "novafit.cli",
-                "--create-user", "Smoke Athlete",
-                "--language", "he",
-                "--theme", "sapphire",
-                "--avatar", "runner",
-                "--activity-level", "active",
-                "--sport-focus", "running",
+                sys.executable,
+                "-m",
+                "novafit.cli",
+                "--create-user",
+                "Smoke Athlete",
+                "--language",
+                "he",
+                "--theme",
+                "sapphire",
+                "--avatar",
+                "runner",
+                "--activity-level",
+                "active",
+                "--sport-focus",
+                "running",
             ],
             env,
         )
         run_command([sys.executable, "-m", "novafit.cli", "--profiles"], env)
         run_command(
             [sys.executable, "-m", "novafit.cli", "--export-json", str(data_dir / "smoke.json")],
+            env,
+        )
+        run_command(
+            [sys.executable, "-m", "novafit.cli", "--backup", str(data_dir / "backups")],
             env,
         )
         run_command(
@@ -234,6 +327,9 @@ def smoke_test() -> None:
             output = data_dir / filename
             if not output.exists() or output.stat().st_size < minimum_size:
                 raise RuntimeError(f"Smoke output is missing or too small: {filename}")
+        backup_files = list((data_dir / "backups").glob("novafit-complete-*.zip"))
+        if len(backup_files) != 1 or backup_files[0].stat().st_size < 1_000:
+            raise RuntimeError("Complete all-profile backup smoke output is missing or too small.")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -260,12 +356,22 @@ def main(argv: list[str] | None = None) -> int:
         verify_requirements()
         if not compileall.compile_dir(ROOT / "novafit", quiet=1):
             raise RuntimeError("Python compilation failed.")
-        run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"])
-        smoke_test()
-        print("All NovaFit checks passed. ✅")
+        if not compileall.compile_dir(ROOT / "scripts", quiet=1):
+            raise RuntimeError("Script compilation failed.")
+        if not compileall.compile_dir(ROOT / "tools", quiet=1):
+            raise RuntimeError("Tool compilation failed.")
+        run_command([sys.executable, "tools/package_audit.py"])
+        run_command([sys.executable, "scripts/sync_docs.py", "--check"])
+        if args.quality:
+            verify_static_quality()
+        if not args.skip_tests:
+            run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"])
+        if not args.skip_smoke:
+            smoke_test()
+        print("All NovaFit checks passed. [OK]")
         return 0
     except Exception as exc:
-        print(f"NovaFit verification failed: {exc} ❌")
+        print(f"NovaFit verification failed: {exc} [ERROR]")
         print("Next step: run REPAIR_AND_VERIFY.bat from this NovaFit folder.")
         if args.debug:
             raise

@@ -50,7 +50,7 @@ class EnvironmentContractTests(unittest.TestCase):
             True
         """
         launcher = (ROOT / "bootstrap_windows.bat").read_text(encoding="utf-8").lower()
-        self.assertIn('.venv\\scripts\\python.exe', launcher)
+        self.assertIn(".venv\\scripts\\python.exe", launcher)
         self.assertIn("--force-recreate", launcher)
         self.assertIn("3.13 3.14 3.12 3.11 3.10", launcher)
         self.assertIn("bootstrap_environment.py", launcher)
@@ -68,7 +68,10 @@ class EnvironmentContractTests(unittest.TestCase):
         launcher = (ROOT / "verify_windows.bat").read_text(encoding="utf-8").lower()
         self.assertIn("call bootstrap_windows.bat", launcher)
         self.assertIn('".venv\\scripts\\python.exe" scripts\\verify.py', launcher)
-        self.assertNotIn("python scripts\\verify.py", launcher.replace('".venv\\scripts\\python.exe" scripts\\verify.py', ""))
+        self.assertNotIn(
+            "python scripts\\verify.py",
+            launcher.replace('".venv\\scripts\\python.exe" scripts\\verify.py', ""),
+        )
 
 
 if __name__ == "__main__":

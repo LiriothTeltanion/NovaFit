@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 import venv
 from pathlib import Path
 
@@ -36,9 +39,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--venv", type=Path, default=DEFAULT_VENV, help="Virtual environment directory.")
     parser.add_argument("--no-upgrade", action="store_true", help="Skip pip/setuptools/wheel upgrade.")
-    parser.add_argument("--offline", action="store_true", help="Do not contact package indexes; validate only.")
+    parser.add_argument(
+        "--offline", action="store_true", help="Do not contact package indexes; validate only."
+    )
     parser.add_argument("--verbose", action="store_true", help="Show full pip command output.")
-    parser.add_argument("--force-recreate", action="store_true", help="Rebuild the generated virtual environment before setup.")
+    parser.add_argument(
+        "--force-recreate",
+        action="store_true",
+        help="Rebuild the generated virtual environment before setup.",
+    )
     return parser
 
 
@@ -131,10 +140,8 @@ def ensure_virtual_environment(path: Path, *, force_recreate: bool = False) -> P
     """
     python_path = venv_python(path)
     if force_recreate and path.exists():
-        import shutil
-
         print(f"[setup] Rebuilding generated environment at {path}")
-        shutil.rmtree(path)
+        remove_generated_environment(path)
     if python_path.exists():
         return python_path
     print(f"[setup] Creating local virtual environment at {path}")
@@ -142,6 +149,44 @@ def ensure_virtual_environment(path: Path, *, force_recreate: bool = False) -> P
     if not python_path.exists():
         raise RuntimeError(f"Virtual environment Python was not created: {python_path}")
     return python_path
+
+
+def remove_generated_environment(path: Path) -> None:
+    """Remove a generated venv reliably, including under OneDrive sync.
+
+    OneDrive can briefly recreate cache directories while ``rmtree`` is
+    walking them. Retrying and then atomically moving the directory out of the
+    synced workspace makes repair dependable without touching source or data.
+
+    Args:
+        path: Generated virtual-environment directory selected by the caller.
+
+    Raises:
+        RuntimeError: If the generated directory cannot be removed or moved.
+    """
+    resolved = path.expanduser().resolve()
+    is_default_generated_path = resolved == DEFAULT_VENV.resolve()
+    is_external_non_venv = not is_default_generated_path and not (resolved / "pyvenv.cfg").is_file()
+    if resolved == ROOT or is_external_non_venv:
+        raise RuntimeError(
+            f"Refusing to remove a directory that is not a generated Python environment: {resolved}"
+        )
+
+    for attempt in range(6):
+        shutil.rmtree(resolved, ignore_errors=True)
+        if not resolved.exists():
+            return
+        time.sleep(0.2 * (attempt + 1))
+
+    quarantine = Path(tempfile.gettempdir()) / f"novafit-venv-stale-{os.getpid()}"
+    shutil.rmtree(quarantine, ignore_errors=True)
+    try:
+        resolved.replace(quarantine)
+    except OSError as exc:
+        raise RuntimeError(
+            f"Could not replace the generated environment after OneDrive retries: {resolved}"
+        ) from exc
+    shutil.rmtree(quarantine, ignore_errors=True)
 
 
 def install_dependencies(python_path: Path, *, no_upgrade: bool, offline: bool, verbose: bool) -> None:
@@ -240,11 +285,13 @@ def main(argv: list[str] | None = None) -> int:
             verbose=args.verbose,
         )
         verify_imports(python_path, verbose=True)
-        print(f"Environment ready: {python_path} ✅")
+        print(f"Environment ready: {python_path} [OK]")
         return 0
     except (OSError, RuntimeError, subprocess.CalledProcessError) as exc:
-        print(f"Environment setup failed: {exc} ❌")
-        print("Check internet access, then rerun REPAIR_AND_VERIFY.bat. Python 3.13 is the recommended fallback.")
+        print(f"Environment setup failed: {exc} [ERROR]")
+        print(
+            "Check internet access, then rerun REPAIR_AND_VERIFY.bat. Python 3.13 is the recommended fallback."
+        )
         return 1
 
 

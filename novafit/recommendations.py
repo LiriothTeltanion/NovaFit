@@ -14,7 +14,7 @@ from typing import Iterable
 
 from .analytics import calculate_dashboard
 from .config import AppSettings
-from .i18n import normalize_language
+from .i18n import normalize_language, tr
 from .models import HealthEntry, UserProfile
 
 
@@ -189,7 +189,9 @@ def build_recommendation_plan(
     copy = _COPY[code]
     rows = list(entries)
     stats = calculate_dashboard(rows, settings)
-    confidence = min(100, round(min(1.0, stats.entry_count / 14) * 70 + min(1.0, stats.tracking_coverage_pct / 100) * 30))
+    confidence = min(
+        100, round(min(1.0, stats.entry_count / 14) * 70 + min(1.0, stats.tracking_coverage_pct / 100) * 30)
+    )
     if stats.entry_count == 0:
         summary = copy["empty"]
     elif confidence < 65:
@@ -199,33 +201,64 @@ def build_recommendation_plan(
 
     items: list[RecommendationItem] = []
     if stats.entry_count < 7:
-        items.append(RecommendationItem("data", copy["track_title"], copy["track_action"], copy["track_reason"], "high"))
+        items.append(
+            RecommendationItem(
+                "data", copy["track_title"], copy["track_action"], copy["track_reason"], "high"
+            )
+        )
     elif stats.tracking_coverage_pct < 75:
-        items.append(RecommendationItem("data", copy["coverage_title"], copy["coverage_action"], copy["coverage_reason"], "high"))
+        items.append(
+            RecommendationItem(
+                "data", copy["coverage_title"], copy["coverage_action"], copy["coverage_reason"], "high"
+            )
+        )
 
     if stats.entry_count and stats.average_steps < settings.step_goal * 0.5:
-        items.append(RecommendationItem("movement", copy["walk_title"], copy["walk_action"], copy["walk_reason"], "high"))
+        items.append(
+            RecommendationItem(
+                "movement", copy["walk_title"], copy["walk_action"], copy["walk_reason"], "high"
+            )
+        )
     else:
-        items.append(RecommendationItem("movement", copy["progress_title"], copy["progress_action"], copy["progress_reason"], "medium"))
+        items.append(
+            RecommendationItem(
+                "movement", copy["progress_title"], copy["progress_action"], copy["progress_reason"], "medium"
+            )
+        )
 
     if stats.entry_count and stats.average_water_l < settings.water_goal_l:
-        items.append(RecommendationItem("hydration", copy["water_title"], copy["water_action"], copy["water_reason"], "medium"))
+        items.append(
+            RecommendationItem(
+                "hydration", copy["water_title"], copy["water_action"], copy["water_reason"], "medium"
+            )
+        )
 
-    items.append(RecommendationItem("recovery", copy["recovery_title"], copy["recovery_action"], copy["recovery_reason"], "medium"))
+    items.append(
+        RecommendationItem(
+            "recovery", copy["recovery_title"], copy["recovery_action"], copy["recovery_reason"], "medium"
+        )
+    )
     mood_days = sum(1 for entry in rows if entry.mood)
     if stats.entry_count >= 4 and mood_days / max(1, stats.entry_count) < 0.5:
-        items.append(RecommendationItem("context", copy["mood_title"], copy["mood_action"], copy["mood_reason"], "low"))
+        items.append(
+            RecommendationItem("context", copy["mood_title"], copy["mood_action"], copy["mood_reason"], "low")
+        )
 
     weekly = _weekly_rhythm(profile, code)
     return RecommendationPlan(confidence, summary, weekly, tuple(items[:5]), copy["disclaimer"])
 
 
-def format_recommendation_plan(plan: RecommendationPlan, profile: UserProfile) -> str:
+def format_recommendation_plan(
+    plan: RecommendationPlan,
+    profile: UserProfile,
+    language: str | None = None,
+) -> str:
     """Format a recommendation plan for terminal output.
 
     Args:
         plan: Recommendation result.
         profile: Active profile.
+        language: Optional report-language override.
 
     Returns:
         Readable terminal report.
@@ -234,17 +267,25 @@ def format_recommendation_plan(plan: RecommendationPlan, profile: UserProfile) -
         >>> 'DATA CONFIDENCE' in format_recommendation_plan(RecommendationPlan(0, 'Start', (), (), 'General'), UserProfile.build('Demo'))
         True
     """
+    code = normalize_language(language or profile.language)
     lines = [
-        f"NOVA SPORT & DATA COACH — {profile.display_name}",
+        tr(code, "recommendation_report_title", name=profile.display_name),
         "=" * 58,
-        f"DATA CONFIDENCE: {plan.data_confidence_pct}%",
+        f"{tr(code, 'data_confidence').upper()}: {plan.data_confidence_pct}%",
         plan.summary,
         "",
-        "RECOMMENDATIONS",
+        tr(code, "recommendations_heading").upper(),
     ]
     for index, item in enumerate(plan.items, start=1):
-        lines.extend((f"{index}. {item.title} [{item.priority.upper()}]", f"   Action: {item.action}", f"   Why: {item.reason}"))
-    lines.extend(("", "SUGGESTED WEEKLY RHYTHM"))
+        priority = tr(code, f"priority_{item.priority}").upper()
+        lines.extend(
+            (
+                f"{index}. {item.title} [{priority}]",
+                f"   {tr(code, 'action')}: {item.action}",
+                f"   {tr(code, 'why')}: {item.reason}",
+            )
+        )
+    lines.extend(("", tr(code, "suggested_weekly_rhythm").upper()))
     lines.extend(f"- {item}" for item in plan.weekly_plan)
     lines.extend(("", plan.disclaimer))
     return "\n".join(lines)
@@ -253,25 +294,62 @@ def format_recommendation_plan(plan: RecommendationPlan, profile: UserProfile) -
 def _weekly_rhythm(profile: UserProfile, language: str) -> tuple[str, ...]:
     plans = {
         "en": {
-            "beginner": ("3 comfortable movement days of 10–20 minutes", "2 short mobility or stretch breaks", "2 recovery or optional easy days"),
-            "balanced": ("3–4 moderate movement days of 20–30 minutes", "2 strength or mobility sessions at a comfortable level", "At least 1 deliberate recovery day"),
-            "active": ("4–5 varied activity days without making every day maximal", "2 strength or mobility blocks", "At least 1 easy recovery day"),
+            "beginner": (
+                "3 comfortable movement days of 10–20 minutes",
+                "2 short mobility or stretch breaks",
+                "2 recovery or optional easy days",
+            ),
+            "balanced": (
+                "3–4 moderate movement days of 20–30 minutes",
+                "2 strength or mobility sessions at a comfortable level",
+                "At least 1 deliberate recovery day",
+            ),
+            "active": (
+                "4–5 varied activity days without making every day maximal",
+                "2 strength or mobility blocks",
+                "At least 1 easy recovery day",
+            ),
         },
         "es": {
-            "beginner": ("3 días de movimiento cómodo de 10–20 minutos", "2 pausas cortas de movilidad o estiramiento", "2 días de recuperación o actividad suave opcional"),
-            "balanced": ("3–4 días de movimiento moderado de 20–30 minutos", "2 sesiones cómodas de fuerza o movilidad", "Al menos 1 día deliberado de recuperación"),
-            "active": ("4–5 días variados sin convertir todos en esfuerzo máximo", "2 bloques de fuerza o movilidad", "Al menos 1 día suave de recuperación"),
+            "beginner": (
+                "3 días de movimiento cómodo de 10–20 minutos",
+                "2 pausas cortas de movilidad o estiramiento",
+                "2 días de recuperación o actividad suave opcional",
+            ),
+            "balanced": (
+                "3–4 días de movimiento moderado de 20–30 minutos",
+                "2 sesiones cómodas de fuerza o movilidad",
+                "Al menos 1 día deliberado de recuperación",
+            ),
+            "active": (
+                "4–5 días variados sin convertir todos en esfuerzo máximo",
+                "2 bloques de fuerza o movilidad",
+                "Al menos 1 día suave de recuperación",
+            ),
         },
         "he": {
-            "beginner": ("3 ימי תנועה נוחה של 10–20 דקות", "2 הפסקות קצרות של ניידות או מתיחות", "2 ימי התאוששות או פעילות קלה אופציונלית"),
-            "balanced": ("3–4 ימי תנועה מתונה של 20–30 דקות", "2 אימוני כוח או ניידות ברמה נוחה", "לפחות יום התאוששות מתוכנן אחד"),
-            "active": ("4–5 ימי פעילות מגוונים בלי להפוך כל יום למאמץ מרבי", "2 מקטעי כוח או ניידות", "לפחות יום התאוששות קל אחד"),
+            "beginner": (
+                "3 ימי תנועה נוחה של 10–20 דקות",
+                "2 הפסקות קצרות של ניידות או מתיחות",
+                "2 ימי התאוששות או פעילות קלה אופציונלית",
+            ),
+            "balanced": (
+                "3–4 ימי תנועה מתונה של 20–30 דקות",
+                "2 אימוני כוח או ניידות ברמה נוחה",
+                "לפחות יום התאוששות מתוכנן אחד",
+            ),
+            "active": (
+                "4–5 ימי פעילות מגוונים בלי להפוך כל יום למאמץ מרבי",
+                "2 מקטעי כוח או ניידות",
+                "לפחות יום התאוששות קל אחד",
+            ),
         },
     }
     selected = plans[language][profile.activity_level]
+    focus_name = tr(language, f"sport_{profile.sport_focus}")
     focus = {
-        "en": f"Preferred focus: {profile.sport_focus}. Adapt the rhythm to your environment and current comfort.",
-        "es": f"Enfoque preferido: {profile.sport_focus}. Adapta el ritmo a tu entorno y comodidad actual.",
-        "he": f"מיקוד מועדף: {profile.sport_focus}. יש להתאים את הקצב לסביבה ולתחושה הנוכחית.",
+        "en": f"Preferred focus: {focus_name}. Adapt the rhythm to your environment and current comfort.",
+        "es": f"Enfoque preferido: {focus_name}. Adapta el ritmo a tu entorno y comodidad actual.",
+        "he": f"הפעילות המועדפת: {focus_name}. מומלץ להתאים את הקצב לסביבה ולהרגשה הנוכחית.",
     }[language]
     return (*selected, focus)

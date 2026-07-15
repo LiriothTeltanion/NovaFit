@@ -17,11 +17,11 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
-from . import APP_NAME, __version__
+from . import __version__
 from .analytics import calculate_dashboard, format_dashboard
+from .backup import BACKUP_DIR, create_complete_backup
 from .charts import SUPPORTED_VIEWS, save_analytics_chart
 from .config import (
-    APP_VERSION,
     CONFIG_PATH,
     CSV_EXPORT_PATH,
     DB_PATH,
@@ -196,8 +196,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--debug", action="store_true", help="Show diagnostic exceptions.")
     parser.add_argument("--db", type=Path, default=DB_PATH, help="SQLite database path.")
     parser.add_argument("--user", help="Active profile id or display name.")
-    parser.add_argument("--language", choices=("en", "es", "he"), help="Language used by multilingual output.")
-    parser.add_argument("--theme", choices=theme_ids() + ("dark", "light"), help="Theme override for this command.")
+    parser.add_argument(
+        "--language", choices=("en", "es", "he"), help="Language used by multilingual output."
+    )
+    parser.add_argument(
+        "--theme", choices=theme_ids() + ("dark", "light"), help="Theme override for this command."
+    )
 
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument("--gui", action="store_true", help="Open the Tkinter desktop interface.")
@@ -205,8 +209,12 @@ def build_parser() -> argparse.ArgumentParser:
     actions.add_argument("--add", metavar="DATE", help="Add or update an entry for YYYY-MM-DD.")
     actions.add_argument("--list", nargs="?", const=10, type=int, metavar="N", help="List recent entries.")
     actions.add_argument("--dashboard", action="store_true", help="Show dashboard statistics.")
-    actions.add_argument("--motivation", action="store_true", help="Show the grounded Motivation Center summary.")
-    actions.add_argument("--recommendations", action="store_true", help="Show the conservative Sport & Data Coach plan.")
+    actions.add_argument(
+        "--motivation", action="store_true", help="Show the grounded Motivation Center summary."
+    )
+    actions.add_argument(
+        "--recommendations", action="store_true", help="Show the conservative Sport & Data Coach plan."
+    )
     actions.add_argument("--profiles", action="store_true", help="List local user profiles.")
     actions.add_argument("--create-user", metavar="NAME", help="Create a local user profile.")
     actions.add_argument("--delete-user", type=int, metavar="ID", help="Delete a non-primary user profile.")
@@ -217,9 +225,19 @@ def build_parser() -> argparse.ArgumentParser:
     actions.add_argument("--import-json", type=Path, metavar="PATH", help="Import JSON backup.")
     actions.add_argument("--export-csv", type=Path, metavar="PATH", help="Export CSV file.")
     actions.add_argument("--import-csv", type=Path, metavar="PATH", help="Import CSV file.")
+    actions.add_argument(
+        "--backup",
+        nargs="?",
+        const=BACKUP_DIR,
+        type=Path,
+        metavar="ZIP_OR_DIR",
+        help="Create a complete all-profile ZIP backup with checksums.",
+    )
     actions.add_argument("--weather", metavar="CITY", help="Show current weather.")
     actions.add_argument("--chart", type=Path, metavar="PNG", help="Save an analytics dashboard PNG.")
-    actions.add_argument("--report-html", type=Path, metavar="HTML", help="Export a self-contained offline HTML report.")
+    actions.add_argument(
+        "--report-html", type=Path, metavar="HTML", help="Export a self-contained offline HTML report."
+    )
     actions.add_argument("--settings", action="store_true", help="Show current settings.")
 
     parser.add_argument("--steps", type=int, help="Step count used with --add.")
@@ -227,9 +245,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--calories", type=int, help="Optional calories used with --add.")
     parser.add_argument("--mood", help="Optional mood used with --add.")
     parser.add_argument("--note", help="Optional private note used with --add.")
-    parser.add_argument("--avatar", choices=PROFILE_AVATARS, default="nova", help="Avatar used with --create-user.")
-    parser.add_argument("--activity-level", choices=ACTIVITY_LEVELS, default="balanced", help="Activity preference used with --create-user.")
-    parser.add_argument("--sport-focus", choices=SPORT_FOCUSES, default="mixed", help="Sport preference used with --create-user.")
+    parser.add_argument(
+        "--avatar", choices=PROFILE_AVATARS, default="nova", help="Avatar used with --create-user."
+    )
+    parser.add_argument(
+        "--activity-level",
+        choices=ACTIVITY_LEVELS,
+        default="balanced",
+        help="Activity preference used with --create-user.",
+    )
+    parser.add_argument(
+        "--sport-focus",
+        choices=SPORT_FOCUSES,
+        default="mixed",
+        help="Sport preference used with --create-user.",
+    )
     parser.add_argument(
         "--import-strategy",
         choices=["replace", "skip"],
@@ -294,7 +324,6 @@ def main(argv: list[str] | None = None) -> int:
         if not args.debug:
             print("Run again with --debug for diagnostic details.")
         return 1
-
 
 
 def _prepare_cli_context(
@@ -392,6 +421,7 @@ def _menu_switch_profile(database: NovaFitDatabase, settings: AppSettings) -> No
     save_settings(settings)
     print(Console.success(f"Active profile: {profile.display_name}"))
 
+
 def json_error_types() -> type[Exception]:
     """Return the JSON decode exception without a module-level import cycle.
 
@@ -417,6 +447,7 @@ def _dispatch(
     profile: UserProfile,
 ) -> int:
     if args.gui:
+        save_settings(settings)
         return launch_gui(database.path)
     if args.add:
         _require_add_fields(args)
@@ -442,7 +473,9 @@ def _dispatch(
         print(format_motivation(build_motivation_snapshot(entries, settings), settings))
         return 0
     if args.recommendations:
-        plan = build_recommendation_plan(database.list(None), settings, profile, args.language or profile.language)
+        plan = build_recommendation_plan(
+            database.list(None), settings, profile, args.language or profile.language
+        )
         print(format_recommendation_plan(plan, profile))
         return 0
     if args.profiles:
@@ -466,7 +499,11 @@ def _dispatch(
         return 0
     if args.delete_user is not None:
         deleted = database.delete_profile(args.delete_user)
-        print(Console.success(f"Deleted profile {args.delete_user}") if deleted else Console.warning("Profile not found"))
+        print(
+            Console.success(f"Deleted profile {args.delete_user}")
+            if deleted
+            else Console.warning("Profile not found")
+        )
         return 0
     if args.delete:
         deleted = database.delete(args.delete)
@@ -496,6 +533,10 @@ def _dispatch(
     if args.import_csv:
         result = import_csv(database, args.import_csv, strategy=args.import_strategy)
         print_import_result(result.imported, result.skipped, result.invalid)
+        return 0
+    if args.backup:
+        destination = create_complete_backup(database, args.backup)
+        print(Console.success(f"Saved complete verified backup to {destination}"))
         return 0
     if args.weather:
         print(format_weather(get_weather(args.weather)))
@@ -664,23 +705,75 @@ def interactive_menu(database: NovaFitDatabase, settings: AppSettings) -> int:
     actions: dict[str, tuple[str, Callable[[], None]]] = {
         "1": ("Add or update entry", lambda: _menu_add(database)),
         "2": ("List recent entries", lambda: _menu_list(database)),
-        "3": ("Dashboard", lambda: print(format_dashboard(calculate_dashboard(database.list(None), settings), settings))),
-        "4": ("Motivation Center", lambda: print(format_motivation(build_motivation_snapshot(database.list(None), settings), settings))),
-        "5": ("Sport & Data Coach", lambda: print(format_recommendation_plan(build_recommendation_plan(database.list(None), settings, database.get_profile(database.active_profile_id) or UserProfile.build("Primary User"), settings.language), database.get_profile(database.active_profile_id) or UserProfile.build("Primary User")))),
+        "3": (
+            "Dashboard",
+            lambda: print(format_dashboard(calculate_dashboard(database.list(None), settings), settings)),
+        ),
+        "4": (
+            "Motivation Center",
+            lambda: print(
+                format_motivation(build_motivation_snapshot(database.list(None), settings), settings)
+            ),
+        ),
+        "5": (
+            "Sport & Data Coach",
+            lambda: print(
+                format_recommendation_plan(
+                    build_recommendation_plan(
+                        database.list(None),
+                        settings,
+                        database.get_profile(database.active_profile_id) or UserProfile.build("Primary User"),
+                        settings.language,
+                    ),
+                    database.get_profile(database.active_profile_id) or UserProfile.build("Primary User"),
+                )
+            ),
+        ),
         "6": ("Switch local user", lambda: _menu_switch_profile(database, settings)),
         "7": ("List user profiles", lambda: print_profiles(database)),
         "8": ("Search date range", lambda: _menu_search(database)),
         "9": ("Delete entry", lambda: _menu_delete(database)),
-        "10": ("Weather", lambda: print(format_weather(get_weather(input(f"City [{settings.default_city}]: ").strip() or settings.default_city)))),
-        "11": ("Export JSON", lambda: print(Console.success(f"Saved {export_json(database, EXPORT_PATH)} records to {EXPORT_PATH}"))),
+        "10": (
+            "Weather",
+            lambda: print(
+                format_weather(
+                    get_weather(input(f"City [{settings.default_city}]: ").strip() or settings.default_city)
+                )
+            ),
+        ),
+        "11": (
+            "Export JSON",
+            lambda: print(
+                Console.success(f"Saved {export_json(database, EXPORT_PATH)} records to {EXPORT_PATH}")
+            ),
+        ),
         "12": ("Import JSON", lambda: _menu_import_json(database)),
-        "13": ("Export CSV", lambda: print(Console.success(f"Saved {export_csv(database, CSV_EXPORT_PATH)} records to {CSV_EXPORT_PATH}"))),
+        "13": (
+            "Export CSV",
+            lambda: print(
+                Console.success(f"Saved {export_csv(database, CSV_EXPORT_PATH)} records to {CSV_EXPORT_PATH}")
+            ),
+        ),
         "14": ("Import CSV", lambda: _menu_import_csv(database)),
         "15": ("Generate demo data", lambda: _menu_seed(database)),
         "16": ("Open GUI", lambda: launch_gui(database.path)),
-        "17": ("Edit goals, theme, and purpose", lambda: _menu_settings(settings)),
-        "18": ("Export analytics PNG", lambda: print(Console.success(f"Saved chart to {save_analytics_chart(database.list(None), settings, Path('data/novafit-dashboard.png'), view=settings.chart_view, days=settings.chart_days, theme=settings.theme)}"))),
-        "19": ("Export visual HTML report", lambda: print(Console.success(f"Saved report to {export_html_report(database.list(None), settings, Path('data/novafit-report.html'), view=settings.chart_view)}"))),
+        "17": ("Edit goals, theme, and purpose", lambda: _menu_settings(database, settings)),
+        "18": (
+            "Export analytics PNG",
+            lambda: print(
+                Console.success(
+                    f"Saved chart to {save_analytics_chart(database.list(None), settings, Path('data/novafit-dashboard.png'), view=settings.chart_view, days=settings.chart_days, theme=settings.theme)}"
+                )
+            ),
+        ),
+        "19": (
+            "Export visual HTML report",
+            lambda: print(
+                Console.success(
+                    f"Saved report to {export_html_report(database.list(None), settings, Path('data/novafit-report.html'), view=settings.chart_view)}"
+                )
+            ),
+        ),
         "20": ("Clear active-profile data", lambda: _menu_clear(database)),
     }
     while True:
@@ -744,7 +837,11 @@ def _menu_delete(database: NovaFitDatabase) -> None:
     if input(f"Delete {target}? Type YES: ").strip() != "YES":
         print("Deletion cancelled.")
         return
-    print(Console.success(f"Deleted {target}") if database.delete(target) else Console.warning("Entry not found"))
+    print(
+        Console.success(f"Deleted {target}")
+        if database.delete(target)
+        else Console.warning("Entry not found")
+    )
 
 
 def _menu_import_json(database: NovaFitDatabase) -> None:
@@ -765,42 +862,82 @@ def _menu_seed(database: NovaFitDatabase) -> None:
     print(Console.success(f"Generated {count} demo record(s)"))
 
 
-def _menu_settings(settings: AppSettings) -> None:
+def _menu_settings(database: NovaFitDatabase, settings: AppSettings) -> None:
     """Edit persistent goals, theme, accessibility, and purpose fields.
 
     Args:
+        database: Active profile store.
         settings: Mutable settings object used by the current menu session.
 
     Returns:
         None.
 
     Example:
-        >>> _menu_settings(AppSettings())  # doctest: +SKIP
+        >>> _menu_settings(NovaFitDatabase(Path('data/example.db')), AppSettings())  # doctest: +SKIP
     """
     print(f"Available themes: {', '.join(theme_ids())}")
     updated = AppSettings(
         step_goal=int(input(f"Step goal [{settings.step_goal}]: ").strip() or settings.step_goal),
         water_goal_l=float(input(f"Water goal [{settings.water_goal_l}]: ").strip() or settings.water_goal_l),
-        calorie_goal=int(input(f"Calorie reference [{settings.calorie_goal}]: ").strip() or settings.calorie_goal),
+        calorie_goal=int(
+            input(f"Calorie reference [{settings.calorie_goal}]: ").strip() or settings.calorie_goal
+        ),
         default_city=input(f"Default city [{settings.default_city}]: ").strip() or settings.default_city,
         theme=input(f"Theme [{settings.theme}]: ").strip() or settings.theme,
         show_achievements=settings.show_achievements,
         chart_days=int(input(f"Chart days [{settings.chart_days}]: ").strip() or settings.chart_days),
-        chart_view=input(f"Chart view command_center/trend_lab/consistency_map/training_atlas [{settings.chart_view}]: ").strip() or settings.chart_view,
-        reduce_motion=(input(f"Reduce motion y/n [{'y' if settings.reduce_motion else 'n'}]: ").strip().lower() or ("y" if settings.reduce_motion else "n")) in {"y", "yes"},
+        chart_view=input(
+            f"Chart view command_center/trend_lab/consistency_map/training_atlas [{settings.chart_view}]: "
+        ).strip()
+        or settings.chart_view,
+        reduce_motion=(
+            input(f"Reduce motion y/n [{'y' if settings.reduce_motion else 'n'}]: ").strip().lower()
+            or ("y" if settings.reduce_motion else "n")
+        )
+        in {"y", "yes"},
         personal_why=input(f"Personal why [{settings.personal_why}]: ").strip() or settings.personal_why,
         weekly_focus=input(f"Weekly focus [{settings.weekly_focus or 'automatic'}]: ").strip(),
         reward_note=input(f"Reward note [{settings.reward_note}]: ").strip() or settings.reward_note,
-        language=normalize_language(input(f"Language en/es/he [{settings.language}]: ").strip() or settings.language),
+        language=normalize_language(
+            input(f"Language en/es/he [{settings.language}]: ").strip() or settings.language
+        ),
         active_profile_id=settings.active_profile_id,
         ui_scale=settings.ui_scale,
     ).validate()
+    profile = database.get_profile(database.active_profile_id)
+    if profile is None:
+        raise ValueError("The active profile no longer exists.")
+    database.update_profile(
+        UserProfile.build(
+            profile.display_name,
+            profile_id=profile.profile_id,
+            avatar=profile.avatar,
+            language=updated.language,
+            theme=updated.theme,
+            step_goal=updated.step_goal,
+            water_goal_l=updated.water_goal_l,
+            calorie_goal=updated.calorie_goal,
+            activity_level=profile.activity_level,
+            sport_focus=profile.sport_focus,
+        )
+    )
     save_settings(updated)
     for field_name in (
-        "step_goal", "water_goal_l", "calorie_goal", "default_city", "theme",
-        "show_achievements", "chart_days", "chart_view", "reduce_motion",
-        "personal_why", "weekly_focus", "reward_note", "language",
-        "active_profile_id", "ui_scale",
+        "step_goal",
+        "water_goal_l",
+        "calorie_goal",
+        "default_city",
+        "theme",
+        "show_achievements",
+        "chart_days",
+        "chart_view",
+        "reduce_motion",
+        "personal_why",
+        "weekly_focus",
+        "reward_note",
+        "language",
+        "active_profile_id",
+        "ui_scale",
     ):
         setattr(settings, field_name, getattr(updated, field_name))
     print(Console.success("Settings saved"))

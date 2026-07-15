@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title NovaFit 4.0 Setup
+title NovaFit Setup
 
 set "NOVAFIT_NO_PAUSE=1"
 call bootstrap_windows.bat

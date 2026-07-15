@@ -47,6 +47,15 @@ class RecommendationTests(unittest.TestCase):
         self.assertIn("DATA CONFIDENCE", report)
         self.assertIn("not medical advice", report)
 
+    def test_hebrew_terminal_report_localizes_headings_and_sport_focus(self) -> None:
+        profile = UserProfile.build("קווין", language="he", sport_focus="walking")
+        plan = build_recommendation_plan([], AppSettings(language="he"), profile, "he")
+        report = format_recommendation_plan(plan, profile)
+        self.assertIn("מאמן הפעילות", report)
+        self.assertIn("אמינות הנתונים", report)
+        self.assertIn("הליכה", report)
+        self.assertNotIn("DATA CONFIDENCE", report)
+
 
 if __name__ == "__main__":
     unittest.main()

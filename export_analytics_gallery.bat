@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title NovaFit Ultimate 4.0 - Analytics Gallery
+title NovaFit Ultimate - Analytics Gallery
 
 if not exist ".venv\Scripts\python.exe" (
   call setup_windows.bat
@@ -18,7 +18,7 @@ if errorlevel 1 goto :failed
 if errorlevel 1 goto :failed
 ".venv\Scripts\python.exe" -m novafit.cli --chart "data\reports\03_consistency_map.png" --chart-view consistency --chart-days 90
 if errorlevel 1 goto :failed
-".venv\Scripts\python.exe" -m novafit.cli --chart "data\reports\04_training_atlas.png" --chart-view training-atlas --chart-days 90
+".venv\Scripts\python.exe" -m novafit.cli --chart "data\reports\04_training_atlas.png" --chart-view training_atlas --chart-days 90
 if errorlevel 1 goto :failed
 
 echo.

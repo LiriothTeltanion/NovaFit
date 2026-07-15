@@ -150,7 +150,7 @@ def export_html_report(
   </header>
 
   <section class="kpis">
-    {''.join(f'<article class="card"><small>{escape(label)}</small><strong>{escape(value)}</strong></article>' for label, value in kpis)}
+    {"".join(f'<article class="card"><small>{escape(label)}</small><strong>{escape(value)}</strong></article>' for label, value in kpis)}
   </section>
 
   <section class="card motivation">
@@ -160,7 +160,7 @@ def export_html_report(
     <p><strong>Daily spark:</strong> {escape(motivation.daily_spark)}</p>
     <p><strong>Next useful action:</strong> {escape(motivation.micro_action)}</p>
     <p><strong>Next milestone:</strong> {escape(motivation.next_milestone)} ({motivation.milestone_progress_pct}%)</p>
-    <p><strong>Personal why:</strong> {escape(settings.personal_why or 'Not configured')}</p>
+    <p><strong>Personal why:</strong> {escape(settings.personal_why or "Not configured")}</p>
   </section>
 
   <section class="chart">
@@ -169,7 +169,7 @@ def export_html_report(
 
   <h2>Evidence-based observations</h2>
   <section class="insights">
-    {''.join(f'<article class="card insight"><p>{escape(line)}</p></article>' for line in insights)}
+    {"".join(f'<article class="card insight"><p>{escape(line)}</p></article>' for line in insights)}
   </section>
 
   <h2>Recent records</h2>

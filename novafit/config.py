@@ -19,6 +19,7 @@ from typing import Any, Mapping
 from . import __version__
 from .i18n import normalize_language
 from .themes import normalize_theme_id, theme_ids
+from .validation import validate_non_negative_float, validate_non_negative_int
 
 LOGGER = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -101,6 +102,9 @@ class AppSettings:
             >>> AppSettings(theme="dark").validate().theme
             'midnight'
         """
+        self.step_goal = validate_non_negative_int(self.step_goal, "Step goal", 200_000)
+        self.water_goal_l = validate_non_negative_float(self.water_goal_l, "Water goal", 20.0)
+        self.calorie_goal = validate_non_negative_int(self.calorie_goal, "Calorie goal", 20_000)
         if self.step_goal <= 0:
             raise ValueError("Step goal must be greater than zero.")
         if self.water_goal_l <= 0:
@@ -112,13 +116,20 @@ class AppSettings:
             raise ValueError(f"Unsupported theme: {self.theme}")
         if self.default_city.lower().strip() not in CITY_COORDS:
             raise ValueError(f"Unsupported default city: {self.default_city}")
+        self.chart_days = validate_non_negative_int(self.chart_days, "Chart days", 365)
         if not 7 <= self.chart_days <= 365:
             raise ValueError("Chart days must be between 7 and 365.")
         if self.chart_view not in {"command_center", "trend_lab", "consistency_map", "training_atlas"}:
-            raise ValueError("Chart view must be command_center, trend_lab, consistency_map, or training_atlas.")
+            raise ValueError(
+                "Chart view must be command_center, trend_lab, consistency_map, or training_atlas."
+            )
         self.language = normalize_language(self.language)
+        self.active_profile_id = validate_non_negative_int(
+            self.active_profile_id, "Active profile id", 2_147_483_647
+        )
         if self.active_profile_id <= 0:
             raise ValueError("Active profile id must be greater than zero.")
+        self.ui_scale = validate_non_negative_float(self.ui_scale, "UI scale", 1.5)
         if not 0.8 <= self.ui_scale <= 1.5:
             raise ValueError("UI scale must be between 0.8 and 1.5.")
         for label, value, maximum in (

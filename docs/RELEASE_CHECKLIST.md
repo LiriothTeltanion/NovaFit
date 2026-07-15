@@ -1,4 +1,4 @@
-# NovaFit 4.0 Release Checklist ✅
+# NovaFit 4.1 Release Checklist ✅
 
 ## Source
 
@@ -6,7 +6,8 @@
 - [ ] Branch name is focused and intentional
 - [ ] No generated dependency folders staged
 - [ ] No database, export, log or secret staged
-- [ ] Version is `4.0.0` in package and project metadata
+- [ ] Version is `4.1.0` in package and project metadata
+- [ ] `python scripts/sync_docs.py --check`
 - [ ] Changelog updated
 
 ## Automated quality
@@ -14,6 +15,7 @@
 - [ ] `python -m compileall -q novafit scripts tests`
 - [ ] `python -m unittest discover -s tests -v`
 - [ ] `python scripts/verify.py`
+- [ ] `VERIFY_ALL.bat`
 - [ ] `git diff --check`
 - [ ] GitHub Actions green on Windows and Ubuntu
 
@@ -65,15 +67,17 @@
 - [ ] CLI help matches README
 - [ ] Analytics formulas match code
 - [ ] Test count matches current run
+- [ ] `docs/PROJECT_FACTS.md`, `portfolio/project.json` and `assets/manifest.json` are synchronized
 - [ ] Actual GUI screenshot labeled honestly
 - [ ] Conceptual assets are not called real screenshots
 
 ## Release
 
 - [ ] Commit messages are descriptive
-- [ ] Pull request explains restoration and Ultimate 4.0 additions
-- [ ] Tag `v4.0.0`
+- [ ] Direct-main publication was explicitly authorized, or a reviewed pull request is ready
+- [ ] Tag `v4.1.0`
 - [ ] Attach source ZIP
 - [ ] Attach Windows-ready ZIP
 - [ ] Attach SHA-256 checksums
 - [ ] Publish release notes from changelog
+- [ ] `.github/workflows/release.yml` completed successfully for the tag

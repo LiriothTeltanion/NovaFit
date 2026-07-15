@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 import tempfile
 import time
 import sys
@@ -260,7 +259,7 @@ def main() -> int:
     """
     args = build_parser().parse_args()
     for path in run_capture(args.output.resolve()):
-        print(f"Captured {path} ✅")
+        print(f"Captured {path} [OK]")
     return 0
 
 

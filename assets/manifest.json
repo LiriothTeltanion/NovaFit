@@ -1,0 +1,722 @@
+{
+  "schema": "novafit-asset-manifest-v1",
+  "asset_count": 54,
+  "total_bytes": 26281202,
+  "assets": [
+    {
+      "path": "assets/analytics-command-center-animated.svg",
+      "bytes": 8826,
+      "sha256": "0aef122613cd4fd880a5c7c8eda601a88fd8c38dc383a2fe10aeca4d4163acb8",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 390,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/analytics-command-center-light.png",
+      "bytes": 292261,
+      "sha256": "80527bdfeb82246bc5d18d5e3e78e9261971fdd7f831b9a016a58420159d91fa",
+      "media_type": "image/png",
+      "width": 2235,
+      "height": 1240,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/analytics-command-center.png",
+      "bytes": 313979,
+      "sha256": "616328fda2997d0f1c86e24fe17436b44f32844f58ee0556f4d437a902fd456f",
+      "media_type": "image/png",
+      "width": 2235,
+      "height": 1240,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/analytics-consistency-map.png",
+      "bytes": 142715,
+      "sha256": "c83f3ce2cc31970ea0573672f786fbb932dac3a0b0e9b8c1cf76efe7d41d1674",
+      "media_type": "image/png",
+      "width": 2230,
+      "height": 1215,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/analytics-training-atlas.png",
+      "bytes": 277303,
+      "sha256": "cb7f53c932ff8084c462734e2f3769d07eb5776ec004039504260afd48bf9d4b",
+      "media_type": "image/png",
+      "width": 2357,
+      "height": 1430,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/analytics-trend-lab.png",
+      "bytes": 294782,
+      "sha256": "536b0848a8e1cc66e86d69cc96c7f0ad03722159b518601066a7217ff4974afe",
+      "media_type": "image/png",
+      "width": 2164,
+      "height": 1171,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/architecture-animated.svg",
+      "bytes": 3245,
+      "sha256": "31442ecd57c783f4eadf38dae408a7d1e3ec75d77554b6bfbc7219a2d88fac29",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 340,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/dashboard-views-animated.svg",
+      "bytes": 3821,
+      "sha256": "cc1451e71d0b15f14fd403b1c9c3f2054d2e99d3b9288269e4f4fbed3b5b4710",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 330,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/distribution-safety-animated.svg",
+      "bytes": 3763,
+      "sha256": "b5d6a92085c93079f735a08d1b3a1d736f683a4774aca5ae4b264d4dbd4d3c34",
+      "media_type": "image/svg+xml",
+      "width": 1400,
+      "height": 430,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/health-orbit-animated.svg",
+      "bytes": 4526,
+      "sha256": "bdea2b96916dc575624d63766408122061e7b5f61f0f4eba97a12a324c632d0e",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 430,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/hebrew-rtl-command-center.png",
+      "bytes": 262199,
+      "sha256": "9d88fdbd381858031d77daeeb4f4630947a9196963796d7e0cff1251b24ef292",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/icon-system.png",
+      "bytes": 38324,
+      "sha256": "063dc7df197b5deabf3aea1fd8da258019e1dff123032d0e176ace878996422f",
+      "media_type": "image/png",
+      "width": 1260,
+      "height": 330,
+      "animated": false,
+      "referenced_by": [
+        "README.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-animated.svg",
+      "bytes": 4191,
+      "sha256": "232ff76b51f19c0416508164c4660012fae954bf0d5fb8ffdabbaed5270e134f",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 420,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-aurora.png",
+      "bytes": 128997,
+      "sha256": "255fd63a2617094d8134bbce183f69280c4c349c9c5162b1e528b0cf916dceb0",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-cloud.png",
+      "bytes": 128869,
+      "sha256": "4ff9286f80483ba0d068c37788a9da20db2faf6d6d2c6abcf0938004e4a7bb7a",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-desert.png",
+      "bytes": 129455,
+      "sha256": "3121d2cd88c6b2e8d3f461f390003d338eea2e79c5afee02d444120a70a8650c",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-real.png",
+      "bytes": 128997,
+      "sha256": "255fd63a2617094d8134bbce183f69280c4c349c9c5162b1e528b0cf916dceb0",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-rose.png",
+      "bytes": 129156,
+      "sha256": "af2313baf44442169580c44097c4220bf9ae629acef63224a84ada56ed224623",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-tour.gif",
+      "bytes": 2041668,
+      "sha256": "561b50606261e37e1e57237a7fa6020ce6904b349147b9f19b4b50606a7368be",
+      "media_type": "image/gif",
+      "width": 960,
+      "height": 600,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-center-ultimate.png",
+      "bytes": 110061,
+      "sha256": "ecd7e194da2ec1f2a1d8fc856b8e9482273670a7b08990fa556154a76226e0c6",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/motivation-roadmap-animated.svg",
+      "bytes": 2403,
+      "sha256": "0c45332c4a87f8e2ed8678997b1c949ab4c9fc9182a710b9af1cda9b88de4c87",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 320,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/multi-profile-i18n-animated.svg",
+      "bytes": 4185,
+      "sha256": "239890a6a550d64e27cbdb7cbff24bbb4e167727ad64476e53451d28b1bebb43",
+      "media_type": "image/svg+xml",
+      "width": 1400,
+      "height": 500,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/multi-profile-language-center.png",
+      "bytes": 89311,
+      "sha256": "2d2b5a1e93d53cf302b059f7447cdf2a15a6aeeeab57fcd9fb2b25e6b477e440",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-analytics-tour.gif",
+      "bytes": 3550299,
+      "sha256": "e61f19fdb915132b21024e8d68d79946f57baf34fe9339d4bf2c21f171155cf1",
+      "media_type": "image/gif",
+      "width": 1100,
+      "height": 609,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-banner-animated.svg",
+      "bytes": 5179,
+      "sha256": "67440adc2dbc9d06738ec0dd8fce92a4a4ed9539ff54f341107d9f70bdd257ed",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 320,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-gui-real.png",
+      "bytes": 194939,
+      "sha256": "3759caa0c6513fb694fff41eca48167d6fe2e135455662d4c62de226067b450f",
+      "media_type": "image/png",
+      "width": 1600,
+      "height": 1000,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-report-preview.html",
+      "bytes": 437368,
+      "sha256": "1372703e637fe8cf6bc7a22706f74ac26343d21a1cbe332fd448bf8c40875ec2",
+      "media_type": "text/html",
+      "width": null,
+      "height": null,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-ultimate-banner-animated.svg",
+      "bytes": 4350,
+      "sha256": "14bfa84a021680a6f04313c7361cbdb0fe3b9fc52b6da7eb85048c5510731929",
+      "media_type": "image/svg+xml",
+      "width": 1600,
+      "height": 520,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-ultimate-gui.png",
+      "bytes": 212606,
+      "sha256": "589f8cc55609656efc79a651d3dd6cc0c51cafb3ace4d30ffeb1ff5d3f8f7090",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-ultimate-tour.gif",
+      "bytes": 7281706,
+      "sha256": "3178bec617f3eef9a1164c24ae06a04a8bfb0ab806a684e16c2998dd13b15580",
+      "media_type": "image/gif",
+      "width": 1200,
+      "height": 760,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/privacy-vault-animated.svg",
+      "bytes": 3782,
+      "sha256": "22f6a6969c77303d9079bb38d247ccc74700b4645f0c73e5cfaba055e3faff09",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 300,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/quality-gates-animated.svg",
+      "bytes": 4098,
+      "sha256": "aafa7da06f20ac2648ad8a2e1a5f7f4d7f61e8bf8dfeb82619c5177d949af0d9",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 250,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/self-healing-verification-animated.svg",
+      "bytes": 2798,
+      "sha256": "ff070b932609dcf1a2f768d153dac8701df47d4a34fe7d96d4bfb9dce6f3e1c6",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 340,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/spanish-sport-data-coach.png",
+      "bytes": 93508,
+      "sha256": "abd6bc098f2741da006ffad649b2af421966ceac988b5401f008976b8b14c1ae",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/sport-data-coach-real.png",
+      "bytes": 92451,
+      "sha256": "4456ca50b70792efd367ca3b1b78497eda257e264a73b89375d4cfdec400293d",
+      "media_type": "image/png",
+      "width": 1580,
+      "height": 980,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/sport-data-engine-animated.svg",
+      "bytes": 4432,
+      "sha256": "c8ad9a6f5d1b4a2a77e304525ad87f67fb067e33fc469b2d18a24c94a45c571e",
+      "media_type": "image/svg+xml",
+      "width": 1400,
+      "height": 500,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/technology-constellation-animated.svg",
+      "bytes": 5041,
+      "sha256": "ac5789a56457ba67eae7ee348a151bc5b95cf1033894b1a5a16ef38ef08ef63e",
+      "media_type": "image/svg+xml",
+      "width": 1400,
+      "height": 520,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-arcade.png",
+      "bytes": 193357,
+      "sha256": "e834835a4b73e49accb701e8a2f9be3730b82d9531507870b9e3027e33138bc1",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-aurora.png",
+      "bytes": 192633,
+      "sha256": "abd17ac4f542e3a4d696cc8254cddf7a33c9d22ab763626eddff837816f0a211",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-cloud.png",
+      "bytes": 189052,
+      "sha256": "a09bacb102d17dd4058814c9f0e4b9c95282a25a1045b62de218b960dc35f360",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-contrast.png",
+      "bytes": 187840,
+      "sha256": "96eccfc58891a68bfce6492f67cfdece7dc4434a12455cc63dd61606a0395c55",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-desert.png",
+      "bytes": 191664,
+      "sha256": "b53907a7ed2af49d79476db7044e855ba95ddcecb35688df2abc261573d865c3",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-forest.png",
+      "bytes": 191320,
+      "sha256": "9477044293a57262a0102f7d9981b926b257d3412cc1f394e4436c8d4bb8e67b",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-lime.png",
+      "bytes": 191247,
+      "sha256": "7af087483dd9f818ed35f26777edd8a355cfe63a7a1c9a2fb4cd67d6cdbab539",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-midnight.png",
+      "bytes": 193061,
+      "sha256": "a606cf63e8a9c949ca71f6109d99368da7ff2e0743cd0fbcefbc46413fc73ff0",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-ocean.png",
+      "bytes": 193080,
+      "sha256": "228f1136db30ebd6daec1f8dd9c493a277f3e58c76584bf7a2e2e3eb76172e08",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-rose.png",
+      "bytes": 193693,
+      "sha256": "18be389f921382f6b2322a1557152091a83ccb6548f519df25a78847640d5d68",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-sapphire.png",
+      "bytes": 193275,
+      "sha256": "ab4f1a39508025dd18a04626077f716b3494083cad9d1d9f6200ec8d2500e934",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-gallery/command-center-solar.png",
+      "bytes": 192575,
+      "sha256": "c2cac15bb53d311a73bf235dca24e0a1aebaecf91f1741135642c3cf5b4bf658",
+      "media_type": "image/png",
+      "width": 1639,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-spectrum-animated.svg",
+      "bytes": 5429,
+      "sha256": "b6b115338f63fdf874e62aa367ff3ec7ef2d51729ad323cf412fec13c86885c5",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 520,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-spectrum-tour.gif",
+      "bytes": 6578503,
+      "sha256": "43b9c6be49076dadfd2ee1c4b03e023877da21b8b497ed39b1d4cf3be7ebb106",
+      "media_type": "image/gif",
+      "width": 1100,
+      "height": 609,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/theme-spectrum.png",
+      "bytes": 951425,
+      "sha256": "3628d51099e0778f745faa58f2743c4e16627a165e4b1c7e382e84c2111c00c8",
+      "media_type": "image/png",
+      "width": 1040,
+      "height": 1992,
+      "animated": false,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md",
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/training-atlas-animated.svg",
+      "bytes": 4249,
+      "sha256": "863239a3df2cee09c5083215550e7ccd06cd88fde2a75794374b65afdfd7cb8e",
+      "media_type": "image/svg+xml",
+      "width": 1400,
+      "height": 500,
+      "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/windows-launch-flow-animated.svg",
+      "bytes": 3205,
+      "sha256": "c31ceba123666266f154368946cfbc7a9ea955332ff83d9f44c18be600a7b716",
+      "media_type": "image/svg+xml",
+      "width": 1200,
+      "height": 300,
+      "animated": true,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    }
+  ]
+}

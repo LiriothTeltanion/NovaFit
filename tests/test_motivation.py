@@ -52,6 +52,26 @@ class MotivationTests(unittest.TestCase):
         self.assertIn("Learn steadily", output)
         self.assertIn("not medical advice", output)
 
+    def test_hebrew_snapshot_localizes_dynamic_motivation_copy(self) -> None:
+        settings = AppSettings(language="he")
+        snapshot = build_motivation_snapshot([], settings, today=date(2026, 7, 15))
+        self.assertIn("רישום", snapshot.headline)
+        self.assertIn("ימים", snapshot.weekly_challenge)
+        self.assertTrue(
+            all(
+                any("\u0590" <= character <= "\u05ff" for character in badge.title)
+                for badge in snapshot.achievements
+            )
+        )
+
+    def test_hebrew_terminal_output_keeps_safety_scope(self) -> None:
+        settings = AppSettings(language="he", personal_why="לבנות שגרה יציבה")
+        snapshot = build_motivation_snapshot([], settings, today=date(2026, 7, 15))
+        output = format_motivation(snapshot, settings)
+        self.assertIn("מרכז המוטיבציה", output)
+        self.assertIn("לבנות שגרה יציבה", output)
+        self.assertIn("אינו ייעוץ רפואי", output)
+
 
 if __name__ == "__main__":
     unittest.main()

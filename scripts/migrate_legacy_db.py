@@ -77,7 +77,7 @@ def main() -> int:
     """
     args = build_parser().parse_args()
     backup = migrate(args.database)
-    print(f"Migration complete. Backup saved to {backup} ✅")
+    print(f"Migration complete. Backup saved to {backup} [OK]")
     return 0
 
 

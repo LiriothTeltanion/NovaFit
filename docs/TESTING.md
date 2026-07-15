@@ -2,11 +2,9 @@
 
 ## Automated result
 
-```text
-74 tests run
-74 passed
-0 failed
-```
+The authoritative test total is the one printed by the current workflow. It is
+also generated into the project facts during documentation synchronization, so
+the README and profile do not need a hand-maintained test claim.
 
 ## Coverage areas
 
@@ -38,10 +36,13 @@ python scripts/verify.py
 On Windows:
 
 ```text
-REPAIR_AND_VERIFY.bat
+VERIFY_ALL.bat
 ```
 
-The verifier compiles the package, checks dependencies, runs all unit tests and executes an isolated smoke workflow with a temporary SQLite database.
+`VERIFY_ALL.bat` creates or repairs the isolated environment, installs the
+development gates, then runs compilation, package audit, Ruff, Pyright, all
+unit tests and an isolated smoke workflow. `REPAIR_AND_VERIFY.bat` remains a
+runtime-focused compatibility route.
 
 ## Smoke workflow
 
@@ -52,6 +53,7 @@ The verifier compiles the package, checks dependencies, runs all unit tests and 
 - create a Hebrew running profile;
 - list profiles;
 - export JSON;
+- create and verify a complete all-profile ZIP backup;
 - export Training Atlas PNG;
 - export offline HTML report.
 
@@ -61,4 +63,4 @@ The release process launches `NovaFitApp`, processes the event loop and captures
 
 ## Honest limitation
 
-`74/74 passed` is not a claim of complete line or branch coverage. It reports the implemented automated cases exactly.
+Passing every currently discovered automated case is not a claim of complete line or branch coverage. The workflow result is the exact reproducible status of the implemented suite at that commit.

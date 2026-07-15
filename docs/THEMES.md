@@ -1,4 +1,4 @@
-# NovaFit 4.0 Theme System 🎨
+# NovaFit 4.1 Theme System 🎨
 
 ## Purpose
 

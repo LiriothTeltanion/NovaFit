@@ -48,8 +48,12 @@ A verification script should not destroy user data. The release builder should c
 
 ## Regression tests
 
-Three source-contract tests protect:
+Behavioral regression tests protect:
 
-1. presence of strict distribution mode;
-2. workspace allowance for runtime database paths;
-3. default Windows checker not invoking strict mode on the user workspace.
+1. workspace preservation of runtime database paths;
+2. strict-staging rejection of runtime files;
+3. rejection of credential-like files in every mode;
+4. default Windows verification not invoking release-strict mode on the user workspace.
+
+The audit also validates required entry points, local Markdown links, SVG XML,
+and Windows BAT line endings. It never deletes or rewrites a user file.

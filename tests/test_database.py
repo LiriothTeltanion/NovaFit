@@ -45,6 +45,19 @@ class DatabaseTests(unittest.TestCase):
         self.assertFalse(self.db.insert_if_missing(second))
         self.assertEqual(self.db.get("2026-07-15").steps, 100)
 
+    def test_write_many_is_atomic_and_reports_skips(self) -> None:
+        existing = HealthEntry.build("2026-07-14", 100, 1)
+        self.db.upsert(existing)
+        written, skipped = self.db.write_many(
+            [
+                HealthEntry.build("2026-07-14", 999, 2),
+                HealthEntry.build("2026-07-15", 500, 1.5),
+            ],
+            replace=False,
+        )
+        self.assertEqual((written, skipped), (1, 1))
+        self.assertEqual(self.db.get("2026-07-14").steps, 100)
+
     def test_search_delete_and_clear(self) -> None:
         for day in ("2026-07-13", "2026-07-14", "2026-07-15"):
             self.db.upsert(HealthEntry.build(day, 1000, 1.0))
@@ -69,6 +82,16 @@ class DatabaseTests(unittest.TestCase):
         entry = legacy.get("2025-10-14")
         self.assertIsNotNone(entry)
         self.assertEqual(entry.steps, 8500)
+
+    def test_rejects_a_database_from_a_newer_schema(self) -> None:
+        path = Path(self.temp_dir.name) / "future.db"
+        future = NovaFitDatabase(path)
+        future.initialize()
+        with closing(sqlite3.connect(path)) as connection:
+            connection.execute("UPDATE app_meta SET value = '999' WHERE key = 'schema_version'")
+            connection.commit()
+        with self.assertRaisesRegex(RuntimeError, "newer"):
+            future.initialize()
 
 
 if __name__ == "__main__":

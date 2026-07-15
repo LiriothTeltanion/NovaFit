@@ -84,6 +84,12 @@ class NovaFitDatabase:
         """
         with self.connect() as connection:
             self._create_profile_tables(connection)
+            stored_version = self._stored_schema_version(connection)
+            if stored_version > SCHEMA_VERSION:
+                raise RuntimeError(
+                    f"Database schema {stored_version} is newer than this NovaFit release "
+                    f"(supported: {SCHEMA_VERSION}). Update NovaFit before opening this data."
+                )
             self._ensure_default_profile(connection)
             if self._table_exists(connection, "logs"):
                 columns = self._column_names(connection, "logs")
@@ -391,6 +397,72 @@ class NovaFitDatabase:
             connection.commit()
             return cursor.rowcount > 0
 
+    def write_many(
+        self,
+        entries: Sequence[HealthEntry],
+        *,
+        replace: bool = True,
+        profile_id: int | None = None,
+    ) -> tuple[int, int]:
+        """Write validated entries in one atomic transaction.
+
+        Args:
+            entries: Validated records to import.
+            replace: Update matching dates when true; otherwise preserve them.
+            profile_id: Optional profile override.
+
+        Returns:
+            ``(written, skipped)`` counts.
+
+        Raises:
+            sqlite3.Error: If any database operation fails; no partial import is committed.
+        """
+        if not entries:
+            return 0, 0
+        user_id = self._resolve_profile_id(profile_id)
+        written = skipped = 0
+        with self.connect() as connection:
+            for entry in entries:
+                values = (
+                    user_id,
+                    entry.entry_date.isoformat(),
+                    entry.steps,
+                    entry.water_l,
+                    entry.calories,
+                    entry.mood,
+                    entry.note,
+                )
+                if replace:
+                    connection.execute(
+                        """
+                        INSERT INTO logs(user_id, date, steps, water_l, calories, mood, note)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(user_id, date) DO UPDATE SET
+                            steps = excluded.steps,
+                            water_l = excluded.water_l,
+                            calories = excluded.calories,
+                            mood = excluded.mood,
+                            note = excluded.note,
+                            updated_at = CURRENT_TIMESTAMP
+                        """,
+                        values,
+                    )
+                    written += 1
+                else:
+                    cursor = connection.execute(
+                        """
+                        INSERT OR IGNORE INTO logs(user_id, date, steps, water_l, calories, mood, note)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        values,
+                    )
+                    if cursor.rowcount:
+                        written += 1
+                    else:
+                        skipped += 1
+            connection.commit()
+        return written, skipped
+
     def get(self, entry_date: str | date, profile_id: int | None = None) -> HealthEntry | None:
         """Return one record by profile and date.
 
@@ -438,8 +510,7 @@ class NovaFitDatabase:
         if limit is not None and limit <= 0:
             raise ValueError("Limit must be greater than zero.")
         query = (
-            "SELECT date, steps, water_l, calories, mood, note "
-            "FROM logs WHERE user_id = ? ORDER BY date DESC"
+            "SELECT date, steps, water_l, calories, mood, note FROM logs WHERE user_id = ? ORDER BY date DESC"
         )
         parameters: Sequence[Any] = (user_id,)
         if limit is not None:
@@ -612,6 +683,16 @@ class NovaFitDatabase:
     def _column_names(connection: sqlite3.Connection, table: str) -> set[str]:
         return {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
 
+    @staticmethod
+    def _stored_schema_version(connection: sqlite3.Connection) -> int:
+        row = connection.execute("SELECT value FROM app_meta WHERE key = 'schema_version'").fetchone()
+        if row is None:
+            return 0
+        try:
+            return int(row["value"])
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError("Database schema metadata is invalid.") from exc
+
     def _create_profile_tables(self, connection: sqlite3.Connection) -> None:
         connection.executescript(
             """
@@ -677,9 +758,16 @@ class NovaFitDatabase:
         connection.execute(f"ALTER TABLE logs RENAME TO {legacy_name}")
         self._create_logs_table(connection)
         columns = self._column_names(connection, legacy_name)
+        legacy_count = int(
+            connection.execute(f"SELECT COUNT(*) AS total FROM {legacy_name}").fetchone()["total"]
+        )
         note_expr = "note" if "note" in columns else "NULL"
-        created_expr = "COALESCE(created_at, CURRENT_TIMESTAMP)" if "created_at" in columns else "CURRENT_TIMESTAMP"
-        updated_expr = "COALESCE(updated_at, CURRENT_TIMESTAMP)" if "updated_at" in columns else "CURRENT_TIMESTAMP"
+        created_expr = (
+            "COALESCE(created_at, CURRENT_TIMESTAMP)" if "created_at" in columns else "CURRENT_TIMESTAMP"
+        )
+        updated_expr = (
+            "COALESCE(updated_at, CURRENT_TIMESTAMP)" if "updated_at" in columns else "CURRENT_TIMESTAMP"
+        )
         connection.execute(
             f"""
             INSERT INTO logs(user_id, date, steps, water_l, calories, mood, note, created_at, updated_at)
@@ -688,6 +776,13 @@ class NovaFitDatabase:
             FROM {legacy_name}
             """
         )
+        migrated_count = int(
+            connection.execute("SELECT COUNT(*) AS total FROM logs WHERE user_id = 1").fetchone()["total"]
+        )
+        if migrated_count != legacy_count:
+            raise RuntimeError(
+                f"Legacy migration verification failed: expected {legacy_count} rows, copied {migrated_count}."
+            )
         connection.execute(f"DROP TABLE {legacy_name}")
 
     def _migrate_log_columns(self, connection: sqlite3.Connection) -> None:

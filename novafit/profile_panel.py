@@ -53,6 +53,10 @@ class ProfileManagerPanel(ttk.Frame):
         self.on_profile_selected = on_profile_selected
         self.on_status = on_status
         self.on_error = on_error
+        self.language = normalize_language(get_language())
+        self._rtl = direction_for(self.language) == "rtl"
+        self._activity_labels = {value: tr(self.language, f"activity_{value}") for value in ACTIVITY_LEVELS}
+        self._sport_labels = {value: tr(self.language, f"sport_{value}") for value in SPORT_FOCUSES}
         self.profile_id_var = tk.StringVar()
         self.name_var = tk.StringVar()
         self.avatar_var = tk.StringVar(value="nova")
@@ -61,77 +65,130 @@ class ProfileManagerPanel(ttk.Frame):
         self.step_goal_var = tk.StringVar(value="10000")
         self.water_goal_var = tk.StringVar(value="2.0")
         self.calorie_goal_var = tk.StringVar(value="2000")
-        self.activity_level_var = tk.StringVar(value="balanced")
-        self.sport_focus_var = tk.StringVar(value="mixed")
+        self.activity_level_var = tk.StringVar(value=self._activity_labels["balanced"])
+        self.sport_focus_var = tk.StringVar(value=self._sport_labels["mixed"])
         self._build()
         self.refresh()
 
     def _build(self) -> None:
-        self.columnconfigure(0, weight=3)
-        self.columnconfigure(1, weight=2)
+        anchor = "e" if self._rtl else "w"
+        justify = "right" if self._rtl else "left"
+        start_side = "right" if self._rtl else "left"
+        end_side = "left" if self._rtl else "right"
+        list_column = 1 if self._rtl else 0
+        form_column = 0 if self._rtl else 1
+        self.columnconfigure(list_column, weight=3)
+        self.columnconfigure(form_column, weight=2)
         self.rowconfigure(1, weight=1)
         header = ttk.Frame(self, style="Panel.TFrame")
         header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 14))
-        ttk.Label(header, text="👥  Local User Profiles", style="Panel.TLabel", font=("Segoe UI", 18, "bold")).pack(anchor="w")
         ttk.Label(
             header,
-            text="Each profile has isolated daily records, goals, language, theme, and activity preferences.",
+            text=tr(self.language, "profile_header"),
             style="Panel.TLabel",
-        ).pack(anchor="w", pady=(4, 0))
+            font=("Segoe UI", 18, "bold"),
+            anchor=anchor,
+            justify=justify,
+        ).pack(anchor=anchor)
+        ttk.Label(
+            header,
+            text=tr(self.language, "profile_subtitle"),
+            style="Panel.TLabel",
+            anchor=anchor,
+            justify=justify,
+        ).pack(anchor=anchor, pady=(4, 0))
 
         list_card = ttk.Frame(self, style="Card.TFrame", padding=14)
-        list_card.grid(row=1, column=0, sticky="nsew", padx=(0, 14))
+        list_card.grid(row=1, column=list_column, sticky="nsew", padx=7)
         columns = ("id", "name", "language", "theme", "focus", "records")
         self.tree = ttk.Treeview(list_card, columns=columns, show="headings", selectmode="browse")
+        self.tree.configure(displaycolumns=tuple(reversed(columns)) if self._rtl else columns)
         headings = {
             "id": "ID",
-            "name": "User",
-            "language": "Language",
-            "theme": "Theme",
-            "focus": "Activity",
-            "records": "Records",
+            "name": tr(self.language, "user"),
+            "language": tr(self.language, "language"),
+            "theme": tr(self.language, "theme"),
+            "focus": tr(self.language, "profile_activity"),
+            "records": tr(self.language, "profile_records"),
         }
         widths = {"id": 45, "name": 160, "language": 90, "theme": 130, "focus": 100, "records": 70}
         for column in columns:
             self.tree.heading(column, text=headings[column])
-            self.tree.column(column, width=widths[column], anchor="center" if column != "name" else "w")
-        self.tree.pack(side="left", fill="both", expand=True)
+            self.tree.column(column, width=widths[column], anchor="center" if column != "name" else anchor)
+        self.tree.pack(side=start_side, fill="both", expand=True)
         scroll = ttk.Scrollbar(list_card, orient="vertical", command=self.tree.yview)
-        scroll.pack(side="right", fill="y")
+        scroll.pack(side=end_side, fill="y")
         self.tree.configure(yscrollcommand=scroll.set)
         self.tree.bind("<<TreeviewSelect>>", self._load_selected, add="+")
         self.tree.bind("<Double-1>", self._activate_selected, add="+")
 
         form = ttk.Frame(self, style="Card.TFrame", padding=18)
-        form.grid(row=1, column=1, sticky="nsew")
-        ttk.Label(form, text="Profile Studio", style="CardValue.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
+        form.grid(row=1, column=form_column, sticky="nsew")
+        ttk.Label(form, text=tr(self.language, "profile_studio"), style="CardValue.TLabel").grid(
+            row=0,
+            column=0,
+            columnspan=2,
+            sticky=anchor,
+            pady=(0, 12),
+        )
         fields = (
-            ("Display name", self.name_var, None),
-            ("Avatar", self.avatar_var, PROFILE_AVATARS),
-            ("Language", self.language_var, language_labels()),
-            ("Theme", self.theme_var, theme_labels()),
-            ("Activity level", self.activity_level_var, ACTIVITY_LEVELS),
-            ("Sport focus", self.sport_focus_var, SPORT_FOCUSES),
-            ("Step goal", self.step_goal_var, None),
-            ("Water goal (L)", self.water_goal_var, None),
-            ("Calorie reference", self.calorie_goal_var, None),
+            (tr(self.language, "display_name"), self.name_var, None),
+            (tr(self.language, "avatar"), self.avatar_var, PROFILE_AVATARS),
+            (tr(self.language, "language"), self.language_var, language_labels()),
+            (tr(self.language, "theme"), self.theme_var, theme_labels()),
+            (
+                tr(self.language, "activity_level"),
+                self.activity_level_var,
+                tuple(self._activity_labels.values()),
+            ),
+            (tr(self.language, "sport_focus"), self.sport_focus_var, tuple(self._sport_labels.values())),
+            (tr(self.language, "step_goal"), self.step_goal_var, None),
+            (tr(self.language, "water_goal"), self.water_goal_var, None),
+            (tr(self.language, "calorie_reference"), self.calorie_goal_var, None),
         )
         for row_index, (label, variable, values) in enumerate(fields, start=1):
-            ttk.Label(form, text=label, style="CardTitle.TLabel").grid(row=row_index, column=0, sticky="w", pady=5)
+            label_column = 1 if self._rtl else 0
+            input_column = 0 if self._rtl else 1
+            ttk.Label(form, text=label, style="CardTitle.TLabel").grid(
+                row=row_index,
+                column=label_column,
+                sticky=anchor,
+                pady=5,
+            )
             if values is None:
-                widget: ttk.Entry | ttk.Combobox = ttk.Entry(form, textvariable=variable)
+                widget: ttk.Entry | ttk.Combobox = ttk.Entry(form, textvariable=variable, justify=justify)
             else:
-                widget = ttk.Combobox(form, textvariable=variable, values=values, state="readonly")
-            widget.grid(row=row_index, column=1, sticky="ew", padx=(12, 0), pady=5)
-        form.columnconfigure(1, weight=1)
+                widget = ttk.Combobox(
+                    form,
+                    textvariable=variable,
+                    values=values,
+                    state="readonly",
+                    justify=justify,
+                )
+            widget.grid(row=row_index, column=input_column, sticky="ew", padx=6, pady=5)
+        form.columnconfigure(0 if self._rtl else 1, weight=1)
 
         actions = ttk.Frame(form, style="Card.TFrame")
         actions.grid(row=10, column=0, columnspan=2, sticky="ew", pady=(16, 0))
-        ttk.Button(actions, text="Create", style="Accent.TButton", command=self._create).pack(side="left")
-        ttk.Button(actions, text="Update", command=self._update).pack(side="left", padx=7)
-        ttk.Button(actions, text="Activate", command=self._activate_selected).pack(side="left")
-        ttk.Button(actions, text="Delete", style="Danger.TButton", command=self._delete).pack(side="right")
-        ttk.Button(form, text="Clear form", command=self._clear_form).grid(row=11, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        ttk.Button(
+            actions, text=tr(self.language, "create"), style="Accent.TButton", command=self._create
+        ).pack(side=start_side)
+        ttk.Button(actions, text=tr(self.language, "update"), command=self._update).pack(
+            side=start_side, padx=7
+        )
+        ttk.Button(actions, text=tr(self.language, "activate"), command=self._activate_selected).pack(
+            side=start_side
+        )
+        ttk.Button(
+            actions, text=tr(self.language, "delete"), style="Danger.TButton", command=self._delete
+        ).pack(side=end_side)
+        ttk.Button(form, text=tr(self.language, "clear_form"), command=self._clear_form).grid(
+            row=11,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(10, 0),
+        )
 
     def refresh(self) -> None:
         """Reload profiles and preserve the active selection.
@@ -154,7 +211,7 @@ class ProfileManagerPanel(ttk.Frame):
                     profile.display_name,
                     language_label(profile.language),
                     theme_label(profile.theme),
-                    profile.sport_focus,
+                    self._sport_labels.get(profile.sport_focus, profile.sport_focus),
                     self.database.count(profile.profile_id),
                 ),
             )
@@ -175,17 +232,19 @@ class ProfileManagerPanel(ttk.Frame):
         self.refresh()
 
     def refresh_language(self) -> None:
-        """Update layout direction metadata and profile language selector.
+        """Rebuild localized labels and RTL geometry after a language change.
 
         Returns:
             None.
         """
-        anchor = "e" if direction_for(self.get_language()) == "rtl" else "w"
+        self.language = normalize_language(self.get_language())
+        self._rtl = direction_for(self.language) == "rtl"
+        self._activity_labels = {value: tr(self.language, f"activity_{value}") for value in ACTIVITY_LEVELS}
+        self._sport_labels = {value: tr(self.language, f"sport_{value}") for value in SPORT_FOCUSES}
         for child in self.winfo_children():
-            try:
-                child.configure(anchor=anchor)
-            except tk.TclError:
-                continue
+            child.destroy()
+        self._build()
+        self.refresh()
 
     def _selected_profile_id(self) -> int | None:
         selected = self.tree.selection()
@@ -208,8 +267,8 @@ class ProfileManagerPanel(ttk.Frame):
         self.step_goal_var.set(str(profile.step_goal))
         self.water_goal_var.set(str(profile.water_goal_l))
         self.calorie_goal_var.set(str(profile.calorie_goal))
-        self.activity_level_var.set(profile.activity_level)
-        self.sport_focus_var.set(profile.sport_focus)
+        self.activity_level_var.set(self._activity_labels.get(profile.activity_level, profile.activity_level))
+        self.sport_focus_var.set(self._sport_labels.get(profile.sport_focus, profile.sport_focus))
 
     def _profile_from_form(self, profile_id: int | None = None) -> UserProfile:
         return UserProfile.build(
@@ -221,46 +280,60 @@ class ProfileManagerPanel(ttk.Frame):
             step_goal=self.step_goal_var.get(),
             water_goal_l=self.water_goal_var.get(),
             calorie_goal=self.calorie_goal_var.get(),
-            activity_level=self.activity_level_var.get(),
-            sport_focus=self.sport_focus_var.get(),
+            activity_level=self._value_from_label(self.activity_level_var.get(), self._activity_labels),
+            sport_focus=self._value_from_label(self.sport_focus_var.get(), self._sport_labels),
         )
+
+    @staticmethod
+    def _value_from_label(label: str, labels: Mapping[str, str]) -> str:
+        """Resolve a localized combobox label to its stable model value."""
+        for value, localized_label in labels.items():
+            if label == localized_label:
+                return value
+        return label
 
     def _create(self) -> None:
         try:
             profile = self.database.create_profile(self._profile_from_form())
             self.database.set_active_profile(profile.profile_id or 1)
             self.on_profile_selected(profile)
-            self.on_status(f"Created profile {profile.display_name} ✅")
+            self.on_status(tr(self.language, "profile_created", name=profile.display_name))
             self.refresh()
         except (ValueError, sqlite3.Error) as exc:
-            self.on_error("Could not create profile", exc)
+            self.on_error(tr(self.language, "create_profile_error"), exc)
 
     def _update(self) -> None:
         profile_id = self._selected_profile_id()
         if profile_id is None:
-            self.on_error("Could not update profile", ValueError("Select a profile first."))
+            self.on_error(
+                tr(self.language, "update_profile_error"),
+                ValueError(tr(self.language, "select_profile_first")),
+            )
             return
         try:
             profile = self.database.update_profile(self._profile_from_form(profile_id))
             if profile_id == self.database.active_profile_id:
                 self.on_profile_selected(profile)
-            self.on_status(f"Updated profile {profile.display_name} ✅")
+            self.on_status(tr(self.language, "profile_updated", name=profile.display_name))
             self.refresh()
         except (ValueError, sqlite3.Error) as exc:
-            self.on_error("Could not update profile", exc)
+            self.on_error(tr(self.language, "update_profile_error"), exc)
 
     def _activate_selected(self, _event: tk.Event[tk.Misc] | None = None) -> None:
         profile_id = self._selected_profile_id()
         if profile_id is None:
-            self.on_error("Could not activate profile", ValueError("Select a profile first."))
+            self.on_error(
+                tr(self.language, "activate_profile_error"),
+                ValueError(tr(self.language, "select_profile_first")),
+            )
             return
         try:
             profile = self.database.set_active_profile(profile_id)
             self.on_profile_selected(profile)
-            self.on_status(f"Active profile: {profile.display_name} ✅")
+            self.on_status(tr(self.language, "profile_activated", name=profile.display_name))
             self.refresh()
         except ValueError as exc:
-            self.on_error("Could not activate profile", exc)
+            self.on_error(tr(self.language, "activate_profile_error"), exc)
 
     def _delete(self) -> None:
         profile_id = self._selected_profile_id()
@@ -270,8 +343,8 @@ class ProfileManagerPanel(ttk.Frame):
         if profile is None:
             return
         if not messagebox.askyesno(
-            "Delete profile",
-            f"Delete {profile.display_name} and all of this profile's records? This cannot be undone.",
+            tr(self.language, "delete_profile_title"),
+            tr(self.language, "delete_profile_confirm", name=profile.display_name),
             icon="warning",
         ):
             return
@@ -280,10 +353,10 @@ class ProfileManagerPanel(ttk.Frame):
             if deleted:
                 primary = self.database.set_active_profile(1)
                 self.on_profile_selected(primary)
-                self.on_status(f"Deleted profile {profile.display_name} ✅")
+                self.on_status(tr(self.language, "profile_deleted", name=profile.display_name))
             self.refresh()
         except (ValueError, sqlite3.Error) as exc:
-            self.on_error("Could not delete profile", exc)
+            self.on_error(tr(self.language, "delete_profile_error"), exc)
 
     def _clear_form(self) -> None:
         self.profile_id_var.set("")
@@ -294,5 +367,5 @@ class ProfileManagerPanel(ttk.Frame):
         self.step_goal_var.set("10000")
         self.water_goal_var.set("2.0")
         self.calorie_goal_var.set("2000")
-        self.activity_level_var.set("balanced")
-        self.sport_focus_var.set("mixed")
+        self.activity_level_var.set(self._activity_labels["balanced"])
+        self.sport_focus_var.set(self._sport_labels["mixed"])

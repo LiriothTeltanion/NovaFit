@@ -8,6 +8,8 @@ Notes: Minimal deps; comments in ENGLISH; emojis sparingly.
 
 from __future__ import annotations
 
+import math
+from decimal import Decimal, InvalidOperation
 from datetime import date, datetime
 from typing import Any
 
@@ -59,10 +61,15 @@ def validate_non_negative_int(value: Any, field_name: str, maximum: int) -> int:
         >>> validate_non_negative_int('8500', 'Steps', 200000)
         8500
     """
+    if isinstance(value, bool):
+        raise ValueError(f"{field_name} must be a whole number.")
     try:
-        converted = int(value)
-    except (TypeError, ValueError) as exc:
+        converted_decimal = Decimal(str(value).strip())
+    except (InvalidOperation, TypeError, ValueError) as exc:
         raise ValueError(f"{field_name} must be a whole number.") from exc
+    if not converted_decimal.is_finite() or converted_decimal != converted_decimal.to_integral_value():
+        raise ValueError(f"{field_name} must be a whole number.")
+    converted = int(converted_decimal)
     if converted < 0:
         raise ValueError(f"{field_name} cannot be negative.")
     if converted > maximum:
@@ -88,10 +95,14 @@ def validate_non_negative_float(value: Any, field_name: str, maximum: float) -> 
         >>> validate_non_negative_float('2.5', 'Water', 20.0)
         2.5
     """
+    if isinstance(value, bool):
+        raise ValueError(f"{field_name} must be a number.")
     try:
         converted = float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{field_name} must be a number.") from exc
+    if not math.isfinite(converted):
+        raise ValueError(f"{field_name} must be a finite number.")
     if converted < 0:
         raise ValueError(f"{field_name} cannot be negative.")
     if converted > maximum:

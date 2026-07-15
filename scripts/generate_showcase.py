@@ -18,11 +18,11 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from novafit.charts import CHART_VIEWS, save_analytics_chart
-from novafit.config import AppSettings
-from novafit.models import HealthEntry
-from novafit.reporting import export_html_report
-from novafit.themes import theme_ids, theme_label
+from novafit.charts import CHART_VIEWS, save_analytics_chart  # noqa: E402
+from novafit.config import AppSettings  # noqa: E402
+from novafit.models import HealthEntry  # noqa: E402
+from novafit.reporting import export_html_report  # noqa: E402
+from novafit.themes import theme_ids, theme_label  # noqa: E402
 
 DEFAULT_OUTPUT = ROOT / "assets"
 
@@ -95,7 +95,6 @@ def build_demo_entries(days: int = 90) -> list[HealthEntry]:
     return entries
 
 
-
 def build_animated_tour(screenshots: list[Path], destination: Path) -> Path:
     """Build a smooth looping GIF from the three deterministic dashboards.
 
@@ -122,8 +121,7 @@ def build_animated_tour(screenshots: list[Path], destination: Path) -> Path:
 
     target_size = (1100, 609)
     base_frames = [
-        Image.open(path).convert("RGB").resize(target_size, Image.Resampling.LANCZOS)
-        for path in screenshots
+        Image.open(path).convert("RGB").resize(target_size, Image.Resampling.LANCZOS) for path in screenshots
     ]
     frames: list[Image.Image] = []
     durations: list[int] = []
@@ -154,6 +152,7 @@ def build_animated_tour(screenshots: list[Path], destination: Path) -> Path:
         disposal=2,
     )
     return destination
+
 
 def build_theme_contact_sheet(screenshots: list[tuple[str, Path]], destination: Path) -> Path:
     """Build a labeled two-row theme gallery from dashboard screenshots.
@@ -189,7 +188,9 @@ def build_theme_contact_sheet(screenshots: list[tuple[str, Path]], destination: 
         x = (index % columns) * thumb_size[0]
         y = (index // columns) * (thumb_size[1] + label_height)
         sheet.paste(image, (x, y))
-        draw.rectangle((x, y + thumb_size[1], x + thumb_size[0], y + thumb_size[1] + label_height), fill="#0b1828")
+        draw.rectangle(
+            (x, y + thumb_size[1], x + thumb_size[0], y + thumb_size[1] + label_height), fill="#0b1828"
+        )
         draw.text((x + 15, y + thumb_size[1] + 12), theme_label(theme_id), fill="#e8f5ff")
     destination.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(destination, optimize=True)
@@ -295,7 +296,7 @@ def main() -> int:
     """
     args = build_parser().parse_args()
     for path in generate_assets(args.output.resolve(), args.days):
-        print(f"Generated {path} ✅")
+        print(f"Generated {path} [OK]")
     return 0
 
 

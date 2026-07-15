@@ -14,9 +14,10 @@ from pathlib import Path
 from tkinter import filedialog, ttk
 from typing import Any, Callable, Mapping
 
-from .analytics import DashboardStats, build_insight_lines
+from .analytics import DashboardStats
 from .charts import CHART_VIEWS, create_dashboard_figure, normalize_chart_view, save_dashboard_chart
 from .config import AppSettings
+from .i18n import direction_for, normalize_language, tr
 from .models import HealthEntry
 
 PaletteProvider = Callable[[], Mapping[str, str]]
@@ -56,9 +57,14 @@ class DashboardPanel(ttk.Frame):
         self._chart_canvas: Any = None
         self._toolbar: Any = None
         self._chart_image: Any = None
+        self.language = normalize_language(settings.language)
+        self._rtl = direction_for(self.language) == "rtl"
+        self._chart_labels = {key: tr(self.language, f"chart_view_{key}") for key in CHART_VIEWS}
 
         self.range_var = tk.StringVar(value=str(settings.chart_days))
-        self.view_var = tk.StringVar(value=CHART_VIEWS.get(settings.chart_view, "Command Center"))
+        self.view_var = tk.StringVar(
+            value=self._chart_labels.get(settings.chart_view, self._chart_labels["command_center"])
+        )
         self.metric_vars = {
             key: tk.StringVar(value="—")
             for key in (
@@ -74,36 +80,53 @@ class DashboardPanel(ttk.Frame):
                 "trend",
             )
         }
-        self.step_goal_var = tk.StringVar(value="Step goal —")
-        self.water_goal_var = tk.StringVar(value="Water goal —")
-        self.both_goal_var = tk.StringVar(value="Both goals —")
-        self.latest_var = tk.StringVar(value="No latest record yet.")
+        self.step_goal_var = tk.StringVar(value=f"{tr(self.language, 'step_goal')} —")
+        self.water_goal_var = tk.StringVar(value=f"{tr(self.language, 'water_goal')} —")
+        self.both_goal_var = tk.StringVar(value=f"{tr(self.language, 'metric_both_goals')} —")
+        self.latest_var = tk.StringVar(value=tr(self.language, "no_latest_record"))
         self._build()
 
     def _build(self) -> None:
+        start_side = "right" if self._rtl else "left"
+        end_side = "left" if self._rtl else "right"
+        anchor = "e" if self._rtl else "w"
+        justify = "right" if self._rtl else "left"
         controls = ttk.Frame(self, style="Panel.TFrame")
         controls.pack(fill="x", pady=(0, 10))
-        ttk.Label(controls, text="Analytics view", style="Panel.TLabel").pack(side="left")
+        ttk.Label(controls, text=tr(self.language, "analytics_view"), style="Panel.TLabel").pack(
+            side=start_side
+        )
         view = ttk.Combobox(
             controls,
             textvariable=self.view_var,
-            values=tuple(CHART_VIEWS.values()),
+            values=tuple(self._chart_labels.values()),
             state="readonly",
             width=18,
+            justify="right" if self._rtl else "left",
         )
-        view.pack(side="left", padx=(7, 16))
-        ttk.Label(controls, text="Calendar range", style="Panel.TLabel").pack(side="left")
+        view.pack(side=start_side, padx=7)
+        ttk.Label(controls, text=tr(self.language, "calendar_range"), style="Panel.TLabel").pack(
+            side=start_side, padx=(9, 0)
+        )
         range_box = ttk.Combobox(
             controls,
             textvariable=self.range_var,
             values=("7", "14", "30", "60", "90", "180", "365"),
             state="readonly",
             width=7,
+            justify="right" if self._rtl else "left",
         )
-        range_box.pack(side="left", padx=(7, 8))
-        ttk.Label(controls, text="days", style="Panel.TLabel").pack(side="left")
-        ttk.Button(controls, text="Refresh charts", style="Accent.TButton", command=self.refresh_chart).pack(side="right")
-        ttk.Button(controls, text="Export PNG", command=self.export_png).pack(side="right", padx=(0, 8))
+        range_box.pack(side=start_side, padx=7)
+        ttk.Label(controls, text=tr(self.language, "days"), style="Panel.TLabel").pack(side=start_side)
+        ttk.Button(
+            controls,
+            text=tr(self.language, "refresh_charts"),
+            style="Accent.TButton",
+            command=self.refresh_chart,
+        ).pack(side=end_side)
+        ttk.Button(controls, text=tr(self.language, "export_png"), command=self.export_png).pack(
+            side=end_side, padx=8
+        )
         view.bind("<<ComboboxSelected>>", lambda _event: self.refresh_chart())
         range_box.bind("<<ComboboxSelected>>", lambda _event: self.refresh_chart())
 
@@ -112,22 +135,27 @@ class DashboardPanel(ttk.Frame):
         for column in range(5):
             cards.columnconfigure(column, weight=1)
         specs = [
-            ("Consistency", "momentum"),
-            ("Tracked days", "tracked"),
-            ("30-day coverage", "coverage"),
-            ("Total steps", "total_steps"),
-            ("Average steps", "average_steps"),
-            ("Average water", "average_water"),
-            ("Both goals", "combined_goals"),
-            ("Current / longest", "streak"),
-            ("Best day", "best_day"),
-            ("Recent trend", "trend"),
+            ("metric_consistency", "momentum"),
+            ("metric_tracked_days", "tracked"),
+            ("metric_coverage_30", "coverage"),
+            ("metric_total_steps", "total_steps"),
+            ("metric_average_steps", "average_steps"),
+            ("metric_average_water", "average_water"),
+            ("metric_both_goals", "combined_goals"),
+            ("metric_current_longest", "streak"),
+            ("metric_best_day", "best_day"),
+            ("metric_recent_trend", "trend"),
         ]
-        for index, (label, key) in enumerate(specs):
+        for index, (label_key, key) in enumerate(specs):
+            column = 4 - (index % 5) if self._rtl else index % 5
             card = ttk.Frame(cards, style="Card.TFrame", padding=(13, 10))
-            card.grid(row=index // 5, column=index % 5, sticky="nsew", padx=4, pady=4)
-            ttk.Label(card, text=label.upper(), style="CardTitle.TLabel").pack(anchor="w")
-            ttk.Label(card, textvariable=self.metric_vars[key], style="CardValue.TLabel").pack(anchor="w", pady=(4, 0))
+            card.grid(row=index // 5, column=column, sticky="nsew", padx=4, pady=4)
+            ttk.Label(card, text=tr(self.language, label_key).upper(), style="CardTitle.TLabel").pack(
+                anchor=anchor
+            )
+            ttk.Label(card, textvariable=self.metric_vars[key], style="CardValue.TLabel").pack(
+                anchor=anchor, pady=(4, 0)
+            )
 
         self.content_pane = ttk.Panedwindow(self, orient="horizontal")
         self.content_pane.pack(fill="both", expand=True)
@@ -144,15 +172,23 @@ class DashboardPanel(ttk.Frame):
         self.toolbar_host = ttk.Frame(chart_shell, style="Card.TFrame")
         self.toolbar_host.pack(fill="x")
 
-        ttk.Label(insights_shell, text="Signal summary", style="CardValue.TLabel").pack(anchor="w")
+        ttk.Label(insights_shell, text=tr(self.language, "signal_summary"), style="CardValue.TLabel").pack(
+            anchor=anchor
+        )
         ttk.Label(
             insights_shell,
-            text="Transparent observations from your stored records — never a diagnosis.",
+            text=tr(self.language, "signal_summary_body"),
             style="CardTitle.TLabel",
             wraplength=225,
-            justify="left",
-        ).pack(anchor="w", pady=(5, 12))
-        ttk.Label(insights_shell, textvariable=self.latest_var, style="Panel.TLabel", wraplength=225, justify="left").pack(anchor="w")
+            justify=justify,
+        ).pack(anchor=anchor, pady=(5, 12))
+        ttk.Label(
+            insights_shell,
+            textvariable=self.latest_var,
+            style="Panel.TLabel",
+            wraplength=225,
+            justify=justify,
+        ).pack(anchor=anchor)
 
         self.insight_text = tk.Text(
             insights_shell,
@@ -171,7 +207,9 @@ class DashboardPanel(ttk.Frame):
 
         ttk.Separator(insights_shell).pack(fill="x", pady=8)
         for variable in (self.step_goal_var, self.water_goal_var, self.both_goal_var):
-            ttk.Label(insights_shell, textvariable=variable, style="CardTitle.TLabel").pack(anchor="w", pady=2)
+            ttk.Label(insights_shell, textvariable=variable, style="CardTitle.TLabel").pack(
+                anchor=anchor, pady=2
+            )
         self.step_progress = ttk.Progressbar(insights_shell, maximum=100)
         self.step_progress.pack(fill="x", pady=(2, 7))
         self.water_progress = ttk.Progressbar(insights_shell, maximum=100)
@@ -219,7 +257,7 @@ class DashboardPanel(ttk.Frame):
         self._stats = stats
         self.settings = settings
         self.range_var.set(str(settings.chart_days))
-        self.view_var.set(CHART_VIEWS.get(settings.chart_view, "Command Center"))
+        self.view_var.set(self._chart_labels.get(settings.chart_view, self._chart_labels["command_center"]))
         self._update_metrics()
         self._update_insights()
         self._apply_text_palette()
@@ -240,7 +278,7 @@ class DashboardPanel(ttk.Frame):
             from PIL import Image, ImageTk
 
             days = int(self.range_var.get())
-            view = normalize_chart_view(self.view_var.get())
+            view = self._selected_view_id()
             self.chart_host.update_idletasks()
             pane_width = max(1, self.content_pane.winfo_width())
             pane_height = max(1, self.content_pane.winfo_height())
@@ -287,14 +325,14 @@ class DashboardPanel(ttk.Frame):
             preview.pack(fill="both", expand=True)
             ttk.Label(
                 self.toolbar_host,
-                text="Theme-aware local preview · use Export PNG for full-resolution artwork",
+                text=tr(self.language, "local_chart_preview"),
                 style="CardTitle.TLabel",
                 anchor="center",
             ).pack(fill="x", pady=(4, 0))
             figure.clear()
             buffer.close()
         except (ImportError, ValueError, tk.TclError) as exc:
-            self._error_callback("Dashboard chart", exc)
+            self._error_callback(tr(self.language, "dashboard_chart_error"), exc)
 
     def export_png(self) -> None:
         """Export the selected view and range as a high-resolution PNG.
@@ -306,10 +344,10 @@ class DashboardPanel(ttk.Frame):
             >>> panel.export_png()  # doctest: +SKIP
         """
         destination = filedialog.asksaveasfilename(
-            title="Save NovaFit analytics dashboard",
+            title=tr(self.language, "save_dashboard_title"),
             defaultextension=".png",
-            filetypes=[("PNG image", "*.png")],
-            initialfile=f"novafit-{normalize_chart_view(self.view_var.get())}-{self.range_var.get()}d.png",
+            filetypes=[(tr(self.language, "png_image"), "*.png")],
+            initialfile=f"novafit-{self._selected_view_id()}-{self.range_var.get()}d.png",
         )
         if not destination:
             return
@@ -320,11 +358,11 @@ class DashboardPanel(ttk.Frame):
                 Path(destination),
                 days=int(self.range_var.get()),
                 theme=self.settings.theme,
-                view=normalize_chart_view(self.view_var.get()),
+                view=self._selected_view_id(),
             )
-            self._status_callback(f"Analytics dashboard saved to {path} ✅")
+            self._status_callback(tr(self.language, "dashboard_saved", path=path))
         except (ImportError, OSError, ValueError) as exc:
-            self._error_callback("Export chart", exc)
+            self._error_callback(tr(self.language, "export_chart_error"), exc)
 
     def apply_theme(self) -> None:
         """Refresh embedded chart and sidebar colors after a theme change.
@@ -348,48 +386,165 @@ class DashboardPanel(ttk.Frame):
             >>> panel.selected_preferences()[0] >= 7  # doctest: +SKIP
             True
         """
-        return int(self.range_var.get()), normalize_chart_view(self.view_var.get())
+        return int(self.range_var.get()), self._selected_view_id()
+
+    def _selected_view_id(self) -> str:
+        """Resolve a localized chart label to its stable storage identifier."""
+        selected = self.view_var.get()
+        for key, label in self._chart_labels.items():
+            if selected == label:
+                return key
+        return normalize_chart_view(selected)
 
     def _update_metrics(self) -> None:
         stats = self._stats
-        trend = "Need 14 records" if stats.recent_step_change_pct is None else f"{stats.recent_step_change_pct:+.1f}%"
-        calories = "N/A" if stats.average_calories is None else f"{stats.average_calories:,} kcal"
+        trend = (
+            tr(self.language, "need_14_records")
+            if stats.recent_step_change_pct is None
+            else f"{stats.recent_step_change_pct:+.1f}%"
+        )
+        calories = (
+            "—"
+            if stats.average_calories is None
+            else f"{stats.average_calories:,} {tr(self.language, 'kcal')}"
+        )
         self.metric_vars["momentum"].set(f"{stats.consistency_score}/100")
         self.metric_vars["tracked"].set(str(stats.entry_count))
         self.metric_vars["coverage"].set(f"{stats.tracking_coverage_pct:.0f}%")
         self.metric_vars["total_steps"].set(f"{stats.total_steps:,}")
         self.metric_vars["average_steps"].set(f"{stats.average_steps:,}")
         self.metric_vars["average_water"].set(f"{stats.average_water_l:.2f} L")
-        self.metric_vars["combined_goals"].set(f"{stats.perfect_goal_days} days")
-        self.metric_vars["streak"].set(f"{stats.current_streak_days} / {stats.longest_tracking_streak_days}d")
+        self.metric_vars["combined_goals"].set(tr(self.language, "day_count", count=stats.perfect_goal_days))
+        self.metric_vars["streak"].set(f"{stats.current_streak_days} / {stats.longest_tracking_streak_days}")
         self.metric_vars["best_day"].set(
             "—" if stats.best_date is None else f"{stats.best_steps:,} · {stats.best_date[5:]}"
         )
         self.metric_vars["trend"].set(trend)
         latest = max(self._entries, key=lambda item: item.entry_date) if self._entries else None
         latest_line = (
-            "No latest record yet."
+            tr(self.language, "no_latest_record")
             if latest is None
-            else f"Latest record: {latest.entry_date} · {latest.steps:,} steps · {latest.water_l:.2f} L water"
+            else tr(
+                self.language,
+                "latest_record",
+                date=latest.entry_date,
+                steps=f"{latest.steps:,}",
+                water=f"{latest.water_l:.2f}",
+            )
+        )
+        mood = (
+            self._localized_option("mood", stats.dominant_mood)
+            if stats.dominant_mood
+            else tr(self.language, "not_recorded")
         )
         self.latest_var.set(
-            f"{latest_line}\nAverage calories: {calories}\nDominant mood: {stats.dominant_mood or 'Not recorded'}"
+            "\n".join(
+                (
+                    latest_line,
+                    tr(self.language, "average_calories", value=calories),
+                    tr(self.language, "dominant_mood", value=mood),
+                )
+            )
         )
 
         self.step_progress["value"] = stats.step_goal_rate_pct
         self.water_progress["value"] = stats.water_goal_rate_pct
         self.both_progress["value"] = stats.perfect_goal_rate_pct
-        self.step_goal_var.set(f"Step goal · {stats.step_goal_rate_pct:.0f}% of tracked dates")
-        self.water_goal_var.set(f"Water goal · {stats.water_goal_rate_pct:.0f}% of tracked dates")
-        self.both_goal_var.set(f"Both goals · {stats.perfect_goal_rate_pct:.0f}% of tracked dates")
+        self.step_goal_var.set(
+            tr(
+                self.language,
+                "goal_rate",
+                label=tr(self.language, "step_goal"),
+                rate=f"{stats.step_goal_rate_pct:.0f}",
+            )
+        )
+        self.water_goal_var.set(
+            tr(
+                self.language,
+                "goal_rate",
+                label=tr(self.language, "water_goal"),
+                rate=f"{stats.water_goal_rate_pct:.0f}",
+            )
+        )
+        self.both_goal_var.set(
+            tr(
+                self.language,
+                "goal_rate",
+                label=tr(self.language, "metric_both_goals"),
+                rate=f"{stats.perfect_goal_rate_pct:.0f}",
+            )
+        )
 
     def _update_insights(self) -> None:
-        lines = build_insight_lines(self._stats, self.settings)
+        lines = self._localized_insight_lines()
         self.insight_text.configure(state="normal")
         self.insight_text.delete("1.0", "end")
+        self.insight_text.tag_configure("body", justify="right" if self._rtl else "left")
         for index, line in enumerate(lines, start=1):
-            self.insight_text.insert("end", f"{index}. {line}\n\n")
+            self.insight_text.insert("end", f"{index}. {line}\n\n", "body")
         self.insight_text.configure(state="disabled")
+
+    def _localized_insight_lines(self) -> list[str]:
+        """Build evidence-based insights in the active interface language."""
+        stats = self._stats
+        if stats.entry_count == 0:
+            return [
+                tr(self.language, "insight_first_record"),
+                tr(self.language, "insight_portable"),
+                tr(self.language, "insight_weather"),
+                tr(self.language, "insight_score_scope"),
+            ]
+
+        trend = (
+            tr(self.language, "insight_trend_locked")
+            if stats.recent_step_change_pct is None
+            else tr(self.language, "insight_trend", change=f"{stats.recent_step_change_pct:+.1f}%")
+        )
+        rhythm = (
+            tr(
+                self.language,
+                "insight_best_weekday",
+                weekday=self._localized_option("weekday", stats.best_weekday),
+            )
+            if stats.best_weekday
+            else tr(self.language, "insight_more_weekdays")
+        )
+        mood = (
+            self._localized_option("mood", stats.dominant_mood)
+            if stats.dominant_mood
+            else tr(self.language, "not_recorded")
+        )
+        freshness = (
+            tr(
+                self.language,
+                "insight_stale",
+                days=stats.days_since_latest,
+                coverage=f"{stats.tracking_coverage_pct:.0f}",
+            )
+            if stats.is_stale
+            else tr(
+                self.language,
+                "insight_recent_activity",
+                active=stats.active_last_7_days,
+                coverage=f"{stats.tracking_coverage_pct:.0f}",
+            )
+        )
+        return [
+            tr(self.language, "insight_goal_rate", rate=f"{stats.perfect_goal_rate_pct:.0f}"),
+            freshness,
+            trend,
+            tr(self.language, "insight_mood", rhythm=rhythm, mood=mood),
+        ]
+
+    def _localized_option(self, category: str, value: str | None) -> str:
+        """Translate a known weekday or mood while preserving custom values."""
+        if not value:
+            return tr(self.language, "not_recorded")
+        key = f"{category}_{value.strip().lower().replace(' ', '_')}"
+        try:
+            return tr(self.language, key)
+        except KeyError:
+            return value
 
     def _apply_text_palette(self) -> None:
         palette = self._palette_provider()

@@ -1,4 +1,4 @@
-# NovaFit 4.0 Windows Guide 🪟⚙️
+# NovaFit 4.1 Windows Guide 🪟⚙️
 
 ## Supported route
 
@@ -8,9 +8,9 @@ NovaFit targets 64-bit Python **3.10–3.14** on current Windows 10 or Windows 1
 
 1. Install Python from the official installer.
 2. Enable **Add python.exe to PATH** and the **Python Launcher for Windows**.
-3. Extract NovaFit to a writable folder such as `C:\Dev\NovaFit`.
-4. Double-click `REPAIR_AND_VERIFY.bat`.
-5. Wait for the dependency preflight and 50-test summary.
+3. Keep or extract NovaFit in a writable location, including your existing OneDrive project folder.
+4. Double-click `VERIFY_ALL.bat` once for the complete repair and quality gate.
+5. Wait for the dependency preflight, tests and isolated smoke summary.
 6. Double-click `run_novafit.bat`.
 
 The same recovery path fixes these common messages:
@@ -45,7 +45,12 @@ If Python 3.14 cannot obtain a binary wheel on a particular machine, the launche
 
 ### REPAIR_AND_VERIFY.bat
 
-Recommended first entry point. Calls environment repair, then the complete test/smoke verifier.
+Runtime-focused compatibility entry point. Calls environment repair, then the core test/smoke verifier.
+
+### VERIFY_ALL.bat
+
+Recommended complete checker. Adds package safety, Ruff and Pyright gates while
+preserving local databases, exports and complete backups.
 
 ### bootstrap_windows.bat
 
@@ -72,7 +77,7 @@ Repairs/preflights the environment, then runs the same Python verifier used by C
 
 ### export_backup.bat
 
-Creates JSON and CSV files under `data`.
+Creates a verified all-profile ZIP, with manifest and SHA-256 checksums, under `data\backups`.
 
 ### export_report.bat
 
@@ -105,6 +110,10 @@ Windows Terminal renders UTF-8 and emoji more consistently than the legacy conso
 ## Paths containing spaces
 
 Launchers quote `%~dp0` and `.venv` paths. A short path is still recommended because it makes troubleshooting and screenshots easier.
+
+The bootstrapper retries generated-environment cleanup and can move a stale
+`.venv` out of the synced folder before rebuilding, which avoids transient
+OneDrive directory-not-empty failures without moving the NovaFit repository.
 
 ## Portable data copy
 
