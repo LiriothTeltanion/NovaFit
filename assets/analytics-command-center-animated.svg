@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="390" viewBox="0 0 1200 390" role="img" aria-labelledby="title desc">
+  <title id="title">NovaFit analytics command center</title>
+  <desc id="desc">Animated local-first wellness analytics with a movement line, goal rings, hydration bars, and consistency heatmap.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04101f"/><stop offset=".55" stop-color="#07182a"/><stop offset="1" stop-color="#160d32"/></linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#34d399"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="plot"><rect x="55" y="100" width="660" height="145" rx="16"/></clipPath>
+    <style>
+      .label{font:700 13px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#91a8bd;letter-spacing:.08em}.value{font:800 26px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#e8f5ff}.small{font:600 11px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#91a8bd}.title{font:800 30px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#e8f5ff}.accent{fill:#22d3ee}.panel{fill:#0b1828;stroke:#28445f;stroke-width:1.3}.grid{stroke:#28445f;stroke-width:1;opacity:.45}.pulse{animation:pulse 2.8s ease-in-out infinite}.dash{stroke-dasharray:10 8;animation:dash 3s linear infinite}.trace{stroke-dasharray:900;stroke-dashoffset:900;animation:draw 4.2s ease-in-out infinite alternate}.orbit{transform-origin:926px 182px;animation:spin 12s linear infinite}.cell{animation:cell 3.5s ease-in-out infinite}.cell:nth-child(3n){animation-delay:.45s}.cell:nth-child(4n){animation-delay:.9s}.bar{transform-origin:bottom;animation:bar 2.8s ease-in-out infinite alternate}.bar:nth-child(2n){animation-delay:.3s}.bar:nth-child(3n){animation-delay:.7s}@keyframes draw{to{stroke-dashoffset:0}}@keyframes dash{to{stroke-dashoffset:-36}}@keyframes pulse{50%{opacity:.45;filter:drop-shadow(0 0 10px #22d3ee)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes cell{50%{opacity:.48}}@keyframes bar{to{transform:scaleY(.65)}}
+      @media (prefers-reduced-motion:reduce){.pulse,.dash,.trace,.orbit,.cell,.bar{animation:none!important}.trace{stroke-dashoffset:0}}
+    </style>
+  </defs>
+  <rect width="1200" height="390" rx="28" fill="url(#bg)"/>
+  <circle cx="1070" cy="55" r="110" fill="#7c3aed" opacity=".08"/><circle cx="170" cy="350" r="135" fill="#22d3ee" opacity=".06"/>
+  <text x="44" y="48" class="title">NovaFit Ultimate · Analytics Studio</text>
+  <text x="44" y="74" class="small">Three views · transparent formulas · local SQLite records · exportable PNG and HTML</text>
+  <text x="1150" y="47" text-anchor="end" class="label accent">LOCAL-FIRST  •  NO MEDICAL CLAIMS</text>
+
+  <rect x="38" y="91" width="692" height="171" rx="20" class="panel"/>
+  <text x="57" y="119" class="label">MOVEMENT SIGNAL</text>
+  <g clip-path="url(#plot)">
+    <path d="M55 225H715M55 193H715M55 161H715M55 129H715" class="grid"/>
+    <path d="M55 202 C83 176 101 215 129 168 S177 130 204 183 S254 210 282 150 S330 126 358 171 S410 216 438 143 S486 117 514 160 S563 196 590 135 S637 112 664 151 S697 164 715 121" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" class="trace" filter="url(#glow)"/>
+    <path d="M55 188 C118 180 164 175 214 176 S315 166 377 170 S489 158 548 156 S651 143 715 141" fill="none" stroke="#a78bfa" stroke-width="3" opacity=".9"/>
+    <path d="M55 149H715" fill="none" stroke="#fbbf24" stroke-width="2" class="dash"/>
+    <circle cx="204" cy="183" r="5" fill="#fb7185" class="pulse"/><circle cx="438" cy="143" r="5" fill="#34d399" class="pulse"/><circle cx="664" cy="151" r="5" fill="#34d399" class="pulse"/>
+  </g>
+  <text x="58" y="252" class="small">7-day rolling average</text><rect x="186" y="244" width="34" height="3" rx="2" fill="#a78bfa"/>
+  <text x="621" y="252" class="small">goal line</text><rect x="681" y="244" width="33" height="3" rx="2" fill="#fbbf24"/>
+
+  <rect x="748" y="91" width="414" height="171" rx="20" class="panel"/>
+  <text x="771" y="119" class="label">GOAL CONSTELLATION</text>
+  <g class="orbit">
+    <circle cx="926" cy="182" r="58" fill="none" stroke="#123150" stroke-width="14"/><circle cx="926" cy="182" r="58" fill="none" stroke="#22d3ee" stroke-width="14" stroke-linecap="round" stroke-dasharray="255 365" transform="rotate(-90 926 182)"/>
+    <circle cx="926" cy="182" r="39" fill="none" stroke="#123150" stroke-width="11"/><circle cx="926" cy="182" r="39" fill="none" stroke="#38bdf8" stroke-width="11" stroke-linecap="round" stroke-dasharray="180 245" transform="rotate(-90 926 182)"/>
+    <circle cx="926" cy="182" r="22" fill="none" stroke="#123150" stroke-width="9"/><circle cx="926" cy="182" r="22" fill="none" stroke="#34d399" stroke-width="9" stroke-linecap="round" stroke-dasharray="77 138" transform="rotate(-90 926 182)"/>
+  </g>
+  <text x="926" y="177" text-anchor="middle" class="value">78</text><text x="926" y="198" text-anchor="middle" class="small">ROUTINE SCORE</text>
+  <text x="1020" y="154" class="small" fill="#22d3ee">STEPS 70%</text><text x="1020" y="181" class="small" fill="#38bdf8">WATER 73%</text><text x="1020" y="208" class="small" fill="#34d399">BOTH 56%</text>
+
+  <rect x="38" y="278" width="480" height="82" rx="18" class="panel"/>
+  <text x="57" y="302" class="label">HYDRATION CURRENT</text>
+  <g transform="translate(60 310)">
+    <rect x="0" y="20" width="13" height="22" rx="3" fill="#38bdf8" class="bar"/><rect x="20" y="8" width="13" height="34" rx="3" fill="#34d399" class="bar"/><rect x="40" y="16" width="13" height="26" rx="3" fill="#22d3ee" class="bar"/><rect x="60" y="3" width="13" height="39" rx="3" fill="#34d399" class="bar"/><rect x="80" y="13" width="13" height="29" rx="3" fill="#22d3ee" class="bar"/><rect x="100" y="25" width="13" height="17" rx="3" fill="#38bdf8" class="bar"/><rect x="120" y="6" width="13" height="36" rx="3" fill="#34d399" class="bar"/><rect x="140" y="18" width="13" height="24" rx="3" fill="#22d3ee" class="bar"/><rect x="160" y="10" width="13" height="32" rx="3" fill="#34d399" class="bar"/><rect x="180" y="22" width="13" height="20" rx="3" fill="#38bdf8" class="bar"/>
+    <path d="M0 21H430" stroke="#fbbf24" stroke-width="2" class="dash"/>
+  </g>
+
+  <rect x="535" y="278" width="627" height="82" rx="18" class="panel"/>
+  <text x="554" y="302" class="label">CONSISTENCY FIELD</text>
+  <g transform="translate(556 313)">
+    <rect class="cell" x="0" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="39" y="0" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="78" y="0" width="35" height="17" rx="3" fill="#38bdf8"/><rect class="cell" x="117" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="156" y="0" width="35" height="17" rx="3" fill="#0b1828"/><rect class="cell" x="195" y="0" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="234" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="273" y="0" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="312" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="351" y="0" width="35" height="17" rx="3" fill="#38bdf8"/><rect class="cell" x="390" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="429" y="0" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="468" y="0" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="507" y="0" width="35" height="17" rx="3" fill="#22d3ee"/>
+    <rect class="cell" x="0" y="22" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="39" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="78" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="117" y="22" width="35" height="17" rx="3" fill="#38bdf8"/><rect class="cell" x="156" y="22" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="195" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="234" y="22" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="273" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="312" y="22" width="35" height="17" rx="3" fill="#0b1828"/><rect class="cell" x="351" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="390" y="22" width="35" height="17" rx="3" fill="#22d3ee"/><rect class="cell" x="429" y="22" width="35" height="17" rx="3" fill="#34d399"/><rect class="cell" x="468" y="22" width="35" height="17" rx="3" fill="#38bdf8"/><rect class="cell" x="507" y="22" width="35" height="17" rx="3" fill="#34d399"/>
+  </g>
+</svg>

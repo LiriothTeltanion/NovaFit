@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">NovaFit twelve-theme spectrum</title>
+  <desc id="desc">Nine animated visual themes connected to one private local data model.</desc>
+  <defs>
+    <linearGradient id="base" x2="1" y2="1"><stop stop-color="#040a14"/><stop offset=".55" stop-color="#0d2230"/><stop offset="1" stop-color="#1b1027"/></linearGradient>
+    <radialGradient id="core"><stop stop-color="#2dd4bf"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#0b1828"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <style>
+      .card{animation:float 5.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+      .card:nth-of-type(2){animation-delay:.35s}.card:nth-of-type(3){animation-delay:.7s}.card:nth-of-type(4){animation-delay:1.05s}.card:nth-of-type(5){animation-delay:1.4s}.card:nth-of-type(6){animation-delay:1.75s}.card:nth-of-type(7){animation-delay:2.1s}.card:nth-of-type(8){animation-delay:2.45s}.card:nth-of-type(9){animation-delay:2.8s}
+      .orbit{stroke-dasharray:15 11;animation:flow 11s linear infinite}.core{animation:pulse 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+      @keyframes float{50%{transform:translateY(-8px)}}@keyframes flow{to{stroke-dashoffset:-260}}@keyframes pulse{50%{transform:scale(1.08);opacity:.86}}
+      @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+    </style>
+  </defs>
+  <rect width="1200" height="520" rx="30" fill="url(#base)"/>
+  <circle cx="600" cy="286" r="150" fill="none" stroke="#22d3ee" stroke-width="2" opacity=".18" class="orbit"/>
+  <circle cx="600" cy="286" r="102" fill="none" stroke="#c084fc" stroke-width="2" opacity=".25" class="orbit"/>
+  <circle cx="600" cy="286" r="54" fill="url(#core)" filter="url(#glow)" class="core"/>
+  <text x="600" y="279" text-anchor="middle" fill="#ffffff" font-family="Segoe UI,Arial" font-size="18" font-weight="800">ONE LOCAL</text>
+  <text x="600" y="303" text-anchor="middle" fill="#d9f7ff" font-family="Segoe UI,Arial" font-size="15">DATA MODEL</text>
+  <text x="55" y="62" fill="#e8f5ff" font-family="Segoe UI,Arial" font-size="34" font-weight="800">Nine visual worlds. One honest system.</text>
+  <text x="55" y="94" fill="#9ab6c9" font-family="Segoe UI,Arial" font-size="17">Tkinter · charts · Motivation Center · PNG gallery · offline HTML reports</text>
+  <g font-family="Segoe UI,Arial" font-size="13" font-weight="700">
+    <g class="card" transform="translate(58 132)"><rect width="240" height="92" rx="18" fill="#0b1828" stroke="#22d3ee"/><circle cx="42" cy="46" r="22" fill="#a78bfa"/><text x="78" y="40" fill="#e8f5ff">MIDNIGHT NEON</text><text x="78" y="62" fill="#91a8bd" font-weight="500">cyber command center</text></g>
+    <g class="card" transform="translate(58 250)"><rect width="240" height="92" rx="18" fill="#0a2223" stroke="#2dd4bf"/><circle cx="42" cy="46" r="22" fill="#c084fc"/><text x="78" y="40" fill="#ecfffb">AURORA BOREALIS</text><text x="78" y="62" fill="#95c6bf" font-weight="500">teal and violet focus</text></g>
+    <g class="card" transform="translate(58 368)"><rect width="240" height="92" rx="18" fill="#2a1710" stroke="#fb923c"/><circle cx="42" cy="46" r="22" fill="#f472b6"/><text x="78" y="40" fill="#fff7ed">NEGEV SUNRISE</text><text x="78" y="62" fill="#d6b49f" font-weight="500">warm desert energy</text></g>
+
+    <g class="card" transform="translate(332 132)"><rect width="240" height="92" rx="18" fill="#07233b" stroke="#38bdf8"/><circle cx="42" cy="46" r="22" fill="#818cf8"/><text x="78" y="40" fill="#ecfeff">OCEAN DEPTH</text><text x="78" y="62" fill="#8cc5d9" font-weight="500">calm analytical blue</text></g>
+    <g class="card" transform="translate(332 388)"><rect width="240" height="92" rx="18" fill="#0d2417" stroke="#4ade80"/><circle cx="42" cy="46" r="22" fill="#22d3ee"/><text x="78" y="40" fill="#f0fdf4">FOREST FOCUS</text><text x="78" y="62" fill="#9ac4a7" font-weight="500">green consistency cues</text></g>
+
+    <g class="card" transform="translate(628 132)"><rect width="240" height="92" rx="18" fill="#2a1022" stroke="#f472b6"/><circle cx="42" cy="46" r="22" fill="#c084fc"/><text x="78" y="40" fill="#fff1f7">ROSE QUARTZ</text><text x="78" y="62" fill="#d5a4bf" font-weight="500">creative magenta identity</text></g>
+    <g class="card" transform="translate(628 388)"><rect width="240" height="92" rx="18" fill="#ffffff" stroke="#0891b2"/><circle cx="42" cy="46" r="22" fill="#7c3aed"/><text x="78" y="40" fill="#102a43">CLOUD DAY</text><text x="78" y="62" fill="#526d82" font-weight="500">bright accessible space</text></g>
+
+    <g class="card" transform="translate(902 190)"><rect width="240" height="92" rx="18" fill="#fffdf7" stroke="#d97706"/><circle cx="42" cy="46" r="22" fill="#7c3aed"/><text x="78" y="40" fill="#3d2b1f">SOLAR PAPER</text><text x="78" y="62" fill="#786554" font-weight="500">warm low-glare reading</text></g>
+    <g class="card" transform="translate(902 322)"><rect width="240" height="92" rx="18" fill="#0a0a0a" stroke="#facc15"/><circle cx="42" cy="46" r="22" fill="#22d3ee"/><text x="78" y="40" fill="#ffffff">HIGH CONTRAST</text><text x="78" y="62" fill="#d4d4d4" font-weight="500">maximum separation</text></g>
+  </g>
+</svg>

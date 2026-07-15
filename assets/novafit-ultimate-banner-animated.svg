@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" role="img">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04171c"/><stop offset=".52" stop-color="#071f2d"/><stop offset="1" stop-color="#15133b"/></linearGradient>
+  <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#2dd4bf"/><stop offset=".5" stop-color="#60a5fa"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<style>
+  .bg{fill:url(#bg)} .grid{stroke:#1f5261;stroke-width:1;opacity:.45}
+  .title{font:700 45px 'Segoe UI',Arial;fill:#f2fbff;letter-spacing:1px}
+  .subtitle{font:500 18px 'Segoe UI',Arial;fill:#9cc6d2}
+  .label{font:700 16px 'Segoe UI',Arial;fill:#e8fbff}
+  .small{font:500 13px 'Segoe UI',Arial;fill:#8db6c2}
+  .card{fill:#0a2830;stroke:#2dd4bf;stroke-width:2}
+  .card2{fill:#101d42;stroke:#60a5fa;stroke-width:2}
+  .line{fill:none;stroke:#2dd4bf;stroke-width:3;stroke-linecap:round}
+  .line2{fill:none;stroke:#c084fc;stroke-width:3;stroke-linecap:round}
+  .pulse{animation:pulse 2.7s ease-in-out infinite;transform-origin:center}
+  .float{animation:float 4.8s ease-in-out infinite;transform-origin:center}
+  .spin{animation:spin 13s linear infinite;transform-origin:center}
+  .dash{stroke-dasharray:12 14;animation:dash 5s linear infinite}
+  .glow{filter:url(#glow)}
+  .delay1{animation-delay:-.7s}.delay2{animation-delay:-1.4s}.delay3{animation-delay:-2.1s}
+  @keyframes pulse{0%,100%{opacity:.58;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes dash{to{stroke-dashoffset:-104}}
+  @media (prefers-reduced-motion:reduce){.pulse,.float,.spin,.dash{animation:none!important}}
+</style>
+<rect width="1600" height="520" class="bg"/><path d="M0 0V520 M64 0V520 M128 0V520 M192 0V520 M256 0V520 M320 0V520 M384 0V520 M448 0V520 M512 0V520 M576 0V520 M640 0V520 M704 0V520 M768 0V520 M832 0V520 M896 0V520 M960 0V520 M1024 0V520 M1088 0V520 M1152 0V520 M1216 0V520 M1280 0V520 M1344 0V520 M1408 0V520 M1472 0V520 M1536 0V520 M1600 0V520 M0 0H1600 M0 64H1600 M0 128H1600 M0 192H1600 M0 256H1600 M0 320H1600 M0 384H1600 M0 448H1600 M0 512H1600" class="grid"/>
+    <circle cx="1370" cy="145" r="94" fill="#2dd4bf" opacity=".08" class="pulse"/>
+    <circle cx="1370" cy="145" r="68" fill="none" stroke="#60a5fa" stroke-width="3" class="spin dash"/>
+    <circle cx="1370" cy="145" r="44" fill="#c084fc" opacity=".28" class="pulse delay1"/>
+    <path d="M55 285 C250 210 370 350 560 270 S850 205 1030 285 S1280 355 1545 248" class="line glow"/>
+    <path d="M55 309 C255 248 390 370 590 300 S890 252 1080 318 S1320 382 1545 285" class="line2" opacity=".7"/>
+    <text x="76" y="92" class="small" fill="#2dd4bf">NOVA HEALTH INTELLIGENCE / LOCAL-FIRST</text>
+    <text x="76" y="160" class="title">NovaFit Ultimate 4.0</text>
+    <text x="76" y="198" class="subtitle">Wellness Intelligence Studio · Python · Tkinter · SQLite · Matplotlib · Pillow</text>
+    <text x="76" y="238" class="subtitle">Multi-user profiles · trilingual UX · Training Atlas · Motivation · portable reports · self-healing Windows delivery</text>
+    <g class="float delay0"><rect x="90" y="355" width="300" height="105" rx="22" class="card"/><text x="114" y="397" class="label">3 LOCAL PROFILES</text><text x="114" y="427" class="small">Isolated dates, goals &amp; themes</text></g><g class="float delay1"><rect x="435" y="355" width="300" height="105" rx="22" class="card2"/><text x="459" y="397" class="label">EN · ES · HE</text><text x="459" y="427" class="small">LTR + true Hebrew RTL shell</text></g><g class="float delay2"><rect x="780" y="355" width="300" height="105" rx="22" class="card"/><text x="804" y="397" class="label">12 THEMES</text><text x="804" y="427" class="small">Dark, light &amp; high contrast</text></g><g class="float delay3"><rect x="1125" y="355" width="300" height="105" rx="22" class="card2"/><text x="1149" y="397" class="label">SPORT + DATA COACH</text><text x="1149" y="427" class="small">Conservative, explainable actions</text></g></svg>

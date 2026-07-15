@@ -1,0 +1,1023 @@
+"""
+Module: analytics chart rendering
+Purpose: Build ambitious, exportable Matplotlib dashboards without coupling storage to UI.
+Author: Kevin "Lirioth" Cusnir
+Date: 2026-07-15 | TZ: Asia/Jerusalem
+Notes: Matplotlib is the only visualization dependency; comments in ENGLISH.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Iterable, Mapping, Sequence
+
+from .analytics import (
+    build_calendar_matrix,
+    build_daily_series,
+    build_mood_distribution,
+    build_weekday_profile,
+    calculate_dashboard,
+    rolling_average,
+)
+from .config import AppSettings
+from .models import HealthEntry
+from .themes import get_theme, theme_ids
+
+CHART_VIEWS: Mapping[str, str] = {
+    "command_center": "Command Center",
+    "trend_lab": "Trend Lab",
+    "consistency_map": "Consistency Map",
+    "training_atlas": "Training Atlas",
+}
+SUPPORTED_VIEWS: tuple[str, ...] = tuple(CHART_VIEWS)
+
+
+@dataclass(frozen=True, slots=True)
+class ChartTheme:
+    """Describe one complete chart palette.
+
+    Attributes:
+        background: Figure background.
+        panel: Plot-panel background.
+        panel_alt: Secondary panel surface.
+        text: Primary text.
+        muted: Secondary text.
+        grid: Grid and separator color.
+        cyan: Movement accent.
+        blue: Secondary movement accent.
+        purple: Identity and rolling-average accent.
+        green: Success accent.
+        amber: Reference and caution accent.
+        pink: Mood and emphasis accent.
+        red: Negative or below-goal accent.
+
+    Example:
+        >>> resolve_chart_theme('dark').cyan
+        '#22d3ee'
+    """
+
+    background: str
+    panel: str
+    panel_alt: str
+    text: str
+    muted: str
+    grid: str
+    cyan: str
+    blue: str
+    purple: str
+    green: str
+    amber: str
+    pink: str
+    red: str
+
+
+DARK_THEME = ChartTheme(**dict(get_theme("midnight").chart))
+
+LIGHT_THEME = ChartTheme(**dict(get_theme("cloud").chart))
+
+
+def resolve_chart_theme(theme: str | ChartTheme) -> ChartTheme:
+    """Resolve any NovaFit theme name or return a supplied palette.
+
+    Args:
+        theme: Stable theme identifier, legacy ``dark``/``light`` alias, display
+            label, or an explicit ``ChartTheme``.
+
+    Returns:
+        Chart palette ready for rendering.
+
+    Raises:
+        ValueError: If a string theme is unsupported.
+
+    Example:
+        >>> resolve_chart_theme('aurora').green
+        '#4ade80'
+    """
+    if isinstance(theme, ChartTheme):
+        return theme
+    definition = get_theme(theme)
+    return ChartTheme(**dict(definition.chart))
+
+
+def normalize_chart_view(view: str) -> str:
+    """Normalize a user-facing chart-view value to its stable identifier.
+
+    Args:
+        view: Identifier or display label.
+
+    Returns:
+        One key from ``CHART_VIEWS``.
+
+    Raises:
+        ValueError: If the view is unsupported.
+
+    Example:
+        >>> normalize_chart_view('Trend Lab')
+        'trend_lab'
+    """
+    normalized = view.strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "overview": "command_center",
+        "goals": "trend_lab",
+        "calendar": "consistency_map",
+        "patterns": "trend_lab",
+        "trends": "trend_lab",
+        "consistency": "consistency_map",
+        "atlas": "training_atlas",
+        "training": "training_atlas",
+        "sport": "training_atlas",
+    }
+    normalized = aliases.get(normalized, normalized)
+    for key, label in CHART_VIEWS.items():
+        if normalized in {key, label.lower().replace(" ", "_")}:
+            return key
+    raise ValueError(f"Unsupported chart view: {view}")
+
+
+def create_dashboard_figure(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    *,
+    view: str = "command_center",
+    theme: str | ChartTheme = "dark",
+    days: int | None = None,
+    figure_size: tuple[float, float] | None = None,
+) -> Any:
+    """Create one of NovaFit's definitive analytics dashboards.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal lines and chart preferences.
+        view: ``command_center``, ``trend_lab``, or ``consistency_map``.
+        theme: Dark, light, or an explicit palette.
+        days: Optional history-range override.
+        figure_size: Optional Matplotlib size in inches for embedded canvases.
+
+    Returns:
+        A Matplotlib ``Figure`` object.
+
+    Raises:
+        ImportError: If Matplotlib is not installed.
+        ValueError: If view, theme, settings, or day range is invalid.
+
+    Example:
+        >>> figure = create_dashboard_figure([], AppSettings(), days=14)
+        >>> len(figure.axes) >= 4
+        True
+    """
+    settings.validate()
+    selected_days = days or settings.chart_days
+    if not 7 <= selected_days <= 365:
+        raise ValueError("Chart days must be between 7 and 365.")
+    selected_view = normalize_chart_view(view)
+    palette = resolve_chart_theme(theme)
+    rows = list(entries)
+
+    if selected_view == "command_center":
+        return _create_command_center(rows, settings, palette, selected_days, figure_size)
+    if selected_view == "trend_lab":
+        return _create_trend_lab(rows, settings, palette, selected_days, figure_size)
+    if selected_view == "consistency_map":
+        return _create_consistency_map(rows, settings, palette, selected_days, figure_size)
+    return _create_training_atlas(rows, settings, palette, selected_days, figure_size)
+
+
+def create_progress_figure(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    *,
+    days: int | None = None,
+) -> Any:
+    """Create the primary command-center figure for backward compatibility.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal lines and chart preferences.
+        days: Optional history-range override.
+
+    Returns:
+        NovaFit command-center ``Figure``.
+
+    Raises:
+        ImportError: If Matplotlib is not installed.
+        ValueError: If settings or days are invalid.
+
+    Example:
+        >>> len(create_progress_figure([], AppSettings(), days=7).axes) >= 4
+        True
+    """
+    return create_dashboard_figure(entries, settings, view="command_center", theme=settings.theme, days=days)
+
+
+def save_dashboard_chart(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    destination: Path,
+    *,
+    view: str = "command_center",
+    theme: str | ChartTheme | None = None,
+    days: int | None = None,
+    dpi: int = 180,
+) -> Path:
+    """Save a high-resolution dashboard PNG for sharing or documentation.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal and chart preferences.
+        destination: PNG output path.
+        view: Dashboard view identifier or label.
+        theme: Optional theme override; settings theme is used by default.
+        days: Optional history-range override.
+        dpi: Output resolution between 72 and 400.
+
+    Returns:
+        Written PNG path.
+
+    Raises:
+        ImportError: If Matplotlib is not installed.
+        ValueError: If view, theme, days, or DPI is invalid.
+        OSError: If the destination cannot be written.
+
+    Example:
+        >>> save_dashboard_chart([], AppSettings(), Path('data/chart.png'), days=7).suffix
+        '.png'
+    """
+    if not 72 <= dpi <= 400:
+        raise ValueError("Chart DPI must be between 72 and 400.")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    figure = create_dashboard_figure(
+        entries,
+        settings,
+        view=view,
+        theme=theme or settings.theme,
+        days=days,
+    )
+    figure.savefig(
+        destination,
+        format="png",
+        dpi=dpi,
+        bbox_inches="tight",
+        facecolor=figure.get_facecolor(),
+    )
+    return destination
+
+
+def save_progress_chart(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    destination: Path,
+    *,
+    days: int | None = None,
+) -> Path:
+    """Save the primary command-center PNG using the historical API name.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal and chart preferences.
+        destination: PNG output path.
+        days: Optional history-range override.
+
+    Returns:
+        Written PNG path.
+
+    Raises:
+        ImportError: If Matplotlib is not installed.
+        OSError: If the destination cannot be written.
+
+    Example:
+        >>> save_progress_chart([], AppSettings(), Path('data/chart.png'), days=7).name
+        'chart.png'
+    """
+    return save_dashboard_chart(entries, settings, destination, days=days)
+
+
+def create_analytics_figure(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    *,
+    view: str = "command_center",
+    theme: str | ChartTheme | None = None,
+    days: int | None = None,
+) -> Any:
+    """Create a definitive analytics figure using the public studio API.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal and chart preferences.
+        view: Dashboard view identifier or supported alias.
+        theme: Optional dark/light palette override.
+        days: Optional history-range override.
+
+    Returns:
+        A Matplotlib ``Figure`` object.
+
+    Raises:
+        ValueError: If view, theme, settings, or range is invalid.
+        ImportError: If Matplotlib is unavailable.
+
+    Example:
+        >>> len(create_analytics_figure([], AppSettings(), days=7).axes) >= 4
+        True
+    """
+    return create_dashboard_figure(
+        entries,
+        settings,
+        view=view,
+        theme=theme or settings.theme,
+        days=days,
+    )
+
+
+def save_analytics_chart(
+    entries: Iterable[HealthEntry],
+    settings: AppSettings,
+    destination: Path,
+    *,
+    view: str = "command_center",
+    theme: str | ChartTheme | None = None,
+    days: int | None = None,
+    dpi: int = 180,
+) -> Path:
+    """Save a definitive analytics view using the public studio API.
+
+    Args:
+        entries: Health records in any order.
+        settings: Goal and chart preferences.
+        destination: PNG output path.
+        view: Dashboard view identifier or supported alias.
+        theme: Optional theme override.
+        days: Optional history-range override.
+        dpi: Output resolution.
+
+    Returns:
+        Written PNG path.
+
+    Raises:
+        ValueError: If view, theme, days, or DPI is invalid.
+        OSError: If the destination cannot be written.
+
+    Example:
+        >>> save_analytics_chart([], AppSettings(), Path('data/chart.png'), days=7).suffix
+        '.png'
+    """
+    return save_dashboard_chart(
+        entries,
+        settings,
+        destination,
+        view=view,
+        theme=theme,
+        days=days,
+        dpi=dpi,
+    )
+
+def _create_command_center(
+    entries: Sequence[HealthEntry],
+    settings: AppSettings,
+    palette: ChartTheme,
+    days: int,
+    figure_size: tuple[float, float] | None = None,
+) -> Any:
+    """Render the multi-panel executive health command center."""
+    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.figure import Figure
+    from matplotlib.gridspec import GridSpec
+    from matplotlib.patches import Wedge
+    from matplotlib.ticker import FuncFormatter
+
+    series = build_daily_series(entries, days)
+    stats = calculate_dashboard(entries, settings)
+    labels = [row["date"][5:] for row in series]
+    positions = list(range(len(series)))
+    steps = [row["steps"] for row in series]
+    water = [row["water_l"] for row in series]
+    tracked = [bool(row["tracked"]) for row in series]
+    step_average = rolling_average(steps, min(7, len(steps)))
+    water_average = rolling_average(water, min(7, len(water)))
+
+    figure = Figure(figsize=figure_size or (14.8, 8.5), dpi=100, facecolor=palette.background)
+    grid = GridSpec(
+        8,
+        12,
+        figure=figure,
+        left=0.045,
+        right=0.985,
+        top=0.815,
+        bottom=0.075,
+        wspace=1.05,
+        hspace=1.35,
+    )
+    movement_axis = figure.add_subplot(grid[0:3, 0:8])
+    goal_axis = figure.add_subplot(grid[0:3, 8:12])
+    hydration_axis = figure.add_subplot(grid[3:5, 0:8])
+    rhythm_axis = figure.add_subplot(grid[3:5, 8:12], projection="polar")
+    mood_axis = figure.add_subplot(grid[5:8, 0:4])
+    heat_axis = figure.add_subplot(grid[5:8, 4:12])
+
+    figure.text(
+        0.045,
+        0.965,
+        "NovaFit Ultimate 4.0 · Wellness Command Center",
+        color=palette.text,
+        fontsize=19,
+        fontweight="bold",
+        ha="left",
+        va="top",
+    )
+    figure.text(
+        0.045,
+        0.925,
+        f"{days}-day local view · {stats.entry_count} tracked records · routine consistency {stats.consistency_score}/100",
+        color=palette.muted,
+        fontsize=9.5,
+        ha="left",
+        va="top",
+    )
+    figure.text(
+        0.95,
+        0.962,
+        "LOCAL-FIRST  •  NO MEDICAL CLAIMS",
+        color=palette.cyan,
+        fontsize=7.6,
+        fontweight="bold",
+        ha="right",
+        va="top",
+    )
+
+    _style_axis(movement_axis, palette, "Movement signal", "Steps")
+    movement_axis.plot(positions, steps, color=palette.cyan, linewidth=2.25, zorder=3)
+    movement_axis.fill_between(positions, steps, color=palette.cyan, alpha=0.13, zorder=1)
+    valid_average = [(index, value) for index, value in enumerate(step_average) if value is not None]
+    if valid_average:
+        movement_axis.plot(
+            [item[0] for item in valid_average],
+            [item[1] for item in valid_average],
+            color=palette.purple,
+            linewidth=1.8,
+            linestyle="-",
+            label="7-day average",
+            zorder=4,
+        )
+    movement_axis.axhline(
+        settings.step_goal,
+        color=palette.amber,
+        linestyle=(0, (4, 4)),
+        linewidth=1.35,
+        label=f"Goal {settings.step_goal:,}",
+        zorder=2,
+    )
+    marker_colors = [
+        palette.green if tracked[index] and value >= settings.step_goal else palette.red if tracked[index] else palette.grid
+        for index, value in enumerate(steps)
+    ]
+    movement_axis.scatter(positions, steps, c=marker_colors, s=28, edgecolors=palette.panel, linewidths=0.8, zorder=5)
+    movement_axis.yaxis.set_major_formatter(FuncFormatter(lambda value, _position: f"{int(value / 1000)}k"))
+    _set_date_ticks(movement_axis, labels)
+    _annotate_peak(movement_axis, positions, steps, labels, palette, suffix=" steps")
+    _style_legend(movement_axis, palette)
+
+    goal_axis.set_facecolor(palette.panel)
+    goal_axis.set_aspect("equal")
+    goal_axis.set_xlim(-1.30, 2.00)
+    goal_axis.set_ylim(-1.2, 1.2)
+    goal_axis.axis("off")
+    goal_axis.set_title("Goal constellation", loc="left", color=palette.text, fontsize=11, fontweight="bold", pad=6)
+    ring_specs = (
+        (1.00, stats.step_goal_rate_pct, palette.cyan, "STEP", stats.step_goal_days),
+        (0.73, stats.water_goal_rate_pct, palette.blue, "WATER", stats.water_goal_days),
+        (0.46, stats.perfect_goal_rate_pct, palette.green, "BOTH", stats.perfect_goal_days),
+    )
+    for radius, percentage, color, label, count in ring_specs:
+        goal_axis.add_patch(Wedge((0, 0), radius, 0, 360, width=0.13, facecolor=palette.panel_alt, edgecolor="none"))
+        goal_axis.add_patch(
+            Wedge(
+                (0, 0),
+                radius,
+                90,
+                90 + (360 * min(100, max(0, percentage)) / 100),
+                width=0.13,
+                facecolor=color,
+                edgecolor="none",
+                alpha=0.95,
+            )
+        )
+        goal_axis.text(
+            1.10,
+            radius - 0.22,
+            f"{label}  {percentage:>3.0f}%  ·  {count}d",
+            color=color,
+            fontsize=8.5,
+            fontweight="bold",
+            ha="left",
+            va="center",
+        )
+    goal_axis.text(0, 0.08, str(stats.consistency_score), color=palette.text, fontsize=23, fontweight="bold", ha="center")
+    goal_axis.text(0, -0.13, "ROUTINE\nSCORE", color=palette.muted, fontsize=7.5, fontweight="bold", ha="center", va="center")
+    goal_axis.text(
+        1.10,
+        -0.82,
+        f"Longest both-goal streak\n{stats.longest_goal_streak_days} day(s)",
+        color=palette.muted,
+        fontsize=8.2,
+        ha="left",
+        va="top",
+    )
+
+    _style_axis(hydration_axis, palette, "Hydration current", "Liters")
+    hydration_colors = [
+        palette.green if tracked[index] and value >= settings.water_goal_l else palette.blue if tracked[index] else palette.grid
+        for index, value in enumerate(water)
+    ]
+    hydration_axis.bar(positions, water, color=hydration_colors, alpha=0.86, width=0.72, zorder=2)
+    valid_water_average = [(index, value) for index, value in enumerate(water_average) if value is not None]
+    if valid_water_average:
+        hydration_axis.plot(
+            [item[0] for item in valid_water_average],
+            [item[1] for item in valid_water_average],
+            color=palette.purple,
+            linewidth=1.65,
+            marker="o",
+            markersize=2.8,
+            label="7-day average",
+            zorder=4,
+        )
+    hydration_axis.axhline(
+        settings.water_goal_l,
+        color=palette.amber,
+        linestyle=(0, (4, 4)),
+        linewidth=1.25,
+        label=f"Goal {settings.water_goal_l:.1f} L",
+    )
+    _set_date_ticks(hydration_axis, labels)
+    _style_legend(hydration_axis, palette)
+
+    weekday = build_weekday_profile(entries)
+    angles = [index * (6.283185307179586 / 7) for index in range(7)]
+    averages = [row["average_steps"] for row in weekday]
+    max_average = max(averages, default=0) or 1
+    normalized = [value / max_average for value in averages]
+    rhythm_axis.set_facecolor(palette.panel)
+    rhythm_axis.set_theta_offset(1.5707963267948966)
+    rhythm_axis.set_theta_direction(-1)
+    rhythm_axis.bar(
+        angles,
+        normalized,
+        width=0.67,
+        color=[palette.cyan, palette.blue, palette.purple, palette.green, palette.amber, palette.pink, palette.cyan],
+        alpha=0.82,
+        edgecolor=palette.panel,
+        linewidth=0.8,
+    )
+    rhythm_axis.set_xticks(angles)
+    rhythm_axis.set_xticklabels([row["weekday"] for row in weekday], color=palette.muted, fontsize=7.5)
+    rhythm_axis.set_yticklabels([])
+    rhythm_axis.grid(color=palette.grid, alpha=0.35)
+    rhythm_axis.spines["polar"].set_color(palette.grid)
+    rhythm_axis.set_title("Weekday rhythm", color=palette.text, fontsize=11, fontweight="bold", pad=10)
+    rhythm_axis.text(
+        0,
+        0,
+        stats.best_weekday or "—",
+        color=palette.text,
+        fontsize=10,
+        fontweight="bold",
+        ha="center",
+        va="center",
+    )
+
+    _style_axis(mood_axis, palette, "Mood check-ins", "Count")
+    mood_pairs = build_mood_distribution(entries)
+    if mood_pairs:
+        mood_labels = [item[0] for item in mood_pairs][::-1]
+        mood_counts = [item[1] for item in mood_pairs][::-1]
+        mood_colors = [palette.purple, palette.cyan, palette.blue, palette.green, palette.amber, palette.pink][-len(mood_pairs) :]
+        mood_axis.barh(mood_labels, mood_counts, color=mood_colors, alpha=0.85)
+        mood_axis.set_xlabel("Recorded days", color=palette.muted, fontsize=8)
+        mood_axis.tick_params(axis="y", labelsize=7.5)
+    else:
+        _draw_empty_state(mood_axis, palette, "No mood check-ins yet")
+
+    _style_axis(heat_axis, palette, "Consistency field", "")
+    matrix = build_calendar_matrix(entries, settings, days=max(42, min(days, 112)))
+    numeric = [[float("nan") if value is None else value for value in row] for row in matrix.values]
+    heatmap = LinearSegmentedColormap.from_list(
+        "novafit_consistency",
+        [palette.panel_alt, palette.blue, palette.cyan, palette.green],
+    ).with_extremes(bad=palette.panel)
+    heat_axis.imshow(numeric, aspect="auto", interpolation="nearest", vmin=0, vmax=1, cmap=heatmap)
+    heat_axis.set_yticks(range(7))
+    heat_axis.set_yticklabels(matrix.weekday_labels, fontsize=7.5)
+    label_step = max(1, len(matrix.week_labels) // 7)
+    week_positions = list(range(0, len(matrix.week_labels), label_step))
+    heat_axis.set_xticks(week_positions)
+    heat_axis.set_xticklabels([matrix.week_labels[index] for index in week_positions], fontsize=7.2, rotation=0)
+    heat_axis.set_xlabel("Darker cells represent stronger combined step and hydration goal progress", color=palette.muted, fontsize=7.5)
+    heat_axis.grid(False)
+
+    figure.text(
+        0.985,
+        0.018,
+        "Routine score = tracking coverage + capped step/hydration goal completion. Personal tracking only; not medical advice.",
+        color=palette.muted,
+        fontsize=7.4,
+        ha="right",
+    )
+    return figure
+
+
+def _create_trend_lab(
+    entries: Sequence[HealthEntry],
+    settings: AppSettings,
+    palette: ChartTheme,
+    days: int,
+    figure_size: tuple[float, float] | None = None,
+) -> Any:
+    """Render a four-panel long-form trend laboratory."""
+    from matplotlib.figure import Figure
+    from matplotlib.gridspec import GridSpec
+    from matplotlib.ticker import FuncFormatter
+
+    series = build_daily_series(entries, days)
+    labels = [row["date"][5:] for row in series]
+    positions = list(range(len(series)))
+    steps = [row["steps"] for row in series]
+    water = [row["water_l"] for row in series]
+    calories = [float("nan") if row["calories"] is None else row["calories"] for row in series]
+    daily_score = [
+        min(1.0, row["steps"] / settings.step_goal) * 50
+        + min(1.0, row["water_l"] / settings.water_goal_l) * 50
+        if row["tracked"]
+        else 0
+        for row in series
+    ]
+
+    figure = Figure(figsize=figure_size or (14.8, 8.5), dpi=100, facecolor=palette.background)
+    grid = GridSpec(6, 12, figure=figure, left=0.055, right=0.98, top=0.84, bottom=0.08, hspace=1.2, wspace=0.85)
+    step_axis = figure.add_subplot(grid[0:3, 0:8])
+    water_axis = figure.add_subplot(grid[0:3, 8:12])
+    calorie_axis = figure.add_subplot(grid[3:6, 0:6])
+    score_axis = figure.add_subplot(grid[3:6, 6:12])
+
+    _figure_header(figure, palette, "Trend Lab", f"Rolling signals and goal context across {days} calendar days")
+
+    _style_axis(step_axis, palette, "Movement trajectory", "Steps")
+    step_axis.plot(positions, steps, color=palette.cyan, linewidth=2.1, marker="o", markersize=3.2)
+    step_axis.fill_between(positions, steps, color=palette.cyan, alpha=0.12)
+    average = rolling_average(steps, min(7, len(steps)))
+    _plot_optional_series(step_axis, average, palette.purple, "7-day average")
+    step_axis.axhline(settings.step_goal, color=palette.amber, linestyle="--", linewidth=1.2, label="Daily goal")
+    step_axis.yaxis.set_major_formatter(FuncFormatter(lambda value, _position: f"{int(value / 1000)}k"))
+    _set_date_ticks(step_axis, labels)
+    _style_legend(step_axis, palette)
+
+    _style_axis(water_axis, palette, "Hydration stability", "Liters")
+    water_axis.bar(positions, water, color=palette.blue, alpha=0.78, width=0.72)
+    water_average = rolling_average(water, min(7, len(water)))
+    _plot_optional_series(water_axis, water_average, palette.green, "7-day average")
+    water_axis.axhline(settings.water_goal_l, color=palette.amber, linestyle="--", linewidth=1.2, label="Daily goal")
+    _set_date_ticks(water_axis, labels)
+    _style_legend(water_axis, palette)
+
+    _style_axis(calorie_axis, palette, "Calorie reference (optional)", "Calories")
+    calorie_axis.plot(positions, calories, color=palette.pink, linewidth=1.8, marker="o", markersize=3)
+    calorie_axis.axhline(settings.calorie_goal, color=palette.amber, linestyle="--", linewidth=1.2, label="Reference")
+    calorie_axis.fill_between(positions, calories, settings.calorie_goal, color=palette.pink, alpha=0.08)
+    _set_date_ticks(calorie_axis, labels)
+    _style_legend(calorie_axis, palette)
+
+    _style_axis(score_axis, palette, "Daily routine score", "Score")
+    score_axis.plot(positions, daily_score, color=palette.green, linewidth=2.0)
+    score_axis.fill_between(positions, daily_score, color=palette.green, alpha=0.16)
+    score_axis.axhline(100, color=palette.cyan, linestyle=(0, (3, 4)), linewidth=1.0, label="Both goals met")
+    score_axis.set_ylim(0, 112)
+    _set_date_ticks(score_axis, labels)
+    _style_legend(score_axis, palette)
+    score_axis.text(
+        0.99,
+        0.04,
+        "50% steps + 50% hydration",
+        transform=score_axis.transAxes,
+        color=palette.muted,
+        fontsize=7.5,
+        ha="right",
+    )
+    return figure
+
+
+def _create_consistency_map(
+    entries: Sequence[HealthEntry],
+    settings: AppSettings,
+    palette: ChartTheme,
+    days: int,
+    figure_size: tuple[float, float] | None = None,
+) -> Any:
+    """Render a calendar-first consistency and rhythm view."""
+    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.figure import Figure
+    from matplotlib.gridspec import GridSpec
+
+    stats = calculate_dashboard(entries, settings)
+    matrix = build_calendar_matrix(entries, settings, days=max(42, min(days, 182)))
+    weekday = build_weekday_profile(entries)
+    moods = build_mood_distribution(entries, limit=7)
+
+    figure = Figure(figsize=figure_size or (14.8, 8.5), dpi=100, facecolor=palette.background)
+    grid = GridSpec(7, 12, figure=figure, left=0.06, right=0.98, top=0.84, bottom=0.09, hspace=1.25, wspace=1.0)
+    heat_axis = figure.add_subplot(grid[0:4, 0:12])
+    weekday_axis = figure.add_subplot(grid[4:7, 0:5])
+    water_axis = figure.add_subplot(grid[4:7, 5:8])
+    mood_axis = figure.add_subplot(grid[4:7, 8:12])
+
+    _figure_header(
+        figure,
+        palette,
+        "Consistency Map",
+        f"Coverage {stats.tracking_coverage_pct:.0f}% · current streak {stats.current_streak_days}d · longest streak {stats.longest_tracking_streak_days}d",
+    )
+
+    _style_axis(heat_axis, palette, "Calendar routine field", "")
+    numeric = [[float("nan") if value is None else value for value in row] for row in matrix.values]
+    colormap = LinearSegmentedColormap.from_list(
+        "novafit_map",
+        [palette.panel_alt, palette.purple, palette.cyan, palette.green],
+    ).with_extremes(bad=palette.panel)
+    image = heat_axis.imshow(numeric, aspect="auto", interpolation="nearest", vmin=0, vmax=1, cmap=colormap)
+    heat_axis.set_yticks(range(7))
+    heat_axis.set_yticklabels(matrix.weekday_labels)
+    label_step = max(1, len(matrix.week_labels) // 10)
+    positions = list(range(0, len(matrix.week_labels), label_step))
+    heat_axis.set_xticks(positions)
+    heat_axis.set_xticklabels([matrix.week_labels[index] for index in positions])
+    heat_axis.set_xlabel("Missing record → empty cell · stronger goal progress → brighter cell", color=palette.muted, fontsize=8)
+    colorbar = figure.colorbar(image, ax=heat_axis, fraction=0.015, pad=0.012)
+    colorbar.ax.tick_params(colors=palette.muted, labelsize=7)
+    colorbar.outline.set_edgecolor(palette.grid)
+    colorbar.set_ticks([0, 0.5, 1])
+    colorbar.set_ticklabels(["Started", "Balanced", "Goals"])
+
+    _style_axis(weekday_axis, palette, "Weekday movement rhythm", "Average steps")
+    weekday_labels = [row["weekday"] for row in weekday]
+    weekday_steps = [row["average_steps"] for row in weekday]
+    bars = weekday_axis.bar(weekday_labels, weekday_steps, color=palette.cyan, alpha=0.82)
+    if weekday_steps:
+        best_index = max(range(len(weekday_steps)), key=weekday_steps.__getitem__)
+        bars[best_index].set_color(palette.green)
+    weekday_axis.tick_params(axis="x", labelrotation=0)
+
+    _style_axis(water_axis, palette, "Hydration by weekday", "Liters")
+    water_axis.bar(
+        weekday_labels,
+        [row["average_water_l"] for row in weekday],
+        color=palette.blue,
+        alpha=0.82,
+    )
+    water_axis.axhline(settings.water_goal_l, color=palette.amber, linestyle="--", linewidth=1.1)
+    water_axis.tick_params(axis="x", labelrotation=65, labelsize=7)
+
+    _style_axis(mood_axis, palette, "Mood distribution", "Recorded days")
+    if moods:
+        labels = [item[0] for item in moods][::-1]
+        counts = [item[1] for item in moods][::-1]
+        colors = [palette.purple, palette.cyan, palette.blue, palette.green, palette.amber, palette.pink, palette.red]
+        mood_axis.barh(labels, counts, color=colors[-len(moods) :], alpha=0.84)
+    else:
+        _draw_empty_state(mood_axis, palette, "No mood check-ins yet")
+
+    figure.text(
+        0.98,
+        0.025,
+        f"Perfect goal days: {stats.perfect_goal_days} · longest combined-goal streak: {stats.longest_goal_streak_days}d · best weekday: {stats.best_weekday or '—'}",
+        color=palette.muted,
+        fontsize=8,
+        ha="right",
+    )
+    return figure
+
+
+
+def _create_training_atlas(
+    entries: Sequence[HealthEntry],
+    settings: AppSettings,
+    palette: ChartTheme,
+    days: int,
+    figure_size: tuple[float, float] | None = None,
+) -> Any:
+    """Create a visual training and routine atlas from descriptive signals."""
+    import math
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    rows = list(entries)
+    stats = calculate_dashboard(rows, settings)
+    series = build_daily_series(rows, days)
+    weekday = build_weekday_profile(rows)
+    labels = [row["date"][5:] for row in series]
+    steps = [float(row["steps"]) for row in series]
+    water = [float(row["water_l"]) for row in series]
+
+    figure = plt.figure(figsize=figure_size or (16.4, 10.1), facecolor=palette.background)
+    grid = figure.add_gridspec(
+        2,
+        3,
+        left=0.055,
+        right=0.97,
+        top=0.86,
+        bottom=0.085,
+        wspace=0.24,
+        hspace=0.33,
+        width_ratios=(1.05, 1.35, 1.0),
+    )
+    radar = figure.add_subplot(grid[:, 0], polar=True)
+    movement_axis = figure.add_subplot(grid[0, 1])
+    hydration_axis = figure.add_subplot(grid[1, 1])
+    rhythm_axis = figure.add_subplot(grid[0, 2])
+    coach_axis = figure.add_subplot(grid[1, 2])
+    _figure_header(
+        figure,
+        palette,
+        "Training Atlas",
+        f"{days}-day descriptive map · goals, rhythm, coverage, and conservative next actions",
+    )
+
+    dimensions = ("Movement", "Hydration", "Coverage", "Consistency", "Recent rhythm")
+    values = (
+        min(100.0, stats.step_goal_rate_pct),
+        min(100.0, stats.water_goal_rate_pct),
+        min(100.0, stats.tracking_coverage_pct),
+        float(stats.consistency_score),
+        min(100.0, (stats.active_last_7_days / 7) * 100),
+    )
+    angles = np.linspace(0, 2 * math.pi, len(dimensions), endpoint=False).tolist()
+    radar_values = list(values) + [values[0]]
+    radar_angles = angles + [angles[0]]
+    radar.set_facecolor(palette.panel)
+    radar.plot(radar_angles, radar_values, color=palette.cyan, linewidth=2.4)
+    radar.fill(radar_angles, radar_values, color=palette.purple, alpha=0.22)
+    radar.scatter(angles, values, color=palette.amber, s=42, zorder=4)
+    radar.set_xticks(angles)
+    radar.set_xticklabels(dimensions, color=palette.text, fontsize=8.5)
+    radar.set_ylim(0, 100)
+    radar.set_yticks((25, 50, 75, 100))
+    radar.set_yticklabels(("25", "50", "75", "100"), color=palette.muted, fontsize=7)
+    radar.grid(color=palette.grid, alpha=0.38)
+    radar.spines["polar"].set_color(palette.grid)
+    radar.set_title("Routine capability map", color=palette.text, fontsize=12, fontweight="bold", pad=24)
+
+    _style_axis(movement_axis, palette, "Movement trajectory", "steps")
+    movement_axis.plot(range(len(steps)), steps, color=palette.cyan, linewidth=2.0, marker="o", markersize=2.8)
+    movement_axis.axhline(settings.step_goal, color=palette.amber, linestyle="--", linewidth=1.15, label="goal")
+    movement_axis.fill_between(range(len(steps)), steps, color=palette.cyan, alpha=0.12)
+    _set_date_ticks(movement_axis, labels)
+    _style_legend(movement_axis, palette)
+
+    _style_axis(hydration_axis, palette, "Hydration signal", "liters")
+    colors = [palette.green if item >= settings.water_goal_l else palette.blue for item in water]
+    hydration_axis.bar(range(len(water)), water, color=colors, alpha=0.78)
+    hydration_axis.axhline(settings.water_goal_l, color=palette.amber, linestyle="--", linewidth=1.15)
+    _set_date_ticks(hydration_axis, labels)
+
+    _style_axis(rhythm_axis, palette, "Weekday rhythm", "average steps")
+    week_labels = [row["weekday"] for row in weekday]
+    week_values = [row["average_steps"] for row in weekday]
+    rhythm_axis.bar(week_labels, week_values, color=[palette.purple, palette.cyan, palette.blue, palette.green, palette.amber, palette.pink, palette.red], alpha=0.82)
+    rhythm_axis.tick_params(axis="x", labelrotation=38)
+
+    coach_axis.set_facecolor(palette.panel)
+    coach_axis.set_xticks([])
+    coach_axis.set_yticks([])
+    for spine in coach_axis.spines.values():
+        spine.set_color(palette.grid)
+    coach_axis.set_title("Coach lens", loc="left", color=palette.text, fontsize=11, fontweight="bold", pad=10)
+    suggestions: list[str] = []
+    if stats.entry_count < 7:
+        suggestions.append("• Build at least 7 tracked days before treating a trend as stable.")
+    if stats.average_steps < settings.step_goal * 0.5 and stats.entry_count:
+        suggestions.append("• Prefer short comfortable movement blocks over one abrupt jump.")
+    else:
+        suggestions.append("• Progress gradually; increase only one variable at a time.")
+    if stats.average_water_l < settings.water_goal_l and stats.entry_count:
+        suggestions.append("• Strengthen hydration logging at two fixed moments each day.")
+    suggestions.append("• Keep at least one easy or recovery day in the weekly rhythm.")
+    suggestions.append("• These are general educational signals, not medical advice.")
+    coach_axis.text(
+        0.055,
+        0.9,
+        "\n\n".join(suggestions),
+        transform=coach_axis.transAxes,
+        color=palette.text,
+        fontsize=9,
+        va="top",
+        wrap=True,
+        linespacing=1.35,
+    )
+    figure.text(
+        0.97,
+        0.03,
+        f"Profile-independent atlas · data confidence grows with coverage · score {stats.consistency_score}/100",
+        color=palette.muted,
+        fontsize=8,
+        ha="right",
+    )
+    return figure
+
+def _figure_header(figure: Any, palette: ChartTheme, title: str, subtitle: str) -> None:
+    """Add a consistent title and privacy boundary to a figure."""
+    figure.text(0.055, 0.952, f"NovaFit Ultimate 4.0 · {title}", color=palette.text, fontsize=19, fontweight="bold", ha="left", va="top")
+    figure.text(0.055, 0.914, subtitle, color=palette.muted, fontsize=9.5, ha="left", va="top")
+    figure.text(0.98, 0.95, "LOCAL ANALYTICS", color=palette.cyan, fontsize=8.5, fontweight="bold", ha="right", va="top")
+
+
+def _style_axis(axis: Any, palette: ChartTheme, title: str, ylabel: str) -> None:
+    """Apply NovaFit panel styling to a Matplotlib axis."""
+    axis.set_facecolor(palette.panel)
+    axis.set_title(title, loc="left", color=palette.text, fontsize=10.5, fontweight="bold", pad=8)
+    if ylabel:
+        axis.set_ylabel(ylabel, color=palette.muted, fontsize=8)
+    axis.tick_params(colors=palette.muted, labelsize=7.6)
+    axis.grid(axis="y", color=palette.grid, alpha=0.27, linewidth=0.8)
+    axis.set_axisbelow(True)
+    for spine in axis.spines.values():
+        spine.set_color(palette.grid)
+        spine.set_alpha(0.58)
+
+
+def _style_legend(axis: Any, palette: ChartTheme) -> None:
+    """Style an axis legend only when labeled artists exist."""
+    handles, labels = axis.get_legend_handles_labels()
+    if not handles:
+        return
+    legend = axis.legend(handles, labels, loc="upper left", fontsize=7.2, ncol=min(3, len(labels)))
+    legend.get_frame().set_facecolor(palette.panel_alt)
+    legend.get_frame().set_edgecolor(palette.grid)
+    legend.get_frame().set_alpha(0.88)
+    for text in legend.get_texts():
+        text.set_color(palette.text)
+
+
+def _set_date_ticks(axis: Any, labels: Sequence[str]) -> None:
+    """Use readable, evenly spaced date ticks for short or long ranges."""
+    if not labels:
+        return
+    step = max(1, len(labels) // 8)
+    positions = list(range(0, len(labels), step))
+    final_position = len(labels) - 1
+    if positions[-1] != final_position:
+        if final_position - positions[-1] < max(2, step // 2):
+            positions[-1] = final_position
+        else:
+            positions.append(final_position)
+    axis.set_xticks(positions)
+    axis.set_xticklabels([labels[index] for index in positions], rotation=0, ha="center")
+
+
+def _plot_optional_series(axis: Any, values: Sequence[float | None], color: str, label: str) -> None:
+    """Plot non-null rolling values while preserving their original positions."""
+    points = [(index, value) for index, value in enumerate(values) if value is not None]
+    if not points:
+        return
+    axis.plot(
+        [point[0] for point in points],
+        [point[1] for point in points],
+        color=color,
+        linewidth=1.8,
+        label=label,
+    )
+
+
+def _annotate_peak(
+    axis: Any,
+    positions: Sequence[int],
+    values: Sequence[float | int],
+    labels: Sequence[str],
+    palette: ChartTheme,
+    *,
+    suffix: str = "",
+) -> None:
+    """Annotate the largest non-zero value without covering the data line."""
+    if not values or max(values, default=0) <= 0:
+        return
+    index = max(range(len(values)), key=values.__getitem__)
+    axis.annotate(
+        f"Peak {int(values[index]):,}{suffix}\n{labels[index]}",
+        xy=(positions[index], values[index]),
+        xytext=(9, 9),
+        textcoords="offset points",
+        color=palette.text,
+        fontsize=7.2,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": palette.purple, "alpha": 0.8},
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": palette.panel_alt, "edgecolor": palette.grid, "alpha": 0.9},
+    )
+
+
+def _draw_empty_state(axis: Any, palette: ChartTheme, message: str) -> None:
+    """Render an accessible empty state inside an existing axis."""
+    axis.text(0.5, 0.5, message, transform=axis.transAxes, color=palette.muted, fontsize=9, ha="center", va="center")
+    axis.set_xticks([])
+    axis.set_yticks([])
+
+# User-facing aliases accepted by the CLI and GUI.
+USER_VIEWS: tuple[str, ...] = ("overview", "trends", "consistency", "atlas")
+SUPPORTED_VIEWS = USER_VIEWS + tuple(CHART_VIEWS)
+palette_for = resolve_chart_theme

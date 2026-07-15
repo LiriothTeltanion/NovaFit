@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520" role="img">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04171c"/><stop offset=".52" stop-color="#071f2d"/><stop offset="1" stop-color="#15133b"/></linearGradient>
+  <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#2dd4bf"/><stop offset=".5" stop-color="#60a5fa"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<style>
+  .bg{fill:url(#bg)} .grid{stroke:#1f5261;stroke-width:1;opacity:.45}
+  .title{font:700 45px 'Segoe UI',Arial;fill:#f2fbff;letter-spacing:1px}
+  .subtitle{font:500 18px 'Segoe UI',Arial;fill:#9cc6d2}
+  .label{font:700 16px 'Segoe UI',Arial;fill:#e8fbff}
+  .small{font:500 13px 'Segoe UI',Arial;fill:#8db6c2}
+  .card{fill:#0a2830;stroke:#2dd4bf;stroke-width:2}
+  .card2{fill:#101d42;stroke:#60a5fa;stroke-width:2}
+  .line{fill:none;stroke:#2dd4bf;stroke-width:3;stroke-linecap:round}
+  .line2{fill:none;stroke:#c084fc;stroke-width:3;stroke-linecap:round}
+  .pulse{animation:pulse 2.7s ease-in-out infinite;transform-origin:center}
+  .float{animation:float 4.8s ease-in-out infinite;transform-origin:center}
+  .spin{animation:spin 13s linear infinite;transform-origin:center}
+  .dash{stroke-dasharray:12 14;animation:dash 5s linear infinite}
+  .glow{filter:url(#glow)}
+  .delay1{animation-delay:-.7s}.delay2{animation-delay:-1.4s}.delay3{animation-delay:-2.1s}
+  @keyframes pulse{0%,100%{opacity:.58;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes dash{to{stroke-dashoffset:-104}}
+  @media (prefers-reduced-motion:reduce){.pulse,.float,.spin,.dash{animation:none!important}}
+</style>
+<rect width="1400" height="520" class="bg"/><path d="M0 0V520 M70 0V520 M140 0V520 M210 0V520 M280 0V520 M350 0V520 M420 0V520 M490 0V520 M560 0V520 M630 0V520 M700 0V520 M770 0V520 M840 0V520 M910 0V520 M980 0V520 M1050 0V520 M1120 0V520 M1190 0V520 M1260 0V520 M1330 0V520 M1400 0V520 M0 0H1400 M0 70H1400 M0 140H1400 M0 210H1400 M0 280H1400 M0 350H1400 M0 420H1400 M0 490H1400" class="grid"/><text x="55" y="62" class="title">Technology constellation</text><text x="55" y="96" class="subtitle">Purposeful dependencies around one local-first Python core.</text><g class="float delay0"><circle cx="700" cy="105" r="57" fill="#0b2834" stroke="#2dd4bf" stroke-width="2"/><text x="700" y="110" class="small" text-anchor="middle">Python 3.10+</text></g><path d="M700 270L700 105" class="line" opacity=".28"/><g class="float delay1"><circle cx="992" cy="144" r="57" fill="#0b2834" stroke="#60a5fa" stroke-width="2"/><text x="992" y="149" class="small" text-anchor="middle">Tkinter / ttk</text></g><path d="M700 270L992 144" class="line" opacity=".28"/><g class="float delay2"><circle cx="1148" cy="241" r="57" fill="#0b2834" stroke="#2dd4bf" stroke-width="2"/><text x="1148" y="246" class="small" text-anchor="middle">SQLite v4</text></g><path d="M700 270L1148 241" class="line" opacity=".28"/><g class="float delay3"><circle cx="1094" cy="352" r="57" fill="#0b2834" stroke="#60a5fa" stroke-width="2"/><text x="1094" y="358" class="small" text-anchor="middle">Matplotlib</text></g><path d="M700 270L1094 352" class="line" opacity=".28"/><g class="float delay0"><circle cx="856" cy="425" r="57" fill="#0b2834" stroke="#2dd4bf" stroke-width="2"/><text x="856" y="430" class="small" text-anchor="middle">Pillow icons</text></g><path d="M700 270L856 425" class="line" opacity=".28"/><g class="float delay1"><circle cx="544" cy="425" r="57" fill="#0b2834" stroke="#60a5fa" stroke-width="2"/><text x="544" y="430" class="small" text-anchor="middle">unittest</text></g><path d="M700 270L544 425" class="line" opacity=".28"/><g class="float delay2"><circle cx="306" cy="352" r="57" fill="#0b2834" stroke="#2dd4bf" stroke-width="2"/><text x="306" y="358" class="small" text-anchor="middle">JSON / CSV</text></g><path d="M700 270L306 352" class="line" opacity=".28"/><g class="float delay3"><circle cx="252" cy="241" r="57" fill="#0b2834" stroke="#60a5fa" stroke-width="2"/><text x="252" y="246" class="small" text-anchor="middle">Windows BAT</text></g><path d="M700 270L252 241" class="line" opacity=".28"/><g class="float delay0"><circle cx="408" cy="144" r="57" fill="#0b2834" stroke="#2dd4bf" stroke-width="2"/><text x="408" y="149" class="small" text-anchor="middle">GitHub Actions</text></g><path d="M700 270L408 144" class="line" opacity=".28"/><circle cx="700" cy="270" r="96" fill="url(#aurora)" opacity=".19" class="pulse"/><circle cx="700" cy="270" r="68" fill="#071f2d" stroke="#c084fc" stroke-width="3"/><text x="700" y="263" class="label" text-anchor="middle">NOVAFIT</text><text x="700" y="292" class="small" text-anchor="middle">ULTIMATE 4.0</text></svg>

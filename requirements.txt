@@ -1,3 +1,7 @@
-requests>=2.31.0
-Faker>=19.0.0
-Faker>=19.12.0
+# NovaFit runtime dependencies.
+# Prefer binary wheels on Windows, especially for Python 3.14.
+requests>=2.32.0,<3.0.0
+Faker>=30.0.0,<40.0.0
+matplotlib>=3.10.0,<4.0.0
+Pillow>=11.0.0,<13.0.0
+tzdata>=2025.2

@@ -1,93 +1,41 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+build/
+dist/
 
-# Testing
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Environments
-.env
-.venv
-env/
+# Virtual environments
+.venv/
 venv/
-ENV/
-env.bak/
-venv.bak/
+env/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Project specific
-data/novafit.db
-data/novafit_export.json
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
+# Tests and tooling
+.coverage
+htmlcov/
+.pytest_cache/
 .mypy_cache/
-.dmypy.json
-dmypy.json
+.ruff_cache/
 
-# IDE
+# Local data and private exports
+data/*.db
+data/*.db-*
+data/*.sqlite
+data/*.json
+data/*.csv
+data/*.log
+data/*.png
+!data/.gitkeep
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# NovaFit specific
-*.db
-*.sqlite
-temp/
-logs/
+desktop.ini
+*.swp

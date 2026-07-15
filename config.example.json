@@ -1,0 +1,17 @@
+{
+  "step_goal": 10000,
+  "water_goal_l": 2.0,
+  "calorie_goal": 2000,
+  "default_city": "beersheba",
+  "theme": "aurora",
+  "show_achievements": true,
+  "chart_days": 30,
+  "chart_view": "command_center",
+  "reduce_motion": false,
+  "personal_why": "Build steady energy for learning, work, and the people I care about.",
+  "weekly_focus": "",
+  "reward_note": "Protect recovery time after meaningful progress.",
+  "language": "en",
+  "active_profile_id": 1,
+  "ui_scale": 1.0
+}

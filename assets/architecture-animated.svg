@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-labelledby="title desc">
+  <title id="title">NovaFit architecture flow</title>
+  <desc id="desc">CLI and GUI feed validation, SQLite, analytics, exports, charts, and optional weather.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#111b35"/></linearGradient>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset=".5" stop-color="#34d399"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <style>
+      .flow { stroke-dasharray: 8 10; animation: move 4s linear infinite; }
+      .node { animation: glow 3s ease-in-out infinite; }
+      @keyframes move { to { stroke-dashoffset: -72; } }
+      @keyframes glow { 0%,100% { opacity:.82 } 50% { opacity:1 } }
+      @media (prefers-reduced-motion: reduce) { * { animation:none!important; } }
+    </style>
+  </defs>
+  <rect width="1200" height="340" rx="28" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#flow)" stroke-width="3" class="flow">
+    <path d="M180 105H335"/><path d="M180 235H335"/><path d="M500 170H620"/><path d="M790 170H900"/><path d="M705 105V65H900"/><path d="M705 235V275H900"/>
+  </g>
+  <g font-family="Segoe UI,Arial" text-anchor="middle">
+    <g class="node"><rect x="45" y="65" width="135" height="80" rx="18" fill="#102a43" stroke="#22d3ee"/><text x="112" y="100" fill="#9fb6c9" font-size="13">INTERFACE</text><text x="112" y="125" fill="#67e8f9" font-size="19" font-weight="800">CLI</text></g>
+    <g class="node"><rect x="45" y="195" width="135" height="80" rx="18" fill="#102a43" stroke="#22d3ee"/><text x="112" y="230" fill="#9fb6c9" font-size="13">INTERFACE</text><text x="112" y="255" fill="#67e8f9" font-size="19" font-weight="800">Tkinter GUI</text></g>
+    <g class="node"><rect x="335" y="125" width="165" height="90" rx="20" fill="#13263a" stroke="#34d399"/><text x="417" y="161" fill="#a5b9c9" font-size="13">DOMAIN LAYER</text><text x="417" y="188" fill="#6ee7b7" font-size="18" font-weight="800">Validation</text></g>
+    <g class="node"><rect x="620" y="125" width="170" height="90" rx="20" fill="#1a1636" stroke="#8b5cf6"/><text x="705" y="161" fill="#aaa2d2" font-size="13">PERSISTENCE</text><text x="705" y="188" fill="#c4b5fd" font-size="18" font-weight="800">SQLite</text></g>
+    <g class="node"><rect x="900" y="25" width="235" height="76" rx="20" fill="#102a43" stroke="#22d3ee"/><text x="1017" y="57" fill="#9fb6c9" font-size="13">PORTABILITY</text><text x="1017" y="82" fill="#67e8f9" font-size="18" font-weight="800">JSON + CSV</text></g>
+    <g class="node"><rect x="900" y="132" width="235" height="76" rx="20" fill="#13263a" stroke="#34d399"/><text x="1017" y="164" fill="#a5b9c9" font-size="13">INSIGHTS</text><text x="1017" y="189" fill="#6ee7b7" font-size="18" font-weight="800">Analytics + Charts</text></g>
+    <g class="node"><rect x="900" y="239" width="235" height="76" rx="20" fill="#261c28" stroke="#fbbf24"/><text x="1017" y="271" fill="#c3ae7d" font-size="13">EXPLICIT REQUEST</text><text x="1017" y="296" fill="#fde68a" font-size="18" font-weight="800">Open-Meteo</text></g>
+  </g>
+</svg>

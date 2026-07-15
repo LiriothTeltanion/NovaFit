@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 500" role="img">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04171c"/><stop offset=".52" stop-color="#071f2d"/><stop offset="1" stop-color="#15133b"/></linearGradient>
+  <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#2dd4bf"/><stop offset=".5" stop-color="#60a5fa"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<style>
+  .bg{fill:url(#bg)} .grid{stroke:#1f5261;stroke-width:1;opacity:.45}
+  .title{font:700 45px 'Segoe UI',Arial;fill:#f2fbff;letter-spacing:1px}
+  .subtitle{font:500 18px 'Segoe UI',Arial;fill:#9cc6d2}
+  .label{font:700 16px 'Segoe UI',Arial;fill:#e8fbff}
+  .small{font:500 13px 'Segoe UI',Arial;fill:#8db6c2}
+  .card{fill:#0a2830;stroke:#2dd4bf;stroke-width:2}
+  .card2{fill:#101d42;stroke:#60a5fa;stroke-width:2}
+  .line{fill:none;stroke:#2dd4bf;stroke-width:3;stroke-linecap:round}
+  .line2{fill:none;stroke:#c084fc;stroke-width:3;stroke-linecap:round}
+  .pulse{animation:pulse 2.7s ease-in-out infinite;transform-origin:center}
+  .float{animation:float 4.8s ease-in-out infinite;transform-origin:center}
+  .spin{animation:spin 13s linear infinite;transform-origin:center}
+  .dash{stroke-dasharray:12 14;animation:dash 5s linear infinite}
+  .glow{filter:url(#glow)}
+  .delay1{animation-delay:-.7s}.delay2{animation-delay:-1.4s}.delay3{animation-delay:-2.1s}
+  @keyframes pulse{0%,100%{opacity:.58;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes dash{to{stroke-dashoffset:-104}}
+  @media (prefers-reduced-motion:reduce){.pulse,.float,.spin,.dash{animation:none!important}}
+</style>
+<rect width="1400" height="500" class="bg"/><path d="M0 0V500 M70 0V500 M140 0V500 M210 0V500 M280 0V500 M350 0V500 M420 0V500 M490 0V500 M560 0V500 M630 0V500 M700 0V500 M770 0V500 M840 0V500 M910 0V500 M980 0V500 M1050 0V500 M1120 0V500 M1190 0V500 M1260 0V500 M1330 0V500 M1400 0V500 M0 0H1400 M0 70H1400 M0 140H1400 M0 210H1400 M0 280H1400 M0 350H1400 M0 420H1400 M0 490H1400" class="grid"/><text x="55" y="67" class="title">Training Atlas · fourth analytics workspace</text><text x="55" y="102" class="subtitle">Capability radar, movement trajectory, hydration signal, weekday rhythm and a conservative coach lens.</text>
+    <g transform="translate(205 290)" class="spin"><polygon points="0,-105 100,-32 62,85 -62,85 -100,-32" fill="#2dd4bf" opacity=".12" stroke="#2dd4bf" stroke-width="2"/><polygon points="0,-78 75,-24 46,63 -46,63 -75,-24" fill="#c084fc" opacity=".24" stroke="#c084fc" stroke-width="3"/><circle r="8" fill="#f2fbff"/></g>
+    <g transform="translate(390 175)"><rect width="460" height="235" rx="25" class="card"/><path d="M28 180L85 154L142 172L199 105L256 128L313 70L370 90L430 42" class="line glow"/><path d="M28 198L85 184L142 191L199 166L256 176L313 138L370 149L430 118" class="line2"/><text x="28" y="35" class="label">Movement trajectory + rolling average</text></g>
+    <g transform="translate(890 175)"><rect width="440" height="235" rx="25" class="card2"/><g fill="#60a5fa"><rect x="30" y="190" width="26" height="35" rx="7" opacity="0.55"/><rect x="78" y="166" width="26" height="59" rx="7" opacity="0.5900000000000001"/><rect x="126" y="142" width="26" height="83" rx="7" opacity="0.63"/><rect x="174" y="118" width="26" height="107" rx="7" opacity="0.67"/><rect x="222" y="94" width="26" height="131" rx="7" opacity="0.7100000000000001"/><rect x="270" y="190" width="26" height="35" rx="7" opacity="0.75"/><rect x="318" y="166" width="26" height="59" rx="7" opacity="0.79"/><rect x="366" y="142" width="26" height="83" rx="7" opacity="0.8300000000000001"/></g><path d="M28 140C100 95 165 160 230 105S355 60 410 92" class="line2"/><text x="28" y="35" class="label">Hydration + weekday rhythm</text><text x="28" y="218" class="small">Coach lens: progress gradually · protect recovery · improve data consistency</text></g></svg>
