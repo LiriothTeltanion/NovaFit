@@ -193,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.write:
         for path, content in files.items():
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
+            path.write_text(content, encoding="utf-8", newline="\n")
             print(f"updated {path.relative_to(ROOT)}")
         return 0
 

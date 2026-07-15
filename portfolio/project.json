@@ -19,7 +19,7 @@
   "theme_count": 12,
   "quality": {
     "workflow": ".github/workflows/quality.yml",
-    "automated_tests_discovered": 104,
+    "automated_tests_discovered": 105,
     "verification_command": "VERIFY_ALL.bat",
     "release_audit": "python tools/package_audit.py --strict-distribution"
   },
@@ -45,7 +45,7 @@
   },
   "assets": {
     "count": 54,
-    "total_bytes": 26281202,
+    "total_bytes": 26280998,
     "hero": "assets/novafit-ultimate-banner-animated.svg",
     "poster": "assets/novafit-ultimate-gui.png",
     "hebrew": "assets/hebrew-rtl-command-center.png",

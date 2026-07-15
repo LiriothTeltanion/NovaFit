@@ -1,7 +1,7 @@
 {
   "schema": "novafit-asset-manifest-v1",
   "asset_count": 54,
-  "total_bytes": 26281202,
+  "total_bytes": 26280998,
   "assets": [
     {
       "path": "assets/analytics-command-center-animated.svg",
@@ -114,8 +114,8 @@
     },
     {
       "path": "assets/distribution-safety-animated.svg",
-      "bytes": 3763,
-      "sha256": "b5d6a92085c93079f735a08d1b3a1d736f683a4774aca5ae4b264d4dbd4d3c34",
+      "bytes": 3729,
+      "sha256": "2f8cbbdb9adfc164cbfcefd07fae3a5a233a143d3fb5ea19bf86ad4d948a7d42",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 430,
@@ -283,8 +283,8 @@
     },
     {
       "path": "assets/multi-profile-i18n-animated.svg",
-      "bytes": 4185,
-      "sha256": "239890a6a550d64e27cbdb7cbff24bbb4e167727ad64476e53451d28b1bebb43",
+      "bytes": 4148,
+      "sha256": "e971ea2941bdeea040b4b7e2071d8ee769bfe9cdcb10467dba42cc3966cdd767",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 500,
@@ -363,8 +363,8 @@
     },
     {
       "path": "assets/novafit-ultimate-banner-animated.svg",
-      "bytes": 4350,
-      "sha256": "14bfa84a021680a6f04313c7361cbdb0fe3b9fc52b6da7eb85048c5510731929",
+      "bytes": 4310,
+      "sha256": "7fe4643313000be579489d588a061e285ee4f3f470c967ca6ebcce667fa41974",
       "media_type": "image/svg+xml",
       "width": 1600,
       "height": 520,
@@ -475,8 +475,8 @@
     },
     {
       "path": "assets/sport-data-engine-animated.svg",
-      "bytes": 4432,
-      "sha256": "c8ad9a6f5d1b4a2a77e304525ad87f67fb067e33fc469b2d18a24c94a45c571e",
+      "bytes": 4402,
+      "sha256": "93ab22344be8ce5b055399e79f39d7325dd8ab5eaff47c450a967c3ecf7135f6",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 500,
@@ -491,8 +491,8 @@
     },
     {
       "path": "assets/technology-constellation-animated.svg",
-      "bytes": 5041,
-      "sha256": "ac5789a56457ba67eae7ee348a151bc5b95cf1033894b1a5a16ef38ef08ef63e",
+      "bytes": 5011,
+      "sha256": "084c5804aec6821e8e1e2417e135d90a2eec352498e03416eab9da10c7cdb989",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 520,
@@ -693,8 +693,8 @@
     },
     {
       "path": "assets/training-atlas-animated.svg",
-      "bytes": 4249,
-      "sha256": "863239a3df2cee09c5083215550e7ccd06cd88fde2a75794374b65afdfd7cb8e",
+      "bytes": 4216,
+      "sha256": "fbbed93128e5f2ccca4657256319f1705d05126a89c2b32b663485492849a638",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 500,

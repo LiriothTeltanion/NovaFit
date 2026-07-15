@@ -128,7 +128,7 @@ def write_svg(path: Path, body: str, width: int, height: int) -> Path:
         PosixPath('x.svg')
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(svg_document(width, height, body), encoding="utf-8")
+    path.write_text(svg_document(width, height, body), encoding="utf-8", newline="\n")
     return path
 
 

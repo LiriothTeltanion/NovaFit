@@ -22,6 +22,18 @@ class DocumentationSyncTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stdout)
 
+    def test_generated_text_artifacts_use_portable_lf_endings(self) -> None:
+        """Keep hashes and byte sizes identical on Windows and Linux checkouts."""
+        paths = (
+            ROOT / "assets" / "novafit-ultimate-banner-animated.svg",
+            ROOT / "assets" / "manifest.json",
+            ROOT / "portfolio" / "project.json",
+            ROOT / "docs" / "PROJECT_FACTS.md",
+        )
+        for path in paths:
+            with self.subTest(path=path.relative_to(ROOT)):
+                self.assertNotIn(b"\r\n", path.read_bytes())
+
 
 if __name__ == "__main__":
     unittest.main()
