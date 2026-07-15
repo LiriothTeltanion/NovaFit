@@ -26,6 +26,7 @@ class DocumentationSyncTests(unittest.TestCase):
         """Keep hashes and byte sizes identical on Windows and Linux checkouts."""
         paths = (
             ROOT / "assets" / "novafit-ultimate-banner-animated.svg",
+            ROOT / "assets" / "novafit-report-preview.html",
             ROOT / "assets" / "manifest.json",
             ROOT / "portfolio" / "project.json",
             ROOT / "docs" / "PROJECT_FACTS.md",
