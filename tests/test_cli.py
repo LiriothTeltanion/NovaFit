@@ -8,13 +8,16 @@ Notes: Minimal deps; comments in ENGLISH; emojis sparingly.
 
 from __future__ import annotations
 
+import io
+import os
 import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 import matplotlib
 
 matplotlib.use("Agg")
-from pathlib import Path
 
 from novafit.cli import build_parser, main
 from novafit.backup import inspect_complete_backup
@@ -33,6 +36,33 @@ class CliTests(unittest.TestCase):
             db_path = Path(temp_dir) / "cli.db"
             self.assertEqual(main(["--db", str(db_path), "--sample"]), 0)
             self.assertEqual(main(["--db", str(db_path), "--dashboard"]), 0)
+
+    def test_legacy_cp1252_stream_is_upgraded_for_hebrew_and_emoji(self) -> None:
+        """Direct CLI use must work when Windows starts without UTF-8 mode."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = Path(temp_dir) / "legacy-console.db"
+            buffer = io.BytesIO()
+            legacy_stream = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
+            self.assertEqual(legacy_stream.encoding.lower(), "cp1252")
+
+            with (
+                patch("sys.stdout", legacy_stream),
+                patch("sys.stderr", legacy_stream),
+                patch.dict(os.environ, {}, clear=False),
+            ):
+                os.environ.pop("PYTHONUTF8", None)
+                self.assertNotIn("PYTHONUTF8", os.environ)
+                self.assertEqual(main(["--db", str(db_path), "--sample"]), 0)
+                self.assertEqual(
+                    main(["--db", str(db_path), "--language", "he", "--motivation"]),
+                    0,
+                )
+                legacy_stream.flush()
+
+            output = buffer.getvalue().decode("utf-8")
+            self.assertIn("✅", output)
+            self.assertIn("מרכז המוטיבציה", output)
+            legacy_stream.close()
 
     def test_motivation_command(self) -> None:
         """Verify the Motivation Center CLI route succeeds."""

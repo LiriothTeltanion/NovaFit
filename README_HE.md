@@ -2,14 +2,15 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/hebrew-rtl-command-center.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.1" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.2" />
 </picture>
 
-# NovaFit Ultimate 4.1 💙
+# NovaFit Ultimate 4.2 💙
 
 ### מערכת מקומית לתיעוד, ניתוח ומוטיבציה · פרופילים מרובים · אנגלית/ספרדית/עברית · 12 ערכות נושא
 
 [![איכות NovaFit](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
+[![תצוגה חיה](https://img.shields.io/badge/Live-GitHub%20Pages-2DD4BF?style=for-the-badge&logo=github)](https://liriothteltanion.github.io/NovaFit/)
 
 [English](README.md) · [Español](README_ES.md) · [עברית](README_HE.md)
 
@@ -23,7 +24,7 @@
 
 NovaFit היא אפליקציית שולחן עבודה ושורת פקודה מקומית. היא שומרת צעדים, מים, קלוריות אופציונליות, מצב רוח והערות פרטיות ב־SQLite במכשיר שלך.
 
-גרסה **4.1.0** כוללת:
+גרסה **4.2.0** כוללת:
 
 - פרופילי משתמשים מבודדים;
 - טקסט מלא באנגלית, ספרדית ועברית;
@@ -39,9 +40,26 @@ NovaFit היא אפליקציית שולחן עבודה ושורת פקודה מ
 - דוחות HTML ללא שרת;
 - CLI מורחב;
 - הפעלה, תיקון ואימות מלאים בלחיצה אחת ב־Windows;
+- תצוגת GitHub Pages ציבורית וניתנת להתקנה עם נתוני פרויקט מאומתים;
 - בדיקה ששומרת על מסד הנתונים האישי.
 
 > NovaFit מספקת מידע כללי ותיאורי בלבד. היא אינה ייעוץ רפואי, אבחון, טיפול או תוכנית אימון מקצועית.
+
+---
+
+## 🌐 תצוגה חיה והגבול בין PWA לשולחן העבודה
+
+אפשר לפתוח את התצוגה הציבורית ב־**[liriothteltanion.github.io/NovaFit](https://liriothteltanion.github.io/NovaFit/)**.
+
+ה־PWA הוא showcase סטטי וניתן להתקנה: הוא מציג את המוצר, התמונות,
+הנתונים המאומתים וקישורי ההורדה. הוא אינו אפליקציית Tkinter בדפדפן ואינו
+יכול לקרוא פרופילים, SQLite, קובצי OneDrive, ייצוא או גיבויים מקומיים.
+
+האפליקציה המלאה זמינה כקובץ Windows דרך
+[GitHub Releases](https://github.com/LiriothTeltanion/NovaFit/releases/latest)
+או מהמקור עם `run_novafit.bat`. הפרסום ל־Pages מתבצע רק אחרי בדיקת
+`main` ירוקה ובדיקה של ה־artifact המדויק ללא נתונים פרטיים או קישורים שבורים.
+פרטים נוספים: [PAGES_AND_RELEASES.md](docs/PAGES_AND_RELEASES.md).
 
 ---
 
@@ -165,6 +183,8 @@ python -m novafit.cli \
 
 נבדקו גם SQLite, מיגרציה, JSON/CSV, תרשימי PNG, דוח HTML, פרופילים, עברית RTL, המלצות, CLI והתנהגות ההפצה.
 
+בנוסף נבדקים staging מדויק של Pages, manifest ציבורי, קישורים מקומיים והיעדר נתוני runtime פרטיים.
+
 ---
 
 ## 🔒 פרטיות
@@ -186,6 +206,6 @@ python -m novafit.cli \
 
 MIT — ראו [LICENSE](LICENSE).
 
-**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
+**NovaFit Ultimate 4.2 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

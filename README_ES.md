@@ -2,14 +2,15 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/novafit-ultimate-gui.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="Banner animado de NovaFit Ultimate 4.1" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="Banner animado de NovaFit Ultimate 4.2" />
 </picture>
 
-# NovaFit Ultimate 4.1 💙
+# NovaFit Ultimate 4.2 💙
 
 ### Inteligencia de bienestar local · perfiles múltiples · EN/ES/HE · 12 temas · recomendaciones explicables · analítica avanzada
 
 [![Calidad de NovaFit](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
+[![Showcase en vivo](https://img.shields.io/badge/Showcase-GitHub%20Pages-2DD4BF?style=for-the-badge&logo=github)](https://liriothteltanion.github.io/NovaFit/)
 
 [English](README.md) · [Español](README_ES.md) · [עברית](README_HE.md)
 
@@ -19,7 +20,7 @@
 
 ## 🌌 Visión
 
-NovaFit es la aplicación local de escritorio y terminal de Kevin “Lirioth” Cusnir para registrar pasos, agua, calorías opcionales, estado de ánimo y notas privadas. La edición **4.1.0** la convierte en un **Wellness Intelligence Studio** más pulido, honesto y mantenible:
+NovaFit es la aplicación local de escritorio y terminal de Kevin “Lirioth” Cusnir para registrar pasos, agua, calorías opcionales, estado de ánimo y notas privadas. La edición **4.2.0** la convierte en un **Wellness Intelligence Studio** más pulido, honesto y mantenible:
 
 - perfiles de usuario aislados;
 - textos completos en inglés, español y hebreo;
@@ -37,10 +38,28 @@ NovaFit es la aplicación local de escritorio y terminal de Kevin “Lirioth” 
 - apertura, reparación y validación completa con un clic en Windows;
 - datos de proyecto y assets generados para sincronizar README y perfil GitHub;
 - releases automáticos desde tags con archivos auditados y checksums SHA-256;
+- showcase público instalable en GitHub Pages con datos de proyecto verificados;
 - auditoría que preserva la base del usuario;
 - empaquetado de release que excluye datos privados.
 
 > NovaFit describe patrones y ayuda a organizar una rutina. No diagnostica, prescribe ni reemplaza consejo médico o deportivo profesional.
+
+---
+
+## 🌐 Showcase en vivo y límites del PWA
+
+Abre **[liriothteltanion.github.io/NovaFit](https://liriothteltanion.github.io/NovaFit/)** para ver la experiencia pública e instalable.
+
+El PWA es un showcase estático: presenta el producto, sus imágenes, métricas
+verificadas y enlaces de descarga. No es la aplicación Tkinter en el navegador y
+no puede leer perfiles, SQLite, OneDrive, exports ni backups locales.
+
+La experiencia completa se obtiene mediante el ejecutable de
+[GitHub Releases](https://github.com/LiriothTeltanion/NovaFit/releases/latest)
+o desde código fuente con `run_novafit.bat`. Pages se despliega únicamente tras
+un Quality verde de `main`; CI audita el artifact exacto para evitar datos
+privados, rutas locales y enlaces rotos. Consulta
+[PAGES_AND_RELEASES.md](docs/PAGES_AND_RELEASES.md).
 
 ---
 
@@ -290,6 +309,7 @@ También se verificó:
 - perfiles aislados;
 - hebreo RTL;
 - release staging sin bases ni logs.
+- artifact exacto de Pages sin rutas privadas ni enlaces locales rotos.
 
 Superar la suite implementada no significa 100% de cobertura de líneas; es un contrato reproducible validado en Windows y Ubuntu.
 
@@ -321,6 +341,7 @@ Superar la suite implementada no significa 100% de cobertura de líneas; es un c
 - [Seguridad](docs/SECURITY.md)
 - [Changelog](docs/CHANGELOG.md)
 - [Datos verificados del proyecto](docs/PROJECT_FACTS.md)
+- [Pages, PWA y releases](docs/PAGES_AND_RELEASES.md)
 
 ---
 
@@ -337,6 +358,6 @@ MIT. Consulta [LICENSE](LICENSE).
 
 **Construye con constancia. Lee los datos con honestidad. Protege la recuperación.** 💙
 
-**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
+**NovaFit Ultimate 4.2 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

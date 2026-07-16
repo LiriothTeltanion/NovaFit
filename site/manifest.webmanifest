@@ -1,0 +1,61 @@
+{
+  "id": "./",
+  "name": "NovaFit 4.2 Showcase",
+  "short_name": "NovaFit",
+  "description": "An installable, privacy-first showcase for the NovaFit local Windows wellness intelligence studio.",
+  "lang": "en",
+  "dir": "auto",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#041116",
+  "theme_color": "#071c24",
+  "categories": ["health", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "assets/novafit-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/novafit-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/novafit-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/novafit-ultimate-gui.png",
+      "sizes": "1580x980",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "NovaFit Command Center"
+    },
+    {
+      "src": "assets/hebrew-rtl-command-center.png",
+      "sizes": "1580x980",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "NovaFit Hebrew right-to-left interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Public demo",
+      "short_name": "Demo",
+      "description": "Open the fixed, privacy-safe NovaFit simulation.",
+      "url": "./#demo",
+      "icons": [{ "src": "assets/novafit-icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

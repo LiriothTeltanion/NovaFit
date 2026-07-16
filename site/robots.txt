@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://liriothteltanion.github.io/NovaFit/sitemap.xml

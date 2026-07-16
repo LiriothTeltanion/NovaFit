@@ -2,6 +2,28 @@
 
 All notable NovaFit changes are documented here.
 
+## 4.2.0 — 2026-07-16 · Public Showcase and One-Click Delivery
+
+### Added
+
+- Installable static GitHub Pages showcase at `https://liriothteltanion.github.io/NovaFit/`.
+- Pages deployment gated by a successful same-repository `main` push in NovaFit Quality.
+- Exact-artifact staging from `site/`, shared public `assets/` and generated `portfolio/project.json`.
+- Offline Pages audit for required files, local links, manifest scope, private paths, secrets and runtime data.
+- Public project facts for the stable showcase URL, desktop-release link and explicit website/runtime boundary.
+- Windows standalone build path and one-click executable delivery through versioned GitHub Releases.
+
+### Changed
+
+- The browser-installable PWA is described honestly as a public showcase, not the Tkinter runtime.
+- Executables and ZIP downloads remain in GitHub Releases instead of being copied into Pages.
+- Generated documentation and portfolio facts now include Pages, release and privacy-delivery metadata.
+
+### Release target
+
+- Package version `4.2.0` and immutable tag `v4.2.0`.
+- Publish only after quality, exact Pages artifact, native Windows executable and privacy gates pass.
+
 ## 4.1.0 — 2026-07-16 · Living Wellness Studio
 
 ### Added

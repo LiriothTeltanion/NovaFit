@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Mapping
@@ -23,7 +24,42 @@ from .validation import validate_non_negative_float, validate_non_negative_int
 
 LOGGER = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATA_DIR = PROJECT_ROOT / "data"
+
+
+def _resolve_default_data_dir(
+    *,
+    frozen: bool | None = None,
+    environment: Mapping[str, str] | None = None,
+    home: Path | None = None,
+) -> Path:
+    """Return the source or installed application's durable data directory.
+
+    A source checkout intentionally keeps its historical ``data`` directory.
+    A frozen Windows build must never write inside the executable bundle, which
+    may live under a read-only installation directory or be replaced during an
+    update. It therefore uses ``%LOCALAPPDATA%/NovaFit``. Environment overrides
+    remain available for portable/test deployments.
+
+    Args:
+        frozen: Explicit frozen state for tests; auto-detected when omitted.
+        environment: Environment mapping used to resolve Windows app data.
+        home: Home-directory fallback used when Windows variables are absent.
+
+    Returns:
+        Absolute default data directory before ``NOVAFIT_DATA_DIR`` overrides.
+    """
+    is_frozen = bool(getattr(sys, "frozen", False)) if frozen is None else frozen
+    if not is_frozen:
+        return PROJECT_ROOT / "data"
+
+    variables = os.environ if environment is None else environment
+    windows_root = variables.get("LOCALAPPDATA") or variables.get("APPDATA")
+    if windows_root:
+        return Path(windows_root).expanduser() / "NovaFit"
+    return (home if home is not None else Path.home()) / ".novafit"
+
+
+DEFAULT_DATA_DIR = _resolve_default_data_dir()
 DATA_DIR = Path(os.getenv("NOVAFIT_DATA_DIR", str(DEFAULT_DATA_DIR))).expanduser().resolve()
 DB_PATH = Path(os.getenv("NOVAFIT_DB_PATH", str(DATA_DIR / "novafit.db"))).expanduser().resolve()
 CONFIG_PATH = Path(os.getenv("NOVAFIT_CONFIG_PATH", str(DATA_DIR / "config.json"))).expanduser().resolve()

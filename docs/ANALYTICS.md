@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines every metric and visualization used by NovaFit Ultimate 4.1. The goal is reproducibility: another developer should be able to read the stored rows, follow the formulas and reach the same result.
+This document defines every metric and visualization used by NovaFit Ultimate 4.2. The goal is reproducibility: another developer should be able to read the stored rows, follow the formulas and reach the same result.
 
 NovaFit analytics are **descriptive product signals**, not medical measurements or recommendations.
 

@@ -1,7 +1,7 @@
 {
   "schema": "novafit-asset-manifest-v1",
-  "asset_count": 54,
-  "total_bytes": 26280998,
+  "asset_count": 58,
+  "total_bytes": 27945959,
   "assets": [
     {
       "path": "assets/analytics-command-center-animated.svg",
@@ -350,6 +350,30 @@
       "privacy": "public-demo"
     },
     {
+      "path": "assets/novafit-icon-192.png",
+      "bytes": 14329,
+      "sha256": "57f6fac79fa5367b4adeb5c7fa60c165c398d07936a4686cecbd60d4679b9cb7",
+      "media_type": "image/png",
+      "width": 192,
+      "height": 192,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/novafit-icon-512.png",
+      "bytes": 28493,
+      "sha256": "923d59f6120f18aa0fe0076f798d37b649a1e632816fc695acdcc6336fd0c340",
+      "media_type": "image/png",
+      "width": 512,
+      "height": 512,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
       "path": "assets/novafit-report-preview.html",
       "bytes": 437368,
       "sha256": "1372703e637fe8cf6bc7a22706f74ac26343d21a1cbe332fd448bf8c40875ec2",
@@ -362,9 +386,21 @@
       "privacy": "public-demo"
     },
     {
+      "path": "assets/novafit-social-preview-4.2.png",
+      "bytes": 1576337,
+      "sha256": "bfe657d99314915573c2958c5c5c04509fa2db89d91802de7593b3426325e4f0",
+      "media_type": "image/png",
+      "width": 1730,
+      "height": 909,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
       "path": "assets/novafit-ultimate-banner-animated.svg",
       "bytes": 4310,
-      "sha256": "7fe4643313000be579489d588a061e285ee4f3f470c967ca6ebcce667fa41974",
+      "sha256": "35a62dccefc1008f81ed7c72a3658f8049d0484cdf5a8f029f503b9b2cf986ca",
       "media_type": "image/svg+xml",
       "width": 1600,
       "height": 520,
@@ -408,6 +444,18 @@
       "privacy": "public-demo"
     },
     {
+      "path": "assets/novafit.ico",
+      "bytes": 45802,
+      "sha256": "7d131e5fce8b283dbef38929178f661ccacdb8f8b9eac5e3ae755d0f6ea23132",
+      "media_type": "application/octet-stream",
+      "width": null,
+      "height": null,
+      "animated": false,
+      "referenced_by": [],
+      "status": "gallery",
+      "privacy": "public-demo"
+    },
+    {
       "path": "assets/privacy-vault-animated.svg",
       "bytes": 3782,
       "sha256": "22f6a6969c77303d9079bb38d247ccc74700b4645f0c73e5cfaba055e3faff09",
@@ -421,8 +469,8 @@
     },
     {
       "path": "assets/quality-gates-animated.svg",
-      "bytes": 4098,
-      "sha256": "aafa7da06f20ac2648ad8a2e1a5f7f4d7f61e8bf8dfeb82619c5177d949af0d9",
+      "bytes": 4096,
+      "sha256": "cc153b5cd5a2e5e819a6846815f01ad9c82cf8f516a3f21f8a6c067ce1e031f3",
       "media_type": "image/svg+xml",
       "width": 1200,
       "height": 250,
@@ -433,8 +481,8 @@
     },
     {
       "path": "assets/self-healing-verification-animated.svg",
-      "bytes": 2798,
-      "sha256": "ff070b932609dcf1a2f768d153dac8701df47d4a34fe7d96d4bfb9dce6f3e1c6",
+      "bytes": 2800,
+      "sha256": "ac1d2d40f48ebd5541aa8e5cdc07baa5f5dc3a10719c89a58638c9b5af7f53c8",
       "media_type": "image/svg+xml",
       "width": 1200,
       "height": 340,
@@ -492,7 +540,7 @@
     {
       "path": "assets/technology-constellation-animated.svg",
       "bytes": 5011,
-      "sha256": "084c5804aec6821e8e1e2417e135d90a2eec352498e03416eab9da10c7cdb989",
+      "sha256": "92693dc337139e54dadf4d62a4ada42d08845cf7c927d32d3ed3e4df285b692d",
       "media_type": "image/svg+xml",
       "width": 1400,
       "height": 520,

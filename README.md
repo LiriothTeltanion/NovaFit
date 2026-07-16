@@ -2,10 +2,10 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="./assets/novafit-ultimate-gui.png" />
-  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.1 animated wellness intelligence banner" />
+  <img src="./assets/novafit-ultimate-banner-animated.svg" width="100%" alt="NovaFit Ultimate 4.2 animated wellness intelligence banner" />
 </picture>
 
-# NovaFit Ultimate 4.1 💙
+# NovaFit Ultimate 4.2 💙
 
 ### Local-first wellness intelligence · full EN/ES/HE · purposeful motion · verified backups · explainable analytics
 
@@ -13,6 +13,7 @@
 [![Desktop](https://img.shields.io/badge/Desktop-Tkinter%20%2F%20ttk-2DD4BF?style=for-the-badge)](#-desktop-experience)
 [![Storage](https://img.shields.io/badge/Storage-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#-multi-user-data-model)
 [![NovaFit Quality](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/LiriothTeltanion/NovaFit/actions/workflows/quality.yml)
+[![Live Showcase](https://img.shields.io/badge/Live-GitHub%20Pages-2DD4BF?style=for-the-badge&logo=github)](https://liriothteltanion.github.io/NovaFit/)
 [![Languages](https://img.shields.io/badge/UI-English%20%C2%B7%20Espa%C3%B1ol%20%C2%B7%20%D7%A2%D7%91%D7%A8%D7%99%D7%AA-F59E0B?style=for-the-badge)](#-three-language-interface)
 [![Privacy](https://img.shields.io/badge/Privacy-Local--first-7C3AED?style=for-the-badge)](#-privacy-and-safety-boundaries)
 
@@ -20,7 +21,7 @@
 
 [English](README.md) · [Español](README_ES.md) · [עברית](README_HE.md)
 
-[Quickstart](#-windows-quickstart) · [GUI](#-desktop-experience) · [CLI](#-expanded-cli) · [Architecture](#-architecture) · [Testing](#-quality-and-verification) · [Docs](#-documentation-map)
+[Live showcase](https://liriothteltanion.github.io/NovaFit/) · [Quickstart](#-windows-quickstart) · [GUI](#-desktop-experience) · [CLI](#-expanded-cli) · [Architecture](#-architecture) · [Testing](#-quality-and-verification) · [Docs](#-documentation-map)
 
 </div>
 
@@ -28,7 +29,7 @@
 
 ## 🌌 Product vision
 
-NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application for recording daily steps, water, optional calories, mood and notes. Version **4.1.0** turns it into a more polished, honest and maintainable **Wellness Intelligence Studio** with:
+NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application for recording daily steps, water, optional calories, mood and notes. Version **4.2.0** turns it into a more polished, honest and maintainable **Wellness Intelligence Studio** with:
 
 - multiple isolated local user profiles;
 - complete English, Spanish and Hebrew interface copy;
@@ -48,9 +49,32 @@ NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application
 - one-click Windows launch, self-repair and full verification;
 - generated project facts and asset metadata for README/profile synchronization;
 - tag-driven GitHub Releases with audited Windows/Python archives and SHA-256 checksums;
+- a verified, installable GitHub Pages showcase with generated public project facts;
 - workspace-safe auditing and clean release staging.
 
 > NovaFit is a descriptive tracking and motivation tool. It does not diagnose, prescribe treatment or replace qualified medical or sports guidance.
+
+---
+
+## 🌐 Live showcase, PWA and desktop boundary
+
+Open the public experience at **[liriothteltanion.github.io/NovaFit](https://liriothteltanion.github.io/NovaFit/)**.
+
+| Experience | What it provides | What it never does |
+|---|---|---|
+| **GitHub Pages / installable PWA** | Public product tour, visuals, verified facts and links to releases | It cannot read local profiles, SQLite records, OneDrive files, exports or backups |
+| **Windows release executable** | The complete Tkinter application with local data, analytics and backups | It does not send wellness records to the showcase |
+| **Source launchers** | `run_novafit.bat`, CLI and complete `VERIFY_ALL.bat` repair/QA | They do not turn Pages into the desktop runtime |
+
+The PWA is intentionally a polished, installable **showcase**, not a browser
+rewrite of NovaFit. Desktop binaries remain in
+[GitHub Releases](https://github.com/LiriothTeltanion/NovaFit/releases/latest),
+and the source route remains available for inspection and development.
+
+Pages deploys only after a successful same-repository `main` quality run. CI
+stages `site/`, shared public `assets/` and generated `project.json`, audits that
+exact artifact for private data and broken links, and then deploys with minimal
+permissions. See [PAGES_AND_RELEASES.md](docs/PAGES_AND_RELEASES.md).
 
 ---
 
@@ -58,7 +82,7 @@ NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application
 
 The application tests, smoke checks and profile generation had all passed. The final package audit failed only because it found `NovaFit/data/novafit.db` — a legitimate runtime database created by actual use of the program.
 
-Version 4.1 preserves two contexts deliberately:
+Version 4.2 preserves two contexts deliberately:
 
 | Context | Database behavior | Audit behavior |
 |---|---|---|
@@ -549,6 +573,7 @@ The test suite covers:
 - CLI profile and recommendation routes;
 - environment repair contract;
 - workspace-safe versus distribution-strict audit behavior;
+- exact GitHub Pages staging, privacy and local-link behavior;
 - weather success and offline recovery.
 
 ### Run locally
@@ -623,6 +648,7 @@ NovaFit/
 ├── scripts/
 │   └── sync_docs.py
 ├── docs/
+├── site/                         # Public showcase/PWA source
 ├── assets/
 │   └── manifest.json
 ├── portfolio/project.json
@@ -650,6 +676,7 @@ NovaFit/
 | [DATA_MODEL.md](docs/DATA_MODEL.md) | SQLite schema and migrations |
 | [TESTING.md](docs/TESTING.md) | Automated suite and manual gates |
 | [PROJECT_FACTS.md](docs/PROJECT_FACTS.md) | Generated version, tests, themes and public asset facts |
+| [PAGES_AND_RELEASES.md](docs/PAGES_AND_RELEASES.md) | Live showcase, PWA/desktop boundary, deployment and tag strategy |
 | [WINDOWS_GUIDE.md](docs/WINDOWS_GUIDE.md) | Setup, repair and launchers |
 | [SECURITY.md](docs/SECURITY.md) | Privacy and technical boundaries |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Release history |
@@ -659,7 +686,7 @@ NovaFit/
 
 ## 🛣️ Roadmap
 
-### Completed in 4.1
+### Completed in 4.2
 
 - [x] Multi-user profile isolation
 - [x] EN/ES/HE language selector
@@ -677,6 +704,10 @@ NovaFit/
 - [x] Strict clean release staging
 - [x] Expanded profile-aware CLI
 - [x] Dynamic test discovery and cross-platform CI matrix
+- [x] Verified GitHub Pages showcase and installable public PWA shell
+- [x] Exact Pages privacy/link audit after green `main` quality
+- [x] Generated project facts consumed by Pages and the GitHub profile
+- [x] One-click standalone Windows release path
 
 ### Reasonable future work
 
@@ -705,6 +736,6 @@ MIT License. See [LICENSE](LICENSE).
 
 **Build steadily. Read the data honestly. Protect recovery. Keep ownership of the system.** 💙
 
-**NovaFit Ultimate 4.1 · Wellness Intelligence Studio · 2026-07-16**
+**NovaFit Ultimate 4.2 · Wellness Intelligence Studio · 2026-07-16**
 
 </div>

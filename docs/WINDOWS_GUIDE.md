@@ -1,4 +1,25 @@
-# NovaFit 4.1 Windows Guide 🪟⚙️
+# NovaFit 4.2 Windows Guide 🪟⚙️
+
+## Recommended standalone release
+
+For the simplest installation, download
+`NovaFit-vX.Y.Z-Windows-x64-Standalone.zip` from GitHub Releases, extract the
+entire folder, and double-click `START_NOVAFIT.bat`. This official **onedir**
+package includes Python, Tkinter, Matplotlib, Pillow, timezone data, and every
+runtime dependency. Python does not need to be installed.
+
+Keep the `_internal` directory beside `NovaFit.exe`; it is part of the program.
+NovaFit stores private runtime data separately under
+`%LOCALAPPDATA%\NovaFit`, so replacing an extracted application folder during
+an upgrade does not replace the database or settings. `OPEN_DATA_FOLDER.bat`
+opens that durable location. Every release also includes:
+
+- `NovaFit-CLI.exe` for Windows Terminal and automation;
+- `STANDALONE_MANIFEST.json` with a SHA-256 digest for every payload file;
+- `BUILD_INFO.json` with version and source-commit provenance;
+- a `.zip.sha256` sidecar plus the release-wide `SHA256SUMS.txt`.
+
+The source-checkout workflow below remains supported for development.
 
 ## Supported route
 
@@ -91,6 +112,14 @@ Creates all four analytics views. The Python showcase generator can additionally
 
 Opens the configured default data directory in Explorer.
 
+### BUILD_WINDOWS_STANDALONE.bat
+
+Developer/release one-click builder. It creates an isolated Python 3.13 build
+environment, runs the complete quality gate, regenerates the multi-resolution
+Windows icon, creates both frozen executables, uses disposable data for the
+frozen CLI smoke test, audits the exact onedir payload, and writes a versioned
+ZIP with its SHA-256 sidecar under `dist`.
+
 ## Manual recovery
 
 From Command Prompt in the NovaFit folder:
@@ -127,4 +156,6 @@ NovaFit has no system-wide service.
 2. Delete the project folder.
 3. Delete any separately copied reports/backups.
 
-The virtual environment is contained inside the project.
+The virtual environment is contained inside the project. For the standalone
+edition, delete the extracted application folder. Private data remains under
+`%LOCALAPPDATA%\NovaFit` until the user explicitly removes or backs it up.

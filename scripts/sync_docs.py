@@ -114,7 +114,7 @@ def build_project_manifest(asset_manifest: dict[str, Any], test_count: int) -> d
             "English, Spanish and Hebrew RTL, efficient motion, explainable analytics, "
             "complete verified backups and one-click self-repair."
         ),
-        "platforms": ["Windows desktop", "Python CLI"],
+        "platforms": ["Windows desktop", "Python CLI", "Static web showcase/PWA"],
         "languages": list(LANGUAGES),
         "theme_count": len(theme_ids()),
         "quality": {
@@ -122,12 +122,26 @@ def build_project_manifest(asset_manifest: dict[str, Any], test_count: int) -> d
             "automated_tests_discovered": test_count,
             "verification_command": "VERIFY_ALL.bat",
             "release_audit": "python tools/package_audit.py --strict-distribution",
+            "pages_audit": "python tools/site_audit.py --site-root _site --base-path /NovaFit/",
         },
         "automation": {
             "documentation": "python scripts/sync_docs.py --write",
             "quality_workflow": ".github/workflows/quality.yml",
             "tag_release_workflow": ".github/workflows/release.yml",
+            "pages_workflow": ".github/workflows/pages.yml",
             "profile_source": "portfolio/project.json",
+        },
+        "website": {
+            "live": "https://liriothteltanion.github.io/NovaFit/",
+            "source": "site/",
+            "kind": "installable-static-showcase",
+            "desktop_runtime": False,
+        },
+        "release": {
+            "tag": f"v{__version__}",
+            "downloads": "https://github.com/LiriothTeltanion/NovaFit/releases/latest",
+            "windows_one_click": "GitHub Release executable",
+            "source_fallback": "run_novafit.bat",
         },
         "capabilities": [
             "multi-profile SQLite isolation",
@@ -137,11 +151,14 @@ def build_project_manifest(asset_manifest: dict[str, Any], test_count: int) -> d
             "complete all-profile ZIP backups with SHA-256",
             "JSON, CSV, PNG and offline HTML exports",
             "one-click Windows setup, launch and verification",
+            "installable public Pages showcase with no desktop-data access",
         ],
         "privacy": {
             "local_first": True,
             "tracked_runtime_data": False,
             "weather_sends_health_records": False,
+            "site_reads_desktop_database": False,
+            "site_publishes_runtime_data": False,
         },
         "assets": {
             "count": asset_manifest["asset_count"],
@@ -168,9 +185,14 @@ def render_facts(project: dict[str, Any]) -> str:
         f"- **Public visual assets:** {assets['count']} ({assets['total_bytes'] / (1024 * 1024):.2f} MiB)\n"
         f"- **Complete verification:** `{quality['verification_command']}`\n"
         f"- **Strict release audit:** `{quality['release_audit']}`\n"
+        f"- **Live public showcase:** {project['website']['live']}\n"
+        f"- **Expected release tag:** `{project['release']['tag']}`\n"
         "- **Automated GitHub release:** `.github/workflows/release.yml`\n"
+        "- **Automated GitHub Pages:** `.github/workflows/pages.yml` after green `main` quality\n"
         "- **Profile synchronization source:** `portfolio/project.json`\n"
         "- **Runtime data policy:** SQLite, config, logs, exports and backups stay outside Git tracking.\n\n"
+        "The installable Pages experience is a public showcase, not the Tkinter desktop runtime, "
+        "and it cannot read local NovaFit profiles or SQLite records.\n\n"
         "The GitHub Actions badge is the source of truth for whether the current remote commit is green.\n"
     )
 

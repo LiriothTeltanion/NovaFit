@@ -1,4 +1,4 @@
-# NovaFit 4.1 Motivation Center ✨
+# NovaFit 4.2 Motivation Center ✨
 
 ## Product goal
 

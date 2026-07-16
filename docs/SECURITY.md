@@ -27,6 +27,19 @@ NovaFit does not:
 - include an AI API;
 - expose a server port.
 
+## GitHub Pages boundary
+
+The browser-installable Pages experience is a public static showcase. It has no
+backend, account, authentication, telemetry or bridge to the Windows desktop
+application. It cannot read SQLite profiles, OneDrive, `%LOCALAPPDATA%`, local
+exports or backups.
+
+Deployment stages only tracked `site/`, root public `assets/` and generated
+`portfolio/project.json`. `tools/site_audit.py` examines the exact artifact and
+rejects runtime databases, logs, backups, executables, archives, private
+absolute paths, credential-like values, symbolic links and broken local links.
+The Pages workflow deploys only after a green same-repository push to `main`.
+
 ## Weather boundary
 
 The optional weather request includes:

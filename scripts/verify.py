@@ -22,7 +22,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 ROOT = Path(__file__).resolve().parent.parent
 REQUIRED_FILES = (
     "README.md",
+    ".github/workflows/pages.yml",
     "requirements.txt",
+    "requirements-build.txt",
     "pyproject.toml",
     "novafit/__main__.py",
     "novafit/cli.py",
@@ -41,9 +43,23 @@ REQUIRED_FILES = (
     "novafit/icon_factory.py",
     "novafit/time_utils.py",
     "run_novafit.bat",
+    "BUILD_WINDOWS_STANDALONE.bat",
     "REPAIR_AND_VERIFY.bat",
     "VERIFY_ALL.bat",
+    "scripts/stage_pages.py",
+    "site/404.html",
+    "site/index.html",
+    "site/manifest.webmanifest",
+    "site/sw.js",
     "tools/package_audit.py",
+    "tools/site_audit.py",
+    "tools/standalone_audit.py",
+    "packaging/novafit.spec",
+    "assets/novafit.ico",
+    "assets/novafit-icon-192.png",
+    "assets/novafit-icon-512.png",
+    "scripts/build_windows_distribution.py",
+    "scripts/generate_windows_icon.py",
     "scripts/sync_docs.py",
     "docs/PROJECT_FACTS.md",
     "portfolio/project.json",
@@ -213,9 +229,11 @@ def verify_static_quality() -> None:
             "tools",
             "scripts/verify.py",
             "scripts/bootstrap_environment.py",
+            "scripts/stage_pages.py",
             "tests/test_bootstrap_environment.py",
             "tests/test_distribution_contract.py",
             "tests/test_backup.py",
+            "tests/test_pages_delivery.py",
         ]
     )
     run_command(
@@ -229,10 +247,29 @@ def verify_static_quality() -> None:
             "novafit/config.py",
             "novafit/validation.py",
             "scripts/bootstrap_environment.py",
+            "scripts/stage_pages.py",
             "scripts/verify.py",
             "tools/package_audit.py",
+            "tools/site_audit.py",
         ]
     )
+
+
+def verify_pages_artifact() -> None:
+    """Stage and audit the exact public tree later uploaded by Pages CI."""
+    with tempfile.TemporaryDirectory(prefix="novafit-pages-") as temp_dir:
+        staged = Path(temp_dir) / "_site"
+        run_command([sys.executable, "scripts/stage_pages.py", "--output", str(staged)])
+        run_command(
+            [
+                sys.executable,
+                "tools/site_audit.py",
+                "--site-root",
+                str(staged),
+                "--base-path",
+                "/NovaFit/",
+            ]
+        )
 
 
 def smoke_test() -> None:
@@ -364,6 +401,7 @@ def main(argv: list[str] | None = None) -> int:
         run_command([sys.executable, "scripts/sync_docs.py", "--check"])
         if args.quality:
             verify_static_quality()
+            verify_pages_artifact()
         if not args.skip_tests:
             run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"])
         if not args.skip_smoke:

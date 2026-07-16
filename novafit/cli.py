@@ -167,6 +167,26 @@ class Console:
         return f"{message} ❌"
 
 
+def _configure_utf8_output() -> None:
+    """Keep multilingual CLI output writable on legacy Windows text streams.
+
+    Python can still expose ``cp1252`` for a Windows console or redirected
+    stream when UTF-8 mode is disabled. NovaFit intentionally prints Hebrew and
+    friendly status symbols, so reconfigure the standard text wrappers before
+    argparse or any command writes to them. Test captures such as ``StringIO``
+    do not expose ``reconfigure`` and remain untouched.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if not callable(reconfigure):
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, TypeError, ValueError):
+            # Non-standard or already-detached streams should not block the CLI.
+            continue
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the NovaFit command-line contract.
 
@@ -304,6 +324,7 @@ def main(argv: list[str] | None = None) -> int:
         >>> main(['--version'])  # doctest: +SKIP
         0
     """
+    _configure_utf8_output()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
@@ -702,7 +723,7 @@ def interactive_menu(database: NovaFitDatabase, settings: AppSettings) -> int:
         >>> interactive_menu(NovaFitDatabase(Path('data/example.db')), AppSettings())  # doctest: +SKIP
         0
     """
-    actions: dict[str, tuple[str, Callable[[], None]]] = {
+    actions: dict[str, tuple[str, Callable[[], object]]] = {
         "1": ("Add or update entry", lambda: _menu_add(database)),
         "2": ("List recent entries", lambda: _menu_list(database)),
         "3": (
@@ -796,7 +817,7 @@ def interactive_menu(database: NovaFitDatabase, settings: AppSettings) -> int:
             print(Console.error(str(exc)))
 
 
-def _print_menu(actions: dict[str, tuple[str, Callable[[], None]]]) -> None:
+def _print_menu(actions: dict[str, tuple[str, Callable[[], object]]]) -> None:
     print()
     print(Console.style("╔════════════════════════════════════════════════════╗", Console.PURPLE, bold=True))
     print(Console.style("║  NOVAFIT ULTIMATE · LOCAL WELLNESS COMMAND CENTER ║", Console.CYAN, bold=True))

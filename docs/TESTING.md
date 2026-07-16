@@ -24,6 +24,7 @@ the README and profile do not need a hand-maintained test claim.
 - CLI record, profile, recommendation and chart routes
 - Windows environment contract
 - Workspace versus strict-distribution audit contract
+- Exact GitHub Pages staging, local links, manifest scope and privacy contract
 - Timezone fallback
 - Weather success and offline recovery
 
@@ -41,8 +42,15 @@ VERIFY_ALL.bat
 
 `VERIFY_ALL.bat` creates or repairs the isolated environment, installs the
 development gates, then runs compilation, package audit, Ruff, Pyright, all
-unit tests and an isolated smoke workflow. `REPAIR_AND_VERIFY.bat` remains a
+unit tests, exact Pages artifact audit and an isolated smoke workflow. `REPAIR_AND_VERIFY.bat` remains a
 runtime-focused compatibility route.
+
+The Pages-only contract can also be reproduced with:
+
+```bash
+python scripts/stage_pages.py --output _site
+python tools/site_audit.py --site-root _site --base-path /NovaFit/
+```
 
 ## Smoke workflow
 
