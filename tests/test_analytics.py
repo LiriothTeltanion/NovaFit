@@ -40,7 +40,10 @@ class AnalyticsTests(unittest.TestCase):
             HealthEntry.build("2026-07-13", 1, 1),
             HealthEntry.build("2026-07-15", 1, 1),
         ]
-        self.assertEqual(calculate_tracking_streak(rows), 1)
+        # as_of is pinned. Without it the streak is measured against the real
+        # clock: this passed in July 2026, when 2026-07-15 was yesterday, and
+        # failed by September, when the newest record was two months old.
+        self.assertEqual(calculate_tracking_streak(rows, as_of=date(2026, 7, 16)), 1)
 
     def test_recent_change_uses_two_seven_record_windows(self) -> None:
         first = date(2026, 7, 1)

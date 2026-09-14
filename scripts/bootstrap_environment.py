@@ -114,7 +114,11 @@ def verify_python_version() -> None:
     Example:
         >>> verify_python_version()
     """
-    if sys.version_info < (3, 10):
+    # Ruff's UP036 calls this branch unreachable because pyproject declares
+    # requires-python >=3.10. That holds for installed code, not here: this
+    # bootstrap runs before any install, on whatever interpreter the user has.
+    # Removing the guard would swap a clear message for a cryptic crash.
+    if sys.version_info < (3, 10):  # noqa: UP036
         raise RuntimeError("NovaFit requires Python 3.10 or newer.")
     if sys.version_info >= (3, 15):
         raise RuntimeError(
