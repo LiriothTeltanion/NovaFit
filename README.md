@@ -255,7 +255,10 @@ log of walks, runs, rides, strength, mobility, swimming and sport sessions.
 - **Session load** is minutes × RPE, the descriptive bookkeeping coaches use to compare weeks.
 - **WHO reference:** the dashed line marks the general adult reference of 150 minutes a week. It is
   orientation, not a personal prescription.
-- **Portable:** export every session to CSV; the complete ZIP backup already includes them.
+- **Coach-aware:** the Sport & Data Coach notices a sharp jump in your 7-day session load, a two-week pause
+  or four weeks of a single workout type, and suggests a conservative next step.
+- **Portable:** JSON exports and imports carry the sessions (no duplicates on re-import), there is a
+  sessions CSV, and the complete ZIP backup includes them.
 - **Safe upgrade:** schema 5 only adds a `workouts` table, so existing daily records are never rewritten.
 
 <img src="./assets/training-log.png" width="100%" alt="NovaFit Training Log with weekly minutes, streak and recent sessions" />

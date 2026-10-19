@@ -332,6 +332,57 @@ class WorkoutStore:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class TrainingSignals:
+    """Rolling-window facts the Sport & Data Coach reads (descriptive, never diagnostic).
+
+    Attributes:
+        total_sessions: Every stored session of the profile.
+        sessions_14d: Sessions in the last 14 days, today included.
+        load_ratio: Last-7-day session load ÷ the weekly mean of the 21 days before it;
+            ``None`` without RPE data in both windows.
+        single_kind: The only workout type of the last 28 days when there were at least
+            four sessions, else ``None``.
+    """
+
+    total_sessions: int
+    sessions_14d: int
+    load_ratio: float | None
+    single_kind: str | None
+
+
+def training_signals(sessions: Sequence[WorkoutSession], *, today: date | None = None) -> TrainingSignals:
+    """Compute rolling 7/14/28-day training signals.
+
+    Rolling windows avoid calendar artefacts: a quiet Monday does not look like a lighter week.
+
+    Example:
+        >>> training_signals([], today=date(2026, 10, 19)).load_ratio is None
+        True
+    """
+    day = today or date.today()
+
+    def within(session: WorkoutSession, first: int, last: int) -> bool:
+        age = (day - session.session_date).days
+        return first <= age <= last
+
+    acute = [s for s in sessions if within(s, 0, 6)]
+    chronic = [s for s in sessions if within(s, 7, 27)]
+    acute_load = sum(s.load or 0 for s in acute)
+    chronic_weekly = sum(s.load or 0 for s in chronic) / 3
+    ratio = (
+        round(acute_load / chronic_weekly, 2) if chronic_weekly > 0 and any(s.load for s in acute) else None
+    )
+    recent = [s for s in sessions if within(s, 0, 27)]
+    kinds = {s.kind for s in recent}
+    return TrainingSignals(
+        total_sessions=len(sessions),
+        sessions_14d=sum(1 for s in sessions if within(s, 0, 13)),
+        load_ratio=ratio,
+        single_kind=next(iter(kinds)) if len(recent) >= 4 and len(kinds) == 1 else None,
+    )
+
+
 def week_start(day: date) -> date:
     """Return the Monday that starts the ISO week containing ``day``."""
     return day - timedelta(days=day.weekday())

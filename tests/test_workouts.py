@@ -12,6 +12,7 @@ from __future__ import annotations
 import contextlib
 import csv
 import io
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -23,9 +24,12 @@ import matplotlib
 matplotlib.use("Agg")
 
 from novafit.cli import main
+from novafit.config import AppSettings
 from novafit.database import SCHEMA_VERSION, NovaFitDatabase
 from novafit.i18n import TRANSLATIONS
+from novafit.io_utils import export_json, import_json
 from novafit.models import HealthEntry, UserProfile
+from novafit.recommendations import build_recommendation_plan
 from novafit.training_panel import weekly_bar_layout
 from novafit.workouts import (
     WORKOUT_KINDS,
@@ -37,6 +41,7 @@ from novafit.workouts import (
     format_training_summary,
     generate_demo_workouts,
     normalize_workout_kind,
+    training_signals,
     week_start,
     weekly_training_summary,
 )
@@ -299,6 +304,91 @@ class TrainingPanelTests(unittest.TestCase):
                     panel.destroy()
         finally:
             root.destroy()
+
+
+class TrainingCoachAndPortabilityTests(unittest.TestCase):
+    """Slice 2: the coach reads sessions and JSON exports carry them."""
+
+    @staticmethod
+    def _week(offset_days: int, minutes: int, rpe: int, count: int = 3) -> list[WorkoutSession]:
+        return [
+            WorkoutSession.build(
+                MONDAY - timedelta(days=offset_days + 2 * index), "running", minutes, rpe=rpe
+            )
+            for index in range(count)
+        ]
+
+    def test_signals_use_rolling_windows(self) -> None:
+        sessions = (
+            self._week(0, 60, 8, 2) + self._week(7, 30, 5) + self._week(14, 30, 5) + self._week(21, 30, 5)
+        )
+        signals = training_signals(sessions, today=MONDAY)
+        # acute load 2 × 480 = 960; chronic 9 × 150 = 1350 over 3 weeks = 450 per week
+        self.assertAlmostEqual(signals.load_ratio or 0, 2.13, places=2)
+        self.assertEqual(signals.sessions_14d, 5)
+        self.assertEqual(signals.single_kind, "running")
+        self.assertIsNone(training_signals([], today=MONDAY).load_ratio)
+
+    def test_coach_without_sessions_is_unchanged(self) -> None:
+        entries = [HealthEntry.build(f"2026-10-{day:02d}", 3000, 1.0, mood="Calm") for day in range(1, 15)]
+        before = build_recommendation_plan(entries, AppSettings(), UserProfile.build("Demo"))
+        after = build_recommendation_plan(entries, AppSettings(), UserProfile.build("Demo"), sessions=None)
+        self.assertEqual(before, after)
+        self.assertNotIn("training", {item.category for item in before.items})
+
+    def test_coach_flags_a_load_jump_first_among_training_cards(self) -> None:
+        sessions = (
+            self._week(0, 60, 8, 2) + self._week(7, 30, 5) + self._week(14, 30, 5) + self._week(21, 30, 5)
+        )
+        plan = build_recommendation_plan(
+            [], AppSettings(), UserProfile.build("Demo", language="es"), "es", sessions=sessions, today=MONDAY
+        )
+        training = [item for item in plan.items if item.category == "training"]
+        self.assertEqual(training[0].priority, "high")
+        self.assertIn("113%", training[0].reason)
+        self.assertEqual(training[0].title, "Suaviza las próximas sesiones")
+
+    def test_coach_suggests_starting_and_resuming(self) -> None:
+        start = build_recommendation_plan(
+            [], AppSettings(), UserProfile.build("Demo"), sessions=[], today=MONDAY
+        )
+        self.assertIn("Start your training log", [item.title for item in start.items])
+        old = [WorkoutSession.build(MONDAY - timedelta(days=20), "walking", 30)]
+        resume = build_recommendation_plan(
+            [], AppSettings(), UserProfile.build("Demo"), sessions=old, today=MONDAY
+        )
+        self.assertIn("Restart with something short", [item.title for item in resume.items])
+
+    def test_json_round_trip_carries_sessions_without_duplicates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source = NovaFitDatabase(Path(temp_dir) / "a.db")
+            source.initialize()
+            source.upsert(HealthEntry.build("2026-10-18", 8000, 2.0))
+            generate_demo_workouts(WorkoutStore(source), 2, end_date=MONDAY)
+            exported = Path(temp_dir) / "export.json"
+            export_json(source, exported)
+            payload = json.loads(exported.read_text(encoding="utf-8"))
+            self.assertEqual(payload["metadata"]["total_sessions"], len(payload["training_sessions"]))
+            self.assertNotIn("load", payload["training_sessions"][0])
+            target = NovaFitDatabase(Path(temp_dir) / "b.db")
+            target.initialize()
+            first = import_json(target, exported)
+            second = import_json(target, exported)
+            self.assertEqual(first.sessions_imported, WorkoutStore(source).count())
+            self.assertEqual(second.sessions_imported, 0)
+            self.assertEqual(WorkoutStore(target).count(), WorkoutStore(source).count())
+            legacy = Path(temp_dir) / "legacy.json"
+            legacy.write_text(json.dumps({"health_data": payload["health_data"]}), encoding="utf-8")
+            self.assertEqual(import_json(target, legacy).sessions_imported, 0)
+
+    def test_cli_coach_report_uses_the_requested_language(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(
+                    main(["--db", str(Path(temp_dir) / "c.db"), "--recommendations", "--language", "es"]), 0
+                )
+            self.assertIn("CONFIANZA DE LOS DATOS", output.getvalue())
 
 
 if __name__ == "__main__":

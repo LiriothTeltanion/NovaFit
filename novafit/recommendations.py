@@ -10,12 +10,17 @@ Notes: Standard library only; recommendations are general and educational.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Iterable
 
 from .analytics import calculate_dashboard
 from .config import AppSettings
 from .i18n import normalize_language, tr
 from .models import HealthEntry, UserProfile
+from .workouts import WorkoutSession, training_signals
+
+# Session load this week ÷ the previous three weeks' weekly mean that counts as a sharp jump.
+LOAD_JUMP_RATIO = 1.5
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +100,21 @@ _COPY = {
         "mood_title": "Add context to the numbers",
         "mood_action": "Record a short mood label or note after activity on several days.",
         "mood_reason": "Context helps distinguish a productive routine from one that feels draining.",
+        "load_title": "Ease into the next sessions",
+        "load_action": "Keep the next two or three sessions shorter or easier, and plan one rest day.",
+        "load_reason": (
+            "Your session load over the last 7 days is {pct}% above your average week of the three before; "
+            "sharp jumps are harder to recover from than gradual ones."
+        ),
+        "resume_title": "Restart with something short",
+        "resume_action": "Log one comfortable 15–20 minute session this week to restart the rhythm.",
+        "resume_reason": "No training session was logged in the last 14 days.",
+        "start_title": "Start your training log",
+        "start_action": "Log your walks, rides or workouts in the Training tab or with --add-workout.",
+        "start_reason": "Sessions add duration and effort to the daily numbers, so the coach can read your week.",
+        "variety_title": "Add some variety",
+        "variety_action": "Consider one short mobility or strength session next to your usual {kind}.",
+        "variety_reason": "Every session of the last four weeks was {kind}; mixing types spreads the load.",
     },
     "es": {
         "disclaimer": (
@@ -125,6 +145,21 @@ _COPY = {
         "mood_title": "Añade contexto a los números",
         "mood_action": "Registra ánimo o una nota breve después de la actividad durante varios días.",
         "mood_reason": "El contexto ayuda a distinguir una rutina productiva de una que se siente agotadora.",
+        "load_title": "Suaviza las próximas sesiones",
+        "load_action": "Haz las próximas dos o tres sesiones más cortas o suaves y planifica un día de descanso.",
+        "load_reason": (
+            "Tu carga de los últimos 7 días está un {pct}% por encima de tu semana media de las tres anteriores; "
+            "los saltos bruscos cuestan más de recuperar que los graduales."
+        ),
+        "resume_title": "Vuelve con algo corto",
+        "resume_action": "Registra esta semana una sesión cómoda de 15–20 minutos para retomar el ritmo.",
+        "resume_reason": "No hay sesiones de entrenamiento registradas en los últimos 14 días.",
+        "start_title": "Empieza tu registro de entrenamientos",
+        "start_action": "Anota caminatas, salidas en bici o rutinas en la pestaña Entrenos o con --add-workout.",
+        "start_reason": "Las sesiones añaden duración y esfuerzo a los números diarios para que el coach lea tu semana.",
+        "variety_title": "Añade algo de variedad",
+        "variety_action": "Considera una sesión corta de movilidad o fuerza junto a tus sesiones de {kind}.",
+        "variety_reason": "Todas las sesiones de las últimas cuatro semanas fueron de {kind}; mezclar tipos reparte la carga.",
     },
     "he": {
         "disclaimer": (
@@ -155,6 +190,21 @@ _COPY = {
         "mood_title": "הוספת הקשר למספרים",
         "mood_action": "כדאי לרשום מצב רוח או הערה קצרה לאחר פעילות במספר ימים.",
         "mood_reason": "הקשר עוזר להבחין בין שגרה מועילה לשגרה מתישה.",
+        "load_title": "הקלה באימונים הבאים",
+        "load_action": "כדאי לקצר או להקל את שניים או שלושה האימונים הבאים ולתכנן יום מנוחה.",
+        "load_reason": (
+            "העומס ב־7 הימים האחרונים גבוה ב־{pct}% מהשבוע הממוצע בשלושת השבועות שלפניהם; "
+            "קפיצות חדות קשות יותר להתאוששות מעלייה הדרגתית."
+        ),
+        "resume_title": "חזרה עם משהו קצר",
+        "resume_action": "אפשר לרשום השבוע אימון נוח של 15–20 דקות כדי לחזור לקצב.",
+        "resume_reason": "לא נרשם אף אימון ב־14 הימים האחרונים.",
+        "start_title": "התחלת יומן האימונים",
+        "start_action": "אפשר לרשום הליכות, רכיבות או אימונים בלשונית האימונים.",
+        "start_reason": "האימונים מוסיפים משך ומאמץ למספרים היומיים, כך שהמאמן יכול לקרוא את השבוע.",
+        "variety_title": "הוספת גיוון",
+        "variety_action": "אפשר לשקול אימון קצר של גמישות או כוח לצד {kind} הרגיל.",
+        "variety_reason": "כל האימונים בארבעת השבועות האחרונים היו {kind}; גיוון מפזר את העומס.",
     },
 }
 
@@ -164,6 +214,9 @@ def build_recommendation_plan(
     settings: AppSettings,
     profile: UserProfile,
     language: str | None = None,
+    *,
+    sessions: Iterable[WorkoutSession] | None = None,
+    today: date | None = None,
 ) -> RecommendationPlan:
     """Build a conservative, explainable recommendation plan.
 
@@ -172,6 +225,8 @@ def build_recommendation_plan(
         settings: Current goals and preferences.
         profile: Activity-level and sport-focus preferences.
         language: Optional output-language override.
+        sessions: Optional training sessions; ``None`` keeps the daily-record-only plan.
+        today: Reference day for the rolling training windows (tests pin it).
 
     Returns:
         Recommendation plan for GUI, CLI, and reports.
@@ -226,6 +281,9 @@ def build_recommendation_plan(
             )
         )
 
+    training_items = _training_items(sessions, code, today)
+    items.extend(item for item in training_items if item.priority != "low")
+
     if stats.entry_count and stats.average_water_l < settings.water_goal_l:
         items.append(
             RecommendationItem(
@@ -243,6 +301,7 @@ def build_recommendation_plan(
         items.append(
             RecommendationItem("context", copy["mood_title"], copy["mood_action"], copy["mood_reason"], "low")
         )
+    items.extend(item for item in training_items if item.priority == "low")
 
     weekly = _weekly_rhythm(profile, code)
     return RecommendationPlan(confidence, summary, weekly, tuple(items[:5]), copy["disclaimer"])
@@ -289,6 +348,47 @@ def format_recommendation_plan(
     lines.extend(f"- {item}" for item in plan.weekly_plan)
     lines.extend(("", plan.disclaimer))
     return "\n".join(lines)
+
+
+def _training_items(
+    sessions: Iterable[WorkoutSession] | None, language: str, today: date | None
+) -> list[RecommendationItem]:
+    """Return training-log cards; empty when no session list was supplied."""
+    if sessions is None:
+        return []
+    copy = _COPY[language]
+    signals = training_signals(list(sessions), today=today)
+    items: list[RecommendationItem] = []
+    if signals.total_sessions == 0:
+        items.append(
+            RecommendationItem("training", copy["start_title"], copy["start_action"], copy["start_reason"], "low")
+        )
+        return items
+    if signals.load_ratio is not None and signals.load_ratio >= LOAD_JUMP_RATIO:
+        pct = round((signals.load_ratio - 1) * 100)
+        items.append(
+            RecommendationItem(
+                "training", copy["load_title"], copy["load_action"], copy["load_reason"].format(pct=pct), "high"
+            )
+        )
+    elif signals.sessions_14d == 0:
+        items.append(
+            RecommendationItem(
+                "training", copy["resume_title"], copy["resume_action"], copy["resume_reason"], "medium"
+            )
+        )
+    if signals.single_kind:
+        kind = tr(language, f"workout_kind_{signals.single_kind}").lower()
+        items.append(
+            RecommendationItem(
+                "training",
+                copy["variety_title"],
+                copy["variety_action"].format(kind=kind),
+                copy["variety_reason"].format(kind=kind),
+                "low",
+            )
+        )
+    return items
 
 
 def _weekly_rhythm(profile: UserProfile, language: str) -> tuple[str, ...]:

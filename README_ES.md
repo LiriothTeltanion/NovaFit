@@ -197,7 +197,10 @@ registro de caminatas, carreras, bici, fuerza, movilidad, natación y deporte.
 - **Carga de sesión** = minutos × RPE, la contabilidad descriptiva que usan los entrenadores para comparar semanas.
 - **Referencia OMS:** la línea discontinua marca la referencia general de 150 minutos semanales para adultos.
   Es orientación, no una prescripción personal.
-- **Portátil:** exporta todas las sesiones a CSV; la copia ZIP completa ya las incluye.
+- **El coach las lee:** avisa de un salto brusco de carga en 7 días, de dos semanas sin sesiones o de cuatro
+  semanas de un solo tipo, y propone un siguiente paso prudente.
+- **Portátil:** el JSON exporta e importa las sesiones (sin duplicados al reimportar), hay un CSV de sesiones
+  y la copia ZIP completa las incluye.
 - **Actualización segura:** el esquema 5 solo añade la tabla `workouts`; los registros diarios no se reescriben.
 
 <img src="./assets/training-log.png" width="100%" alt="Registro de entrenamientos de NovaFit" />

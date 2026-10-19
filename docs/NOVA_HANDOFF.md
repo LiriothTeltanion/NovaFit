@@ -20,23 +20,32 @@ NovaFit registraba pasos, agua, calorías y ánimo, pero no entrenamientos. Ahor
 Commits locales: `5b60867` (feature), `5a95a3e` (docs + pulido RTL) y el de este handoff.
 
 ### 🔬 Verificado (TESTED_LOCAL, 19-10-2026)
-- `scripts\verify.py --quality` → **All NovaFit checks passed**: 137 pruebas OK (antes 124), Ruff y Pyright del
-  proyecto, auditoría de paquete y de Pages, smoke de la CLI (ahora también con entrenamientos).
+- `scripts\verify.py --quality` → **All NovaFit checks passed**: 137 pruebas OK tras la rebanada 1 y **143** tras la
+  rebanada 2 (antes 124), Ruff y Pyright del proyecto, auditoría de paquete y de Pages, smoke de la CLI (ahora también
+  con entrenamientos).
 - Mis archivos nuevos pasan además Ruff estricto (`E,F,W,I,B,UP`) y Pyright con 0 errores.
 - Capturas reales de la ventana con datos generados: `assets/training-log.png` (EN) y
   `assets/training-log-hebrew-rtl.png` (HE). Más en `D:\dev\_rescue\2026-10-19\novafit-capture\`.
 - Todas las pruebas y capturas usaron carpetas temporales (`NOVAFIT_DATA_DIR`): tus datos reales no se tocaron.
 
+### ✅ Rebanada 2 (misma noche, ≈ 23:00-23:10): el Coach lee los entrenamientos + JSON portátil
+- El Coach deportivo añade tarjetas cuando hay sesiones: **salto brusco de carga** (últimos 7 días ≥ 1,5 × la semana
+  media de las 3 anteriores → semana más suave), **retomar** tras 14 días sin sesiones, **variedad** si 4 semanas son
+  de un solo tipo, y **empezar** el registro. Sin sesiones, el plan es idéntico al de antes (probado).
+- El JSON exporta `training_sessions` y al importarlo añade las sesiones sin duplicarlas; los JSON antiguos siguen valiendo.
+- Arreglado de paso: `--recommendations --language es` imprimía los encabezados en inglés.
+- 6 pruebas nuevas (19 de entrenamientos en total).
+
 ### ⚠️ No verificado / límites honestos
 - CI remoto (Python 3.10–3.14, Ubuntu y Windows) no se ejecutó porque no hubo push. En Linux sin pantalla la
   prueba del panel Tk se salta sola.
-- La exportación/importación JSON y CSV de registros diarios todavía **no** incluye sesiones (sí el ZIP completo
-  y el CSV propio de entrenamientos).
+- El CSV de registros diarios no lleva sesiones (el JSON, el ZIP y el CSV de entrenamientos sí).
+- La ventana de la app no muestra aún cuántas sesiones importó un JSON (la CLI sí lo dice).
 - El gráfico va de izquierda a derecha también en hebreo (como el resto de la analítica).
 - Un error de tipos de Pyright en `database.py:247` ya existía antes y no está en los archivos que el proyecto revisa.
 
 ### 👉 Siguiente paso sugerido
 1. Abrir NovaFit desde esta rama (`python launch_novafit.py` dentro del worktree con su `.venv`) y probar la
    pestaña Entrenamientos con tus datos reales.
-2. Si te convence: siguiente rebanada = que el **Coach** use los entrenamientos (p. ej. avisar de semanas con
-   mucha carga seguida) e incluir sesiones en el JSON portátil.
+2. Si te convence: siguiente rebanada = metas semanales de minutos por perfil y una sección de entrenamientos en el
+   informe HTML.

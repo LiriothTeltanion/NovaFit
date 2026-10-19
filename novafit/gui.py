@@ -1011,8 +1011,10 @@ class NovaFitApp(tk.Tk):
             stats = calculate_dashboard(entries, self.settings)
             self.dashboard_panel.refresh(entries, stats, self.settings)
             self.motivation_panel.refresh(entries, stats, self.settings)
-            self.recommendations_panel.refresh(entries, self.settings, self.active_profile)
             self.training_panel.refresh()
+            self.recommendations_panel.refresh(
+                entries, self.settings, self.active_profile, self.training_panel.sessions
+            )
             self.profile_panel.refresh()
             self._refresh_profile_selector()
             self.hero.set_profile_name(self.active_profile.display_name)

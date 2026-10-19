@@ -534,9 +534,13 @@ def _dispatch(
         return 0
     if args.recommendations:
         plan = build_recommendation_plan(
-            database.list(None), settings, profile, args.language or profile.language
+            database.list(None),
+            settings,
+            profile,
+            args.language or profile.language,
+            sessions=WorkoutStore(database).list(None),
         )
-        print(format_recommendation_plan(plan, profile))
+        print(format_recommendation_plan(plan, profile, args.language or profile.language))
         return 0
     if args.profiles:
         print_profiles(database)
@@ -585,6 +589,8 @@ def _dispatch(
     if args.import_json:
         result = import_json(database, args.import_json, strategy=args.import_strategy)
         print_import_result(result.imported, result.skipped, result.invalid)
+        if result.sessions_imported:
+            print(Console.success(f"Added {result.sessions_imported} training session(s)"))
         return 0
     if args.export_csv:
         count = export_csv(database, args.export_csv)
@@ -868,6 +874,7 @@ def interactive_menu(database: NovaFitDatabase, settings: AppSettings) -> int:
                         settings,
                         database.get_profile(database.active_profile_id) or UserProfile.build("Primary User"),
                         settings.language,
+                        sessions=WorkoutStore(database).list(None),
                     ),
                     database.get_profile(database.active_profile_id) or UserProfile.build("Primary User"),
                 )

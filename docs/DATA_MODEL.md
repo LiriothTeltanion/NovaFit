@@ -63,8 +63,10 @@ CREATE TABLE workouts (
 ```
 
 `WorkoutStore` (`novafit/workouts.py`) offers `add`, `list`, `search`, `delete` and `count`, always scoped
-to one profile. Session load is `duration_min × rpe` and is descriptive only. JSON/CSV daily-record
-imports and exports do not include sessions yet; use `--export-workouts-csv` or the complete ZIP backup.
+to one profile. Session load is `duration_min × rpe` and is descriptive only. JSON exports include a
+`training_sessions` list (date, kind, duration_min, rpe, distance_km, note); JSON imports add those sessions
+to the active profile and skip exact duplicates. CSV daily-record files do not carry sessions; use
+`--export-workouts-csv` for a sessions-only CSV.
 
 ## Repository methods
 
