@@ -48,6 +48,15 @@ from .motivation import build_motivation_snapshot, format_motivation
 from .themes import normalize_theme_id, theme_ids, theme_label
 from .reporting import export_html_report
 from .weather import format_weather, get_weather
+from .workouts import (
+    WORKOUT_KINDS,
+    WorkoutSession,
+    WorkoutStore,
+    build_training_snapshot,
+    export_workouts_csv,
+    format_training_summary,
+    generate_demo_workouts,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -259,12 +268,42 @@ def build_parser() -> argparse.ArgumentParser:
         "--report-html", type=Path, metavar="HTML", help="Export a self-contained offline HTML report."
     )
     actions.add_argument("--settings", action="store_true", help="Show current settings.")
+    actions.add_argument(
+        "--add-workout",
+        metavar="DATE",
+        help="Log a training session for YYYY-MM-DD (needs --kind, --minutes).",
+    )
+    actions.add_argument(
+        "--workouts", nargs="?", const=10, type=int, metavar="N", help="List recent training sessions."
+    )
+    actions.add_argument(
+        "--training",
+        nargs="?",
+        const=8,
+        type=int,
+        metavar="WEEKS",
+        help="Show the weekly training summary (1–52 weeks).",
+    )
+    actions.add_argument("--delete-workout", type=int, metavar="ID", help="Delete a training session by id.")
+    actions.add_argument(
+        "--export-workouts-csv",
+        type=Path,
+        metavar="PATH",
+        help="Export the active profile's sessions to CSV.",
+    )
+    actions.add_argument(
+        "--seed-workouts", type=int, metavar="WEEKS", help="Generate WEEKS of deterministic demo sessions."
+    )
 
     parser.add_argument("--steps", type=int, help="Step count used with --add.")
     parser.add_argument("--water", type=float, help="Water liters used with --add.")
     parser.add_argument("--calories", type=int, help="Optional calories used with --add.")
     parser.add_argument("--mood", help="Optional mood used with --add.")
-    parser.add_argument("--note", help="Optional private note used with --add.")
+    parser.add_argument("--note", help="Optional private note used with --add or --add-workout.")
+    parser.add_argument("--kind", choices=WORKOUT_KINDS, help="Workout type used with --add-workout.")
+    parser.add_argument("--minutes", type=int, help="Session minutes used with --add-workout.")
+    parser.add_argument("--rpe", type=int, help="Optional effort 1–10 used with --add-workout.")
+    parser.add_argument("--distance", type=float, help="Optional kilometres used with --add-workout.")
     parser.add_argument(
         "--avatar", choices=PROFILE_AVATARS, default="nova", help="Avatar used with --create-user."
     )
@@ -587,7 +626,91 @@ def _dispatch(
     if args.settings:
         print_settings(settings)
         return 0
+    training_result = _dispatch_training(args, database, settings)
+    if training_result is not None:
+        return training_result
     return interactive_menu(database, settings)
+
+
+def _dispatch_training(
+    args: argparse.Namespace, database: NovaFitDatabase, settings: AppSettings
+) -> int | None:
+    """Handle the training-log actions; return ``None`` when none was requested."""
+    store = WorkoutStore(database)
+    if args.add_workout:
+        missing = [name for name in ("kind", "minutes") if getattr(args, name) is None]
+        if missing:
+            joined = ", ".join(f"--{name}" for name in missing)
+            raise ValueError(f"--add-workout also requires {joined}.")
+        session = store.add(
+            WorkoutSession.build(
+                args.add_workout,
+                args.kind,
+                args.minutes,
+                rpe=args.rpe,
+                distance_km=args.distance,
+                note=args.note,
+            )
+        )
+        print(
+            Console.style(
+                Console.success(
+                    f"Saved session {session.session_id}: {session.kind} · {session.duration_min} min "
+                    f"on {session.session_date}"
+                ),
+                Console.GREEN,
+            )
+        )
+        return 0
+    if args.workouts is not None:
+        print_workouts(store.list(args.workouts))
+        return 0
+    if args.training is not None:
+        snapshot = build_training_snapshot(store.list(None), weeks=args.training)
+        print(format_training_summary(snapshot, settings.language))
+        return 0
+    if args.delete_workout is not None:
+        deleted = store.delete(args.delete_workout)
+        message = (
+            f"Deleted session {args.delete_workout}"
+            if deleted
+            else f"No session {args.delete_workout} for this profile"
+        )
+        print(Console.success(message) if deleted else Console.warning(message))
+        return 0
+    if args.export_workouts_csv:
+        count = export_workouts_csv(store, args.export_workouts_csv)
+        print(Console.success(f"Saved {count} sessions to {args.export_workouts_csv}"))
+        return 0
+    if args.seed_workouts is not None:
+        count = generate_demo_workouts(store, args.seed_workouts)
+        print(Console.success(f"Generated {count} demo session(s)"))
+        return 0
+    return None
+
+
+def print_workouts(sessions: list[WorkoutSession]) -> None:
+    """Print training sessions in an aligned terminal table.
+
+    Example:
+        >>> print_workouts([])
+        No sessions found. Log one with --add-workout. 💡
+    """
+    if not sessions:
+        print("No sessions found. Log one with --add-workout. 💡")
+        return
+    print(Console.style("NovaFit Training Sessions", Console.CYAN, bold=True))
+    print("-" * 88)
+    print(f"{'ID':>5}  {'Date':<12} {'Type':<10} {'Min':>5} {'RPE':>4} {'Km':>7} {'Load':>6}  Note")
+    print("-" * 88)
+    for session in sessions:
+        rpe = "—" if session.rpe is None else str(session.rpe)
+        distance = "—" if session.distance_km is None else f"{session.distance_km:.1f}"
+        load = "—" if session.load is None else str(session.load)
+        print(
+            f"{session.session_id or 0:>5}  {session.session_date.isoformat():<12} {session.kind:<10} "
+            f"{session.duration_min:>5} {rpe:>4} {distance:>7} {load:>6}  {(session.note or '')[:24]}"
+        )
 
 
 def _require_add_fields(args: argparse.Namespace) -> None:

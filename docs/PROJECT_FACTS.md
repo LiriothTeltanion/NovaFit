@@ -4,7 +4,7 @@
 
 - **Version:** `4.2.0`
 - **Default branch:** `main`
-- **Automated tests discovered:** 124
+- **Automated tests discovered:** 137
 - **Interface languages:** en, es, he
 - **Themes:** 12
 - **Public visual assets:** 58 (26.65 MiB)

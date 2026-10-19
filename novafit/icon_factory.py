@@ -20,6 +20,7 @@ ICON_NAMES: tuple[str, ...] = (
     "motivation",
     "recommendations",
     "add",
+    "training",
     "records",
     "profiles",
     "tools",
@@ -35,6 +36,8 @@ _ALIASES = {
     "profile": "profiles",
     "user": "profiles",
     "settings": "tools",
+    "workout": "training",
+    "workouts": "training",
 }
 
 
@@ -213,6 +216,17 @@ class IconFactory:
             draw.ellipse((size * 0.23, size * 0.23, size * 0.77, size * 0.77), outline=accent, width=stroke)
             draw.line((cx, size * 0.35, cx, size * 0.65), fill=accent_alt, width=stroke)
             draw.line((size * 0.35, cy, size * 0.65, cy), fill=accent_alt, width=stroke)
+        elif name == "training":
+            # Dumbbell: a bar with two weight plates per side.
+            draw.line((size * 0.30, cy, size * 0.70, cy), fill=accent, width=stroke)
+            for x0, x1 in ((0.22, 0.31), (0.69, 0.78)):
+                draw.rounded_rectangle(
+                    (size * x0, size * 0.32, size * x1, size * 0.68), radius=2 * scale, fill=accent_alt
+                )
+            for x0, x1 in ((0.31, 0.37), (0.63, 0.69)):
+                draw.rounded_rectangle(
+                    (size * x0, size * 0.38, size * x1, size * 0.62), radius=scale, fill=accent
+                )
         elif name == "records":
             draw.rounded_rectangle(
                 (size * 0.25, size * 0.22, size * 0.75, size * 0.79),

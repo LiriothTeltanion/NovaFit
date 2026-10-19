@@ -294,6 +294,12 @@ def smoke_test() -> None:
         run_command([sys.executable, "-m", "novafit.cli", "--dashboard"], env)
         run_command([sys.executable, "-m", "novafit.cli", "--motivation"], env)
         run_command([sys.executable, "-m", "novafit.cli", "--recommendations", "--language", "es"], env)
+        run_command([sys.executable, "-m", "novafit.cli", "--seed-workouts", "4"], env)
+        run_command([sys.executable, "-m", "novafit.cli", "--training", "--language", "he"], env)
+        run_command(
+            [sys.executable, "-m", "novafit.cli", "--export-workouts-csv", str(data_dir / "training.csv")],
+            env,
+        )
         run_command(
             [
                 sys.executable,
