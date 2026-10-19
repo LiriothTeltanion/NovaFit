@@ -62,8 +62,8 @@
     "site_publishes_runtime_data": false
   },
   "assets": {
-    "count": 58,
-    "total_bytes": 27945959,
+    "count": 60,
+    "total_bytes": 28089690,
     "hero": "assets/novafit-ultimate-banner-animated.svg",
     "poster": "assets/novafit-ultimate-gui.png",
     "hebrew": "assets/hebrew-rtl-command-center.png",

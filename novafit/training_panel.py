@@ -18,6 +18,7 @@ from tkinter import filedialog, messagebox, ttk
 from typing import Literal
 
 from .i18n import direction_for, tr
+from .themes import accessible_text_color
 from .workouts import (
     REFERENCE_WEEKLY_MINUTES,
     WORKOUT_KINDS,
@@ -90,7 +91,7 @@ class WeeklyBarsCanvas(tk.Canvas):
     """Draw minutes per week with the WHO reference line."""
 
     def __init__(self, master: tk.Misc, palette: Mapping[str, str], language: str) -> None:
-        super().__init__(master, height=210, highlightthickness=0, background=palette["panel_alt"])
+        super().__init__(master, height=180, highlightthickness=0, background=palette["panel_alt"])
         self.palette = dict(palette)
         self.language = language
         self.weeks: tuple[TrainingWeek, ...] = ()
@@ -121,11 +122,17 @@ class WeeklyBarsCanvas(tk.Canvas):
             color = self.palette["accent_alt"] if bar.current else self.palette["accent"]
             if bar.week.minutes:
                 self.create_rectangle(bar.x0, bar.y0, bar.x1, bar.y1, fill=color, outline="")
+                label_y = bar.y0 - 9
+                label_color = self.palette["text"]
+                if abs(label_y - line_y) < 9 and bar.y1 - bar.y0 > 24:
+                    # Keep the value readable instead of printing it on the reference line.
+                    label_y = bar.y0 + 10
+                    label_color = accessible_text_color(color)
                 self.create_text(
                     (bar.x0 + bar.x1) / 2,
-                    bar.y0 - 9,
+                    label_y,
                     text=str(bar.week.minutes),
-                    fill=self.palette["text"],
+                    fill=label_color,
                     font=("Segoe UI", 8, "bold"),
                 )
             self.create_text(
@@ -266,7 +273,9 @@ class TrainingPanel(ttk.Frame):
         table = ttk.Frame(body, style="Panel.TFrame")
         table.grid(row=3, column=0, columnspan=3, sticky="nsew", padx=6, pady=(8, 0))
         columns = ("date", "kind", "minutes", "rpe", "distance", "load", "note")
-        self.tree = ttk.Treeview(table, columns=columns, show="headings", selectmode="browse", height=7)
+        # Hebrew reads right to left, so the first column sits on the right.
+        self.columns = tuple(reversed(columns)) if rtl else columns
+        self.tree = ttk.Treeview(table, columns=self.columns, show="headings", selectmode="browse", height=7)
         headings = {
             "date": self.t("date"),
             "kind": self.t("workout_kind"),
@@ -277,7 +286,7 @@ class TrainingPanel(ttk.Frame):
             "note": self.t("note"),
         }
         widths = {"date": 100, "kind": 130, "minutes": 80, "rpe": 55, "distance": 70, "load": 70, "note": 220}
-        for column in columns:
+        for column in self.columns:
             self.tree.heading(column, text=headings[column])
             self.tree.column(
                 column,
@@ -371,16 +380,19 @@ class TrainingPanel(ttk.Frame):
                 "",
                 "end",
                 iid=str(session.session_id),
-                values=(
-                    session.session_date.isoformat(),
-                    self.t(f"workout_kind_{session.kind}"),
-                    session.duration_min,
-                    "" if session.rpe is None else session.rpe,
-                    "" if session.distance_km is None else f"{session.distance_km:.1f}",
-                    "" if session.load is None else session.load,
-                    session.note or "",
-                ),
+                values=tuple(self._row_values(session)[column] for column in self.columns),
             )
+
+    def _row_values(self, session: WorkoutSession) -> dict[str, object]:
+        return {
+            "date": session.session_date.isoformat(),
+            "kind": self.t(f"workout_kind_{session.kind}"),
+            "minutes": session.duration_min,
+            "rpe": "" if session.rpe is None else session.rpe,
+            "distance": "" if session.distance_km is None else f"{session.distance_km:.1f}",
+            "load": "" if session.load is None else session.load,
+            "note": session.note or "",
+        }
 
     def _save(self) -> None:
         try:

@@ -1,7 +1,7 @@
 {
   "schema": "novafit-asset-manifest-v1",
-  "asset_count": 58,
-  "total_bytes": 27945959,
+  "asset_count": 60,
+  "total_bytes": 28089690,
   "assets": [
     {
       "path": "assets/analytics-command-center-animated.svg",
@@ -747,6 +747,35 @@
       "width": 1400,
       "height": 500,
       "animated": true,
+      "referenced_by": [
+        "README.md",
+        "README_ES.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/training-log-hebrew-rtl.png",
+      "bytes": 68650,
+      "sha256": "abe7d4330629407273b9106f3acd64a6cc6b5887d1ba5c26515b12a11f04a912",
+      "media_type": "image/png",
+      "width": 1500,
+      "height": 940,
+      "animated": false,
+      "referenced_by": [
+        "README_HE.md"
+      ],
+      "status": "current",
+      "privacy": "public-demo"
+    },
+    {
+      "path": "assets/training-log.png",
+      "bytes": 75081,
+      "sha256": "80ab3534bffffb97e7f6b3492b36effa8ff58f00044faa13ff2ab55c897878c7",
+      "media_type": "image/png",
+      "width": 1500,
+      "height": 940,
+      "animated": false,
       "referenced_by": [
         "README.md",
         "README_ES.md"

@@ -186,6 +186,29 @@ Los rangos disponibles van de 7 a 365 días.
 
 ---
 
+## 🏋️ Registro de entrenamientos
+
+El registro de entrenamientos añade lo que le faltaba a una app de fitness: las sesiones. Cada perfil local guarda su propio
+registro de caminatas, carreras, bici, fuerza, movilidad, natación y deporte.
+
+- **Anota una sesión** con tipo, minutos, esfuerzo en la escala RPE 1–10, distancia opcional y nota privada.
+- **Tu semana de un vistazo:** minutos, sesiones y días activos, racha semanal, cambio frente a la semana
+  pasada y un gráfico de ocho semanas.
+- **Carga de sesión** = minutos × RPE, la contabilidad descriptiva que usan los entrenadores para comparar semanas.
+- **Referencia OMS:** la línea discontinua marca la referencia general de 150 minutos semanales para adultos.
+  Es orientación, no una prescripción personal.
+- **Portátil:** exporta todas las sesiones a CSV; la copia ZIP completa ya las incluye.
+- **Actualización segura:** el esquema 5 solo añade la tabla `workouts`; los registros diarios no se reescriben.
+
+<img src="./assets/training-log.png" width="100%" alt="Registro de entrenamientos de NovaFit" />
+
+```powershell
+python -m novafit.cli --add-workout 2026-10-19 --kind running --minutes 32 --rpe 6 --distance 5.4
+python -m novafit.cli --training 8 --language es
+```
+
+---
+
 ## 🧠 Coach deportivo y de datos
 
 <img src="./assets/sport-data-engine-animated.svg" width="100%" alt="Motor de recomendaciones explicable" />
