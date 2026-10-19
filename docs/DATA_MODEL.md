@@ -46,6 +46,26 @@ CREATE TABLE logs (
 );
 ```
 
+### Training sessions (schema 5)
+
+```sql
+CREATE TABLE workouts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    duration_min INTEGER NOT NULL CHECK (duration_min BETWEEN 1 AND 600),
+    rpe INTEGER CHECK (rpe IS NULL OR rpe BETWEEN 1 AND 10),
+    distance_km REAL CHECK (distance_km IS NULL OR distance_km >= 0),
+    note TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+`WorkoutStore` (`novafit/workouts.py`) offers `add`, `list`, `search`, `delete` and `count`, always scoped
+to one profile. Session load is `duration_min × rpe` and is descriptive only. JSON/CSV daily-record
+imports and exports do not include sessions yet; use `--export-workouts-csv` or the complete ZIP backup.
+
 ## Repository methods
 
 | Method | Behavior |
