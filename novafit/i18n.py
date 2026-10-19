@@ -1216,6 +1216,29 @@ TRAINING_TRANSLATIONS: dict[str, dict[str, str]] = {
 for _language_code, _translations in TRAINING_TRANSLATIONS.items():
     TRANSLATIONS[_language_code].update(_translations)
 
+# NovaFit web shell (web/): the few strings only the browser app needs, kept here so the
+# exported catalogue stays the single source for both interfaces.
+WEB_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "en": {
+        "web_badge": "Web preview",
+        "web_storage_note": "Saved only in this browser (IndexedDB). Nothing is uploaded.",
+        "web_desktop_only": "In the desktop app for now",
+    },
+    "es": {
+        "web_badge": "Vista previa web",
+        "web_storage_note": "Se guarda solo en este navegador (IndexedDB). No se sube nada.",
+        "web_desktop_only": "Por ahora en la app de escritorio",
+    },
+    "he": {
+        "web_badge": "תצוגה מקדימה לרשת",
+        "web_storage_note": "נשמר רק בדפדפן הזה (IndexedDB). שום דבר לא מועלה.",
+        "web_desktop_only": "בינתיים באפליקציית המחשב",
+    },
+}
+
+for _language_code, _translations in WEB_TRANSLATIONS.items():
+    TRANSLATIONS[_language_code].update(_translations)
+
 
 def normalize_language(value: str) -> str:
     """Normalize a language code or native label.
