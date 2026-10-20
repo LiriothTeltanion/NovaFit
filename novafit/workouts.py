@@ -518,8 +518,20 @@ def export_workouts_csv(store: WorkoutStore, path: Path, profile_id: int | None 
         writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS)
         writer.writeheader()
         for session in sessions:
-            writer.writerow({key: "" if value is None else value for key, value in session.to_row().items()})
+            writer.writerow({key: _csv_cell(value) for key, value in session.to_row().items()})
     return len(sessions)
+
+
+def _csv_cell(value: Any) -> Any:
+    """Blank for None; text that a spreadsheet could run as a formula gets a leading apostrophe.
+
+    Mirrors ``io_utils._spreadsheet_safe`` (importing it here would be circular).
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str) and value[:1] in {"=", "+", "-", "@"}:
+        return "'" + value
+    return value
 
 
 def generate_demo_workouts(

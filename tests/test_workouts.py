@@ -155,6 +155,15 @@ class WorkoutStoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_demo_workouts(self.store, 0)
 
+    def test_csv_export_neutralizes_formula_notes(self) -> None:
+        self.store.add(WorkoutSession.build("2026-10-19", "walking", 20, note="=HYPERLINK(\"x\")"))
+        destination = Path(self.temp_dir.name) / "formula.csv"
+        export_workouts_csv(self.store, destination)
+        with destination.open(encoding="utf-8-sig", newline="") as handle:
+            row = next(csv.DictReader(handle))
+        self.assertEqual(row["note"], "'=HYPERLINK(\"x\")")
+        self.assertEqual(row["rpe"], "")
+
 
 class TrainingSummaryTests(unittest.TestCase):
     """Check weekly aggregation and the descriptive snapshot."""
