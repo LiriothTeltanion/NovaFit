@@ -11,7 +11,7 @@ same twelve themes as the desktop app. Version 0.2.0 covers the daily workflow e
 | Motivation | Grounded headline, daily spark (same rotation as the desktop), next action, weekly challenge, milestone and the achievement constellation |
 | Coach | The desktop's Sport & Data Coach (same rules and copy, including training-load cards) with data confidence and weekly rhythm |
 | Profiles | Several local profiles, each in its own IndexedDB database (isolated records and sessions; deleting a profile removes only its data) |
-| Tools | Goals, activity level, personal why, JSON and CSV import/export compatible with the desktop (`novafit-health-export-v2`, `Date,Steps,Water (L),…`) |
+| Tools | Goals, activity level, sport focus, personal why, JSON and CSV import/export compatible with the desktop (`novafit-health-export-v2`, `Date,Steps,Water (L),…`) and an offline HTML report (inline CSS + SVG, no scripts, every user string escaped, RTL in Hebrew) |
 
 ```bash
 cd web
@@ -29,7 +29,7 @@ python scripts/export_from_python.py   # regenerate src/generated/*.json from th
 | `novafit/i18n.py` — 381 keys × EN/ES/HE | `src/i18n.ts` | Exported as `src/generated/i18n.json`; one catalogue, no drift |
 | `novafit/themes.py` — 12 themes | `src/theme.ts` + `styles.css` | Exported as CSS custom properties `--nf-*` |
 | `novafit/workouts.py` | `src/domain/workouts.ts` | Ported 1:1; `workouts.test.ts` mirrors `tests/test_workouts.py` |
-| SQLite (`novafit.db`) | IndexedDB via Dexie | Same fields; JSON export/import is the bridge (next slice) |
+| SQLite (`novafit.db`) | IndexedDB via Dexie | Same fields; JSON and CSV export/import are the bridge |
 | Tkinter panels | React components | Rewritten; layout uses CSS logical properties so Hebrew mirrors by itself |
 
 Stack aligned with Nova Music Lab: React 19, TypeScript 6, Vite 8, Dexie 4, Vitest 5, lucide-react. No backend, no
@@ -43,6 +43,9 @@ account, no analytics: data never leaves the browser.
 - [x] Motivation Center: headline, micro-action, weekly challenge, milestone and 6 badges (ported from `motivation.py`)
 - [x] Multiple local profiles (isolated databases) with their own goals, language, theme, activity level, sport focus and personal why
 - [x] Installable PWA (manifest + offline shell; verified offline with Playwright)
+- [x] Offline HTML report, the web counterpart of `novafit/reporting.py`
+- [x] Fixes from an independent Codex review (2026-10-20): drafts reset when the profile changes, local calendar day,
+      service worker clears only its own caches, skip link keeps the current page
 - [ ] GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
 
 The desktop app stays the complete reference until the web reaches parity.

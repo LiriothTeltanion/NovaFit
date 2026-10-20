@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Download, Upload } from 'lucide-react';
+import { Download, FileText, Upload } from 'lucide-react';
 import type { ActivityLevel } from '../domain/coach';
 import { tr, type Language } from '../i18n';
 import { SPORT_FOCUSES, type Prefs, type SportFocus } from '../settings';
@@ -11,10 +11,11 @@ interface Props {
   onExport: () => Promise<void>;
   onImport: (text: string) => Promise<string>;
   onExportCsv: () => Promise<void>;
+  onExportReport: () => Promise<void>;
   onImportCsv: (text: string) => Promise<string>;
 }
 
-export function SettingsPage({ language, prefs, onSave, onExport, onImport, onExportCsv, onImportCsv }: Props) {
+export function SettingsPage({ language, prefs, onSave, onExport, onImport, onExportCsv, onExportReport, onImportCsv }: Props) {
   const t = (key: string) => tr(language, key);
   const [draft, setDraft] = useState({ stepGoal: String(prefs.goals.stepGoal), waterGoalL: String(prefs.goals.waterGoalL), calorieGoal: String(prefs.goals.calorieGoal), activityLevel: prefs.activityLevel, sportFocus: prefs.sportFocus, why: prefs.why });
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
@@ -86,6 +87,7 @@ export function SettingsPage({ language, prefs, onSave, onExport, onImport, onEx
             <Upload aria-hidden size={18} /> {t('import_csv')}
             <input ref={csvInput} type="file" accept="text/csv,.csv" className="visually-hidden" onChange={(e) => void importFile(e.target.files?.[0], true)} />
           </label>
+          <button className="button button--quiet" type="button" onClick={() => void onExportReport()}><FileText aria-hidden size={18} /> {t('export_report')}</button>
           <p className="card__detail">{t('web_storage_note')}</p>
         </article>
       </div>

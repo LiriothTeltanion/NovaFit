@@ -117,6 +117,25 @@ describe('records, dashboard and coach', () => {
     expect(screen.getByLabelText('Minutes')).toHaveDisplayValue('25');
   });
 
+  it('exports a self-contained HTML report of the active profile', async () => {
+    const blobs: Blob[] = [];
+    const createObjectURL = vi.fn((blob: Blob) => { blobs.push(blob); return 'blob:report'; });
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    open('/#/settings');
+    const user = userEvent.setup();
+    const store = freshStore();
+    await store.entries.put({ date: '2026-10-19', steps: 9000, waterL: 2, calories: null, mood: null, note: null });
+    render(<App store={store} today="2026-10-19" />);
+    await user.click(await screen.findByRole('button', { name: tr('en', 'export_report') }));
+    expect(click).toHaveBeenCalled();
+    const html = await blobs[0].text();
+    expect(html).toContain('<html lang="en" dir="ltr">');
+    expect(html).toContain('NovaFit · Primary User');
+    expect(html).toContain('9,000');
+    click.mockRestore();
+  });
+
   it('switches the document to Hebrew right-to-left', async () => {
     open('/?lang=he#/training');
     render(<App store={freshStore()} today="2026-10-19" />);

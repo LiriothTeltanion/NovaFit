@@ -14,6 +14,7 @@ import { csvToEntries, entriesToCsv } from './domain/csv';
 import { demoEntries, demoSessions } from './domain/demo';
 import type { HealthEntry } from './domain/entries';
 import { localIsoToday, type WorkoutSession } from './domain/workouts';
+import { buildHtmlReport } from './domain/report';
 import { LANGUAGES, directionFor, tr, type Language } from './i18n';
 import { forgetProfilePrefs, readPrefs, readProfilePrefs, savePrefs, type Prefs } from './settings';
 import { THEMES, applyTheme } from './theme';
@@ -103,6 +104,12 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
 
   async function exportJson() {
     download(JSON.stringify(exportPayload([...entries].reverse(), [...sessions].reverse()), null, 2) + '\n', 'application/json', `novafit-web-export-${today}.json`);
+  }
+
+  async function exportReport() {
+    const profileName = profiles.find((p) => p.id === profileId)?.name ?? '';
+    const html = buildHtmlReport({ entries, sessions, goals: prefs.goals, language, today, profileName });
+    download(html, 'text/html', `novafit-web-report-${today}.html`);
   }
 
   async function exportCsv() {
@@ -247,7 +254,7 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
           {page === 'profiles' && (
             <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={switchProfile} onDelete={removeProfile} />
           )}
-          {page === 'settings' && <SettingsPage key={prefs.profileId} language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
+          {page === 'settings' && <SettingsPage key={prefs.profileId} language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onExportReport={exportReport} onImportCsv={importCsv} />}
         </main>
       </div>
     </div>
