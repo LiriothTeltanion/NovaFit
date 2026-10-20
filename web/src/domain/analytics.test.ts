@@ -1,5 +1,5 @@
 // Mirrors tests/test_analytics.py style cases so the web dashboard matches the desktop numbers.
-import { calculateDashboard, dailySeries, DEFAULT_GOALS, trackingStreak } from './analytics';
+import { calculateDashboard, dailySeries, DEFAULT_GOALS, moodDistribution, rollingAverage, routineScore, trackingStreak, weekdayProfile } from './analytics';
 import { buildEntry, canonicalMood, EntryValidationError, moodLabel } from './entries';
 import { tr } from '../i18n';
 
@@ -37,3 +37,30 @@ describe('dashboard', () => {
     expect(series.map((p) => p.tracked)).toEqual([false, true, true, false]);
   });
 });
+
+describe('trend lab helpers (analytics.py parity)', () => {
+  it('rolls a trailing average like the doctest', () => {
+    expect(rollingAverage([1, 2, 3], 2)).toEqual([null, 1.5, 2.5]);
+    expect(() => rollingAverage([1], 0)).toThrow();
+  });
+
+  it('builds a Monday-first weekday profile', () => {
+    const profile = weekdayProfile([e('2026-10-19', 8000, 2), e('2026-10-26', 10000, 2.5), e('2026-10-25', 4000, 1)]);
+    expect(profile).toHaveLength(7);
+    expect(profile[0]).toEqual({ weekday: 0, count: 2, averageSteps: 9000, averageWaterL: 2.25 });
+    expect(profile[6]).toMatchObject({ count: 1, averageSteps: 4000 });
+    expect(weekdayProfile([]).every((d) => d.count === 0)).toBe(true);
+  });
+
+  it('counts moods by frequency, then name, with unrecorded days', () => {
+    const rows = [e('2026-10-17', 1, 1, 'Calm'), e('2026-10-18', 1, 1, 'Happy'), e('2026-10-19', 1, 1, 'Happy'), e('2026-10-20', 1, 1)];
+    expect(moodDistribution(rows)).toEqual([['Happy', 2], ['Calm', 1], [null, 1]]);
+    expect(moodDistribution(rows, 1)).toEqual([['Happy', 2]]);
+  });
+
+  it('scores a day out of 100 with both goals capped', () => {
+    const [point] = dailySeries([e('2026-10-19', 15000, 1)], 1, '2026-10-19');
+    expect(routineScore(point, DEFAULT_GOALS)).toBe(75);
+  });
+});
+

@@ -6,6 +6,7 @@ same twelve themes as the desktop app. Version 0.2.0 covers the daily workflow e
 | Page | What it does |
 | --- | --- |
 | Command Center | Daily spark + your personal why, 7 metric cards (averages, streaks, both-goal days, routine score, trend, best day), 14-day steps and water charts with goal lines, a 7-week consistency map, insights |
+| Trend Lab | The desktop Trend Lab in the browser: 30 / 60 / 90-day steps with the 7-day rolling average and goal, hydration bars, daily routine score, average steps by weekday and mood distribution (ported from `analytics.py`) |
 | Records | Add / edit / delete daily steps, water, calories, mood (chips) and notes; search; one record per date like the desktop |
 | Training | Sessions, weekly cards, WHO reference bars, recent table |
 | Motivation | Grounded headline, daily spark (same rotation as the desktop), next action, weekly challenge, milestone and the achievement constellation |
@@ -44,6 +45,7 @@ account, no analytics: data never leaves the browser.
 - [x] Multiple local profiles (isolated databases) with their own goals, language, theme, activity level, sport focus and personal why
 - [x] Installable PWA (manifest + offline shell; verified offline with Playwright)
 - [x] Offline HTML report, the web counterpart of `novafit/reporting.py`
+- [x] Trend Lab page (rolling averages, routine score, weekday rhythm, mood distribution)
 - [x] Fixes from an independent Codex review (2026-10-20): drafts reset when the profile changes, local calendar day,
       service worker clears only its own caches, skip link keeps the current page
 - [ ] GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI

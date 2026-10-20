@@ -149,3 +149,51 @@ export function dailySeries(entries: HealthEntry[], count: number, end: string):
     return { date, steps: e?.steps ?? 0, waterL: e?.waterL ?? 0, calories: e?.calories ?? null, mood: e?.mood ?? null, tracked: !!e };
   });
 }
+
+/** Trailing rolling average, `null` until the window is full (analytics.py rolling_average). */
+export function rollingAverage(values: number[], window = 7): Array<number | null> {
+  if (window <= 0) throw new Error('Rolling-average window must be positive.');
+  return values.map((_, i) => (i - window + 1 < 0 ? null : pyRound(mean(values.slice(i - window + 1, i + 1)), 2)));
+}
+
+export interface WeekdayAverage {
+  weekday: number; // 0 = Monday
+  count: number;
+  averageSteps: number;
+  averageWaterL: number;
+}
+
+/** Monday-first averages per weekday (analytics.py build_weekday_profile). */
+export function weekdayProfile(entries: HealthEntry[]): WeekdayAverage[] {
+  const steps: number[][] = Array.from({ length: 7 }, () => []);
+  const water: number[][] = Array.from({ length: 7 }, () => []);
+  for (const e of entries) {
+    const wd = (parseIsoDate(e.date).getUTCDay() + 6) % 7;
+    steps[wd].push(e.steps);
+    water[wd].push(e.waterL);
+  }
+  return steps.map((list, weekday) => ({
+    weekday,
+    count: list.length,
+    averageSteps: list.length ? pyRound(mean(list)) : 0,
+    averageWaterL: list.length ? pyRound(mean(water[weekday]), 2) : 0,
+  }));
+}
+
+/** Most frequent moods, ties by name (analytics.py build_mood_distribution); `null` = not recorded. */
+export function moodDistribution(entries: HealthEntry[], limit = 6): Array<[string | null, number]> {
+  if (limit <= 0) throw new Error('Mood limit must be positive.');
+  const counts = new Map<string | null, number>();
+  for (const e of entries) {
+    const mood = e.mood?.trim() || null;
+    counts.set(mood, (counts.get(mood) ?? 0) + 1);
+  }
+  const name = (m: string | null) => (m ?? 'Not recorded').toLowerCase();
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || name(a[0]).localeCompare(name(b[0]))).slice(0, limit);
+}
+
+/** Daily routine score 0–100 used by the desktop Trend Lab: half steps, half water, capped at each goal. */
+export function routineScore(point: DailyPoint, goals: Goals): number {
+  if (!point.tracked) return 0;
+  return Math.min(1, point.steps / goals.stepGoal) * 50 + Math.min(1, point.waterL / goals.waterGoalL) * 50;
+}

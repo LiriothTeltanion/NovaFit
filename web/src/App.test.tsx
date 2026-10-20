@@ -136,6 +136,26 @@ describe('records, dashboard and coach', () => {
     click.mockRestore();
   });
 
+  it('shows the trend lab with weekday rhythm and mood distribution', async () => {
+    open('/#/trends');
+    const user = userEvent.setup();
+    const store = freshStore();
+    await store.entries.bulkPut([
+      { date: '2026-10-12', steps: 12000, waterL: 2.5, calories: null, mood: 'Happy', note: null },
+      { date: '2026-10-19', steps: 10000, waterL: 2, calories: null, mood: 'Happy', note: null },
+      { date: '2026-10-18', steps: 3000, waterL: 1, calories: null, mood: null, note: null },
+    ]);
+    render(<App store={store} today="2026-10-19" />);
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(tr('en', 'chart_view_trend_lab'));
+    const weekdays = await screen.findByRole('list', { name: tr('en', 'web_trend_weekday') });
+    expect(within(weekdays).getByText('11,000')).toBeInTheDocument(); // two Mondays averaged
+    const moods = screen.getByRole('list', { name: tr('en', 'web_trend_moods') });
+    expect(within(moods).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByText(tr('en', 'insight_best_weekday', { weekday: tr('en', 'weekday_monday') }), { exact: false })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(tr('en', 'web_trend_range')), '90');
+    expect(screen.getByText(tr('en', 'web_trend_subtitle', { days: 90 }))).toBeInTheDocument();
+  });
+
   it('switches the document to Hebrew right-to-left', async () => {
     open('/?lang=he#/training');
     render(<App store={freshStore()} today="2026-10-19" />);

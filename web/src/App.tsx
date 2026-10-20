@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BookOpen, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles, UserRound } from 'lucide-react';
+import { BookOpen, ChartLine, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { CoachPage } from './components/CoachPage';
 import { DashboardPage } from './components/DashboardPage';
 import { MotivationPage } from './components/MotivationPage';
 import { ProfilesPage } from './components/ProfilesPage';
 import { deleteProfileData, readProfiles, saveProfiles, storeFor, validateName, type Profile } from './profiles';
 import { RecordsPage } from './components/RecordsPage';
+import { TrendsPage } from './components/TrendsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TrainingPage } from './components/TrainingPage';
 import { db, listEntries, listSessions, type NovaFitWebDb } from './db';
@@ -24,6 +25,7 @@ let demoRequested = false; // React StrictMode runs effects twice in development
 const PAGES = [
   { id: 'dashboard', key: 'nav_dashboard', icon: LayoutDashboard },
   { id: 'motivation', key: 'nav_motivation', icon: Sparkles },
+  { id: 'trends', key: 'chart_view_trend_lab', icon: ChartLine },
   { id: 'records', key: 'nav_records', icon: BookOpen },
   { id: 'training', key: 'nav_training', icon: Dumbbell },
   { id: 'coach', key: 'nav_recommendations', icon: HeartPulse },
@@ -249,6 +251,7 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
               onDelete={async (id) => { await store.workouts.delete(id); await reload(); }}
             />
           )}
+          {page === 'trends' && <TrendsPage language={language} entries={entries} goals={prefs.goals} today={today} />}
           {page === 'motivation' && <MotivationPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} />}
           {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} focus={prefs.sportFocus} today={today} />}
           {page === 'profiles' && (

@@ -159,6 +159,23 @@ a.nav:hover { background: color-mix(in srgb, var(--nf-accent) 10%, transparent);
 .map__cell--tracked { fill: color-mix(in srgb, var(--nf-accent-alt) 35%, var(--nf-panel-alt)); background: color-mix(in srgb, var(--nf-accent-alt) 35%, var(--nf-panel-alt)); }
 .map__cell--none { fill: color-mix(in srgb, var(--nf-border) 60%, transparent); background: color-mix(in srgb, var(--nf-border) 60%, transparent); }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--nf-muted-text); font-size: .8rem; margin-block-start: 8px; }
+/* Trend Lab: averages, filled lines and ranked rows */
+.page__header--split { display: flex; flex-wrap: wrap; gap: var(--space); align-items: end; justify-content: space-between; }
+.page__header h1 svg { vertical-align: -3px; }
+.chart__area { fill: color-mix(in srgb, var(--nf-blue, var(--nf-accent)) 16%, transparent); }
+.chart__average { fill: none; stroke: var(--nf-accent-alt); stroke-width: 2.5; stroke-dasharray: 2 0; stroke-linecap: round; stroke-linejoin: round; }
+.legend__line { display: inline-block; inline-size: 18px; block-size: 0; border-block-start: 3px solid; margin-inline-start: 8px; }
+.legend__line--main { border-color: var(--nf-blue, var(--nf-accent)); }
+.legend__line--average { border-color: var(--nf-accent-alt); }
+.legend__line--goal { border-color: var(--nf-warning); border-block-start-style: dashed; }
+.rank { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.rank__row { display: grid; grid-template-columns: minmax(5.5rem, 8rem) minmax(0, 1fr) minmax(3.5rem, auto); gap: 10px; align-items: center; font-size: .9rem; }
+.rank__name { color: var(--nf-muted-text); overflow-wrap: anywhere; }
+.rank__track { block-size: 10px; border-radius: 999px; background: color-mix(in srgb, var(--nf-border) 60%, transparent); overflow: hidden; }
+.rank__track span { display: block; block-size: 100%; border-radius: inherit; background: color-mix(in srgb, var(--nf-accent) 60%, var(--nf-panel-alt)); }
+.rank__row--strong .rank__name { color: var(--nf-text); font-weight: 700; }
+.rank__row--strong .rank__track span { background: var(--nf-accent); }
+.rank__value { text-align: end; font-variant-numeric: tabular-nums; font-weight: 600; }
 .legend__swatch { display: inline-block; inline-size: 14px; block-size: 14px; border-radius: 4px; }
 .insights { display: grid; gap: 8px; color: var(--nf-text); }
 .form__row { display: flex; flex-wrap: wrap; gap: 10px; }
