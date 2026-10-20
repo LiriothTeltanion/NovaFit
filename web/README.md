@@ -41,7 +41,8 @@ account, no analytics: data never leaves the browser.
 - [x] Coach (ported from `recommendations.py`; copy exported from Python)
 - [x] Motivation Center: headline, micro-action, weekly challenge, milestone and 6 badges (ported from `motivation.py`)
 - [ ] Multiple local profiles (the desktop's profile manager)
-- [ ] PWA + GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
+- [x] Installable PWA (manifest + offline shell; verified offline with Playwright)
+- [ ] GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
 
 The desktop app stays the complete reference until the web reaches parity.
 
