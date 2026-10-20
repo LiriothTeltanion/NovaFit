@@ -21,6 +21,8 @@ sys.path.insert(0, str(ROOT))
 
 from novafit.i18n import LANGUAGES, TRANSLATIONS  # noqa: E402
 from novafit.themes import THEMES  # noqa: E402
+from novafit.models import ACTIVITY_LEVELS, UserProfile  # noqa: E402
+from novafit.recommendations import _COPY, LOAD_JUMP_RATIO, _weekly_rhythm  # noqa: E402
 from novafit.workouts import REFERENCE_WEEKLY_MINUTES, WORKOUT_KINDS  # noqa: E402
 
 
@@ -38,8 +40,21 @@ def build() -> dict[str, str]:
         for theme_id, theme in THEMES.items()
     }
     domain = {"workoutKinds": list(WORKOUT_KINDS), "referenceWeeklyMinutes": REFERENCE_WEEKLY_MINUTES}
+    rhythm = {
+        code: {
+            level: list(_weekly_rhythm(UserProfile.build("Web", activity_level=level), code)[:3])
+            for level in ACTIVITY_LEVELS
+        }
+        for code in LANGUAGES
+    }
+    coach = {"copy": _COPY, "weeklyRhythm": rhythm, "loadJumpRatio": LOAD_JUMP_RATIO}
     dump = lambda value: json.dumps(value, ensure_ascii=False, indent=1) + "\n"  # noqa: E731
-    return {"i18n.json": dump(i18n), "themes.json": dump(themes), "domain.json": dump(domain)}
+    return {
+        "i18n.json": dump(i18n),
+        "themes.json": dump(themes),
+        "domain.json": dump(domain),
+        "coach.json": dump(coach),
+    }
 
 
 def main() -> int:

@@ -1,8 +1,15 @@
-# NovaFit web (early shell)
+# NovaFit web 0.2.0
 
 The NovaFit wellness studio in the browser: local-first (IndexedDB), English / Spanish / Hebrew with true RTL, and the
-same twelve themes as the desktop app. This first slice ships the **Training Log**; the other workspaces still live in
-the Tkinter app and are shown as "in the desktop app for now".
+same twelve themes as the desktop app. Version 0.2.0 covers the daily workflow end to end:
+
+| Page | What it does |
+| --- | --- |
+| Command Center | Daily spark + your personal why, 7 metric cards (averages, streaks, both-goal days, routine score, trend, best day), 14-day steps and water charts with goal lines, a 7-week consistency map, insights |
+| Records | Add / edit / delete daily steps, water, calories, mood (chips) and notes; search; one record per date like the desktop |
+| Training | Sessions, weekly cards, WHO reference bars, recent table |
+| Coach | The desktop's Sport & Data Coach (same rules and copy, including training-load cards) with data confidence and weekly rhythm |
+| Tools | Goals, activity level, personal why, JSON import/export compatible with the desktop (`novafit-health-export-v2`) |
 
 ```bash
 cd web
@@ -26,15 +33,19 @@ python scripts/export_from_python.py   # regenerate src/generated/*.json from th
 Stack aligned with Nova Music Lab: React 19, TypeScript 6, Vite 8, Dexie 4, Vitest 5, lucide-react. No backend, no
 account, no analytics: data never leaves the browser.
 
-## Roadmap (estimate)
+## Status and next steps
 
-1. **JSON bridge** — import/export the desktop's `novafit-health-export-v2` file (daily records + `training_sessions`).
-2. **Daily records + dashboard** — port `models.py`, `validation.py`, `analytics.py`; SVG charts.
-3. **Coach + motivation** — port `recommendations.py` / `motivation.py` (pure functions, already tested in Python).
-4. **PWA + GitHub Pages** — publish under `/NovaFit/app/` next to the existing showcase; Playwright journeys.
+- [x] JSON bridge with the desktop (records + training sessions, row-level validation, duplicate-safe sessions)
+- [x] Daily records, dashboard analytics (ported from `analytics.py` with Python-style rounding) and SVG charts
+- [x] Coach (ported from `recommendations.py`; copy exported from Python)
+- [ ] Motivation Center badges and challenges (`motivation.py`)
+- [ ] Multiple local profiles (the desktop's profile manager)
+- [ ] PWA + GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
 
-Each step is one focused session; the desktop app stays the complete reference until the web reaches parity.
+The desktop app stays the complete reference until the web reaches parity.
 
 ## Screenshots (real browser captures, demo data)
 
-<img src="docs/training-es-aurora.png" width="49%" alt="NovaFit web Training Log in Spanish, Aurora theme" /> <img src="docs/training-he-solar.png" width="49%" alt="NovaFit web Training Log in Hebrew right-to-left, Solar Paper light theme" />
+<img src="docs/dashboard-es-aurora.png" width="49%" alt="NovaFit web Command Center in Spanish, Aurora theme" /> <img src="docs/coach-he-solar.png" width="49%" alt="NovaFit web Coach in Hebrew right-to-left, Solar Paper light theme" />
+
+<img src="docs/dashboard-en-mobile.png" width="24%" alt="NovaFit web Command Center on a 390 px phone" /> <img src="docs/training-es-aurora.png" width="37%" alt="NovaFit web Training Log in Spanish" /> <img src="docs/training-he-solar.png" width="37%" alt="NovaFit web Training Log in Hebrew" />
