@@ -8,6 +8,7 @@ import { SettingsPage } from './components/SettingsPage';
 import { TrainingPage } from './components/TrainingPage';
 import { db, listEntries, listSessions, type NovaFitWebDb } from './db';
 import { exportPayload, parseImport, sessionKey } from './domain/bridge';
+import { csvToEntries, entriesToCsv } from './domain/csv';
 import { demoEntries, demoSessions } from './domain/demo';
 import type { HealthEntry } from './domain/entries';
 import { toIso, type WorkoutSession } from './domain/workouts';
@@ -84,12 +85,26 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
     setPage(id);
   };
 
-  async function exportJson() {
-    const blob = new Blob([JSON.stringify(exportPayload([...entries].reverse(), [...sessions].reverse()), null, 2) + '\n'], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = Object.assign(document.createElement('a'), { href: url, download: `novafit-web-export-${today}.json` });
+  function download(content: string, type: string, name: string) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const link = Object.assign(document.createElement('a'), { href: url, download: name });
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function exportJson() {
+    download(JSON.stringify(exportPayload([...entries].reverse(), [...sessions].reverse()), null, 2) + '\n', 'application/json', `novafit-web-export-${today}.json`);
+  }
+
+  async function exportCsv() {
+    download(entriesToCsv([...entries].reverse()), 'text/csv', `novafit-web-records-${today}.csv`);
+  }
+
+  async function importCsv(text: string): Promise<string> {
+    const outcome = csvToEntries(text);
+    await store.entries.bulkPut(outcome.entries);
+    await reload();
+    return t('imported_records', { imported: outcome.entries.length, invalid: outcome.invalid });
   }
 
   async function importJson(text: string): Promise<string> {
@@ -179,7 +194,7 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
           )}
           {page === 'motivation' && <MotivationPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} />}
           {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} today={today} />}
-          {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} />}
+          {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
         </main>
       </div>
     </div>

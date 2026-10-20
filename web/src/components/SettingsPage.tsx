@@ -10,13 +10,16 @@ interface Props {
   onSave: (prefs: Prefs) => void;
   onExport: () => Promise<void>;
   onImport: (text: string) => Promise<string>;
+  onExportCsv: () => Promise<void>;
+  onImportCsv: (text: string) => Promise<string>;
 }
 
-export function SettingsPage({ language, prefs, onSave, onExport, onImport }: Props) {
+export function SettingsPage({ language, prefs, onSave, onExport, onImport, onExportCsv, onImportCsv }: Props) {
   const t = (key: string) => tr(language, key);
   const [draft, setDraft] = useState({ stepGoal: String(prefs.goals.stepGoal), waterGoalL: String(prefs.goals.waterGoalL), calorieGoal: String(prefs.goals.calorieGoal), activityLevel: prefs.activityLevel, why: prefs.why });
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const csvInput = useRef<HTMLInputElement>(null);
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -29,14 +32,14 @@ export function SettingsPage({ language, prefs, onSave, onExport, onImport }: Pr
     setMessage({ tone: 'ok', text: `${t('settings_saved')} ✅` });
   }
 
-  async function importFile(file: File | undefined) {
+  async function importFile(file: File | undefined, csv = false) {
     if (!file) return;
     try {
-      setMessage({ tone: 'ok', text: await onImport(await file.text()) });
+      setMessage({ tone: 'ok', text: await (csv ? onImportCsv : onImport)(await file.text()) });
     } catch (error) {
-      setMessage({ tone: 'error', text: `${t('json_import_failed')}: ${error instanceof Error ? error.message : String(error)}` });
+      setMessage({ tone: 'error', text: `${t(csv ? 'csv_import_failed' : 'json_import_failed')}: ${error instanceof Error ? error.message : String(error)}` });
     } finally {
-      if (fileInput.current) fileInput.current.value = '';
+      for (const input of [fileInput.current, csvInput.current]) if (input) input.value = '';
     }
   }
 
@@ -71,6 +74,11 @@ export function SettingsPage({ language, prefs, onSave, onExport, onImport }: Pr
           <label className="button button--quiet file-button">
             <Upload aria-hidden size={18} /> {t('import_json')}
             <input ref={fileInput} type="file" accept="application/json,.json" className="visually-hidden" onChange={(e) => void importFile(e.target.files?.[0])} />
+          </label>
+          <button className="button button--quiet" type="button" onClick={() => void onExportCsv()}><Download aria-hidden size={18} /> {t('export_csv')}</button>
+          <label className="button button--quiet file-button">
+            <Upload aria-hidden size={18} /> {t('import_csv')}
+            <input ref={csvInput} type="file" accept="text/csv,.csv" className="visually-hidden" onChange={(e) => void importFile(e.target.files?.[0], true)} />
           </label>
           <p className="card__detail">{t('web_storage_note')}</p>
         </article>

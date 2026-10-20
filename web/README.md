@@ -10,7 +10,7 @@ same twelve themes as the desktop app. Version 0.2.0 covers the daily workflow e
 | Training | Sessions, weekly cards, WHO reference bars, recent table |
 | Motivation | Grounded headline, daily spark (same rotation as the desktop), next action, weekly challenge, milestone and the achievement constellation |
 | Coach | The desktop's Sport & Data Coach (same rules and copy, including training-load cards) with data confidence and weekly rhythm |
-| Tools | Goals, activity level, personal why, JSON import/export compatible with the desktop (`novafit-health-export-v2`) |
+| Tools | Goals, activity level, personal why, JSON and CSV import/export compatible with the desktop (`novafit-health-export-v2`, `Date,Steps,Water (L),…`) |
 
 ```bash
 cd web
