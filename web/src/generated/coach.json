@@ -171,5 +171,10 @@
    ]
   }
  },
+ "focusLine": {
+  "en": "Preferred focus: {focus}. Adapt the rhythm to your environment and current comfort.",
+  "es": "Enfoque preferido: {focus}. Adapta el ritmo a tu entorno y comodidad actual.",
+  "he": "הפעילות המועדפת: {focus}. מומלץ להתאים את הקצב לסביבה ולהרגשה הנוכחית."
+ },
  "loadJumpRatio": 1.5
 }

@@ -15,7 +15,7 @@ import { demoEntries, demoSessions } from './domain/demo';
 import type { HealthEntry } from './domain/entries';
 import { toIso, type WorkoutSession } from './domain/workouts';
 import { LANGUAGES, directionFor, tr, type Language } from './i18n';
-import { readPrefs, savePrefs, type Prefs } from './settings';
+import { forgetProfilePrefs, readPrefs, readProfilePrefs, savePrefs, type Prefs } from './settings';
 import { THEMES, applyTheme } from './theme';
 
 let demoRequested = false; // React StrictMode runs effects twice in development: seed once.
@@ -51,6 +51,8 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
     setPrefs(next);
     savePrefs(next);
   };
+  // Each profile keeps its own goals, language, theme, level, sport focus and personal why.
+  const switchProfile = (id: number) => updatePrefs(readProfilePrefs(id, prefs));
 
   useEffect(() => {
     applyTheme(theme);
@@ -132,7 +134,8 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
     const next = profiles.filter((p) => p.id !== profile.id);
     setProfiles(next);
     saveProfiles(next);
-    if (profileId === profile.id) updatePrefs({ ...prefs, profileId: 1 });
+    forgetProfilePrefs(profile.id);
+    if (profileId === profile.id) switchProfile(1);
     return t('profile_deleted', { name: profile.name });
   }
 
@@ -166,7 +169,7 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
         <div className="selectors">
           <label>
             {t('user')}
-            <select value={profileId} onChange={(e) => updatePrefs({ ...prefs, profileId: Number(e.target.value) })}>
+            <select value={profileId} onChange={(e) => switchProfile(Number(e.target.value))}>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -230,9 +233,9 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
             />
           )}
           {page === 'motivation' && <MotivationPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} />}
-          {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} today={today} />}
+          {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} focus={prefs.sportFocus} today={today} />}
           {page === 'profiles' && (
-            <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={(id) => updatePrefs({ ...prefs, profileId: id })} onDelete={removeProfile} />
+            <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={switchProfile} onDelete={removeProfile} />
           )}
           {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
         </main>

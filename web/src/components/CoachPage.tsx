@@ -5,6 +5,7 @@ import { buildPlan, type ActivityLevel } from '../domain/coach';
 import type { HealthEntry } from '../domain/entries';
 import type { WorkoutSession } from '../domain/workouts';
 import { tr, type Language } from '../i18n';
+import type { SportFocus } from '../settings';
 
 interface Props {
   language: Language;
@@ -12,14 +13,15 @@ interface Props {
   sessions: WorkoutSession[];
   goals: Goals;
   level: ActivityLevel;
+  focus: SportFocus;
   today: string;
 }
 
-export function CoachPage({ language, entries, sessions, goals, level, today }: Props) {
+export function CoachPage({ language, entries, sessions, goals, level, focus, today }: Props) {
   const t = (key: string) => tr(language, key);
   const plan = useMemo(
-    () => buildPlan(entries, goals, level, language, today, sessions, (k) => tr(language, `workout_kind_${k}`)),
-    [entries, goals, level, language, today, sessions],
+    () => buildPlan(entries, goals, level, language, today, sessions, (k) => tr(language, `workout_kind_${k}`), tr(language, `sport_${focus}`)),
+    [entries, goals, level, language, today, sessions, focus],
   );
   return (
     <section className="page" aria-labelledby="coach-title">

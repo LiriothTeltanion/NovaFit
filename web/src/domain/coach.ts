@@ -25,6 +25,7 @@ export type ActivityLevel = 'beginner' | 'balanced' | 'active';
 
 const COPY = coach.copy as Record<Language, Record<string, string>>;
 const RHYTHM = coach.weeklyRhythm as Record<Language, Record<ActivityLevel, string[]>>;
+const FOCUS = coach.focusLine as Record<Language, string>;
 export const LOAD_JUMP_RATIO: number = coach.loadJumpRatio;
 
 export interface TrainingSignals {
@@ -78,6 +79,7 @@ export function buildPlan(
   today: string,
   sessions: WorkoutSession[] | null,
   kindLabel: (k: string) => string,
+  focusLabel?: string,
 ): RecommendationPlan {
   const c = COPY[language];
   const stats = calculateDashboard(entries, goals, today);
@@ -95,5 +97,5 @@ export function buildPlan(
   const moodDays = entries.filter((e) => e.mood).length;
   if (stats.entryCount >= 4 && moodDays / Math.max(1, stats.entryCount) < 0.5) items.push({ category: 'context', title: c.mood_title, action: c.mood_action, reason: c.mood_reason, priority: 'low' });
   items.push(...training.filter((i) => i.priority === 'low'));
-  return { confidencePct, summary, weekly: RHYTHM[language][level], items: items.slice(0, 5), disclaimer: c.disclaimer };
+  return { confidencePct, summary, weekly: focusLabel ? [...RHYTHM[language][level], FOCUS[language].replace('{focus}', focusLabel)] : RHYTHM[language][level], items: items.slice(0, 5), disclaimer: c.disclaimer };
 }

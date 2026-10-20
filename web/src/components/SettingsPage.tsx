@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { Download, Upload } from 'lucide-react';
 import type { ActivityLevel } from '../domain/coach';
 import { tr, type Language } from '../i18n';
-import type { Prefs } from '../settings';
+import { SPORT_FOCUSES, type Prefs, type SportFocus } from '../settings';
 
 interface Props {
   language: Language;
@@ -16,7 +16,7 @@ interface Props {
 
 export function SettingsPage({ language, prefs, onSave, onExport, onImport, onExportCsv, onImportCsv }: Props) {
   const t = (key: string) => tr(language, key);
-  const [draft, setDraft] = useState({ stepGoal: String(prefs.goals.stepGoal), waterGoalL: String(prefs.goals.waterGoalL), calorieGoal: String(prefs.goals.calorieGoal), activityLevel: prefs.activityLevel, why: prefs.why });
+  const [draft, setDraft] = useState({ stepGoal: String(prefs.goals.stepGoal), waterGoalL: String(prefs.goals.waterGoalL), calorieGoal: String(prefs.goals.calorieGoal), activityLevel: prefs.activityLevel, sportFocus: prefs.sportFocus, why: prefs.why });
   const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const csvInput = useRef<HTMLInputElement>(null);
@@ -28,7 +28,7 @@ export function SettingsPage({ language, prefs, onSave, onExport, onImport, onEx
       setMessage({ tone: 'error', text: `${t('preferences_save_error')}: 1–100000 · 0.1–10 L · 1–10000` });
       return;
     }
-    onSave({ ...prefs, goals: { stepGoal, waterGoalL, calorieGoal }, activityLevel: draft.activityLevel, why: draft.why.trim().slice(0, 160) });
+    onSave({ ...prefs, goals: { stepGoal, waterGoalL, calorieGoal }, activityLevel: draft.activityLevel, sportFocus: draft.sportFocus, why: draft.why.trim().slice(0, 160) });
     setMessage({ tone: 'ok', text: `${t('settings_saved')} ✅` });
   }
 
@@ -59,6 +59,12 @@ export function SettingsPage({ language, prefs, onSave, onExport, onImport, onEx
             {t('activity_level')}
             <select value={draft.activityLevel} onChange={(e) => setDraft({ ...draft, activityLevel: e.target.value as ActivityLevel })}>
               {(['beginner', 'balanced', 'active'] as const).map((level) => <option key={level} value={level}>{t(`activity_${level}`)}</option>)}
+            </select>
+          </label>
+          <label>
+            {t('sport_focus')}
+            <select value={draft.sportFocus} onChange={(e) => setDraft({ ...draft, sportFocus: e.target.value as SportFocus })}>
+              {SPORT_FOCUSES.map((focus) => <option key={focus} value={focus}>{t(`sport_${focus}`)}</option>)}
             </select>
           </label>
           <label>

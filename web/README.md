@@ -41,7 +41,7 @@ account, no analytics: data never leaves the browser.
 - [x] Daily records, dashboard analytics (ported from `analytics.py` with Python-style rounding) and SVG charts
 - [x] Coach (ported from `recommendations.py`; copy exported from Python)
 - [x] Motivation Center: headline, micro-action, weekly challenge, milestone and 6 badges (ported from `motivation.py`)
-- [x] Multiple local profiles (isolated databases). Known gap: goals, language and theme are per browser, not per profile as on the desktop
+- [x] Multiple local profiles (isolated databases) with their own goals, language, theme, activity level, sport focus and personal why
 - [x] Installable PWA (manifest + offline shell; verified offline with Playwright)
 - [ ] GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
 

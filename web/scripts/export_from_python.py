@@ -47,7 +47,14 @@ def build() -> dict[str, str]:
         }
         for code in LANGUAGES
     }
-    coach = {"copy": _COPY, "weeklyRhythm": rhythm, "loadJumpRatio": LOAD_JUMP_RATIO}
+    # The desktop appends "Preferred focus: <sport>…" to the weekly rhythm; export it as a {focus} template.
+    focus_line = {
+        code: _weekly_rhythm(UserProfile.build("Web", sport_focus="mixed"), code)[3].replace(
+            TRANSLATIONS[code]["sport_mixed"], "{focus}"
+        )
+        for code in LANGUAGES
+    }
+    coach = {"copy": _COPY, "weeklyRhythm": rhythm, "focusLine": focus_line, "loadJumpRatio": LOAD_JUMP_RATIO}
     dump = lambda value: json.dumps(value, ensure_ascii=False, indent=1) + "\n"  # noqa: E731
     return {
         "i18n.json": dump(i18n),
