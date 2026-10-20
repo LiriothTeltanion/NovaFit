@@ -1,5 +1,5 @@
 // Mirrors tests/test_workouts.py so the web port and the desktop agree on the numbers.
-import { buildSession, sessionLoad, trainingSnapshot, weekStart, weeklySummary, WorkoutValidationError } from './workouts';
+import { buildSession, localIsoToday, sessionLoad, trainingSnapshot, weekStart, weeklySummary, WorkoutValidationError } from './workouts';
 
 const MONDAY = '2026-10-19';
 const s = (date: string, kind: string, durationMin: number, rpe?: number) => buildSession({ date, kind, durationMin, rpe });
@@ -35,5 +35,12 @@ describe('weekly summary', () => {
     expect(snapshot.streakWeeks).toBe(4);
     expect(snapshot.referencePercent).toBe(100);
     expect(snapshot.minutesChange).toBe(170);
+  });
+});
+
+describe('local calendar day', () => {
+  it('uses the local date, not UTC, right after midnight', () => {
+    expect(localIsoToday(new Date(2026, 9, 20, 0, 30))).toBe('2026-10-20');
+    expect(localIsoToday(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
   });
 });

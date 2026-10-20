@@ -94,6 +94,29 @@ describe('records, dashboard and coach', () => {
     expect(await store.entries.count()).toBe(1);
   });
 
+  it('drops an unsaved draft when the active profile changes', async () => {
+    localStorage.setItem('novafit-web:profiles', JSON.stringify([{ id: 1, name: 'Kevin' }, { id: 2, name: 'Mamá' }]));
+    open('/#/records');
+    const user = userEvent.setup();
+    const store = freshStore();
+    render(<App store={store} today="2026-10-19" />);
+    await user.type(await screen.findByLabelText('Steps'), '7000');
+    await user.selectOptions(screen.getByLabelText(tr('en', 'user')), 'Mamá');
+    expect(await screen.findByLabelText('Steps')).toHaveDisplayValue('');
+    expect(await store.entries.count()).toBe(0);
+  });
+
+  it('skips to the content without leaving the current page', async () => {
+    open('/#/training');
+    const user = userEvent.setup();
+    render(<App store={freshStore()} today="2026-10-19" />);
+    await user.type(await screen.findByLabelText('Minutes'), '25');
+    await user.click(screen.getByRole('link', { name: new RegExp(tr('en', 'nav_dashboard') + ' ↓') }));
+    expect(window.location.hash).toBe('#/training');
+    expect(document.activeElement).toBe(document.getElementById('main'));
+    expect(screen.getByLabelText('Minutes')).toHaveDisplayValue('25');
+  });
+
   it('switches the document to Hebrew right-to-left', async () => {
     open('/?lang=he#/training');
     render(<App store={freshStore()} today="2026-10-19" />);

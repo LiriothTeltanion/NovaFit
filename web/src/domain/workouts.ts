@@ -51,6 +51,9 @@ export function parseIsoDate(value: string): Date {
 }
 
 export const toIso = (day: Date): string => day.toISOString().slice(0, 10);
+/** The user's own calendar day (toIso is UTC: right after local midnight in Israel it still says yesterday). */
+export const localIsoToday = (now: Date = new Date()): string =>
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
 function wholeNumber(raw: unknown, field: string, min: number, max: number): number {
   const text = String(raw ?? '').trim();

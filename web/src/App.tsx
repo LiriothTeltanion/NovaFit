@@ -13,7 +13,7 @@ import { exportPayload, parseImport, sessionKey } from './domain/bridge';
 import { csvToEntries, entriesToCsv } from './domain/csv';
 import { demoEntries, demoSessions } from './domain/demo';
 import type { HealthEntry } from './domain/entries';
-import { toIso, type WorkoutSession } from './domain/workouts';
+import { localIsoToday, type WorkoutSession } from './domain/workouts';
 import { LANGUAGES, directionFor, tr, type Language } from './i18n';
 import { forgetProfilePrefs, readPrefs, readProfilePrefs, savePrefs, type Prefs } from './settings';
 import { THEMES, applyTheme } from './theme';
@@ -36,7 +36,7 @@ const pageFromHash = (): PageId => {
   return (PAGES.some((p) => p.id === id) ? id : 'dashboard') as PageId;
 };
 
-export function App({ store: base = db, today = toIso(new Date()) }: { store?: NovaFitWebDb; today?: string }) {
+export function App({ store: base = db, today = localIsoToday() }: { store?: NovaFitWebDb; today?: string }) {
   const [prefs, setPrefs] = useState<Prefs>(readPrefs);
   const [profiles, setProfiles] = useState<Profile[]>(readProfiles);
   const [counts, setCounts] = useState<Record<number, number>>({});
@@ -153,7 +153,15 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
 
   return (
     <div className="shell">
-      <a className="skip-link" href="#main">{t('nav_dashboard')} ↓</a>
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(event) => {
+          // The hash router would read #main as a page; focus the content without changing the route.
+          event.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+      >{t('nav_dashboard')} ↓</a>
       <header className="topbar">
         <div className="brand">
           <span className="brand__mark" aria-hidden>
@@ -216,6 +224,7 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
           {page === 'dashboard' && <DashboardPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} onAddRecord={() => go('records')} />}
           {page === 'records' && (
             <RecordsPage
+              key={prefs.profileId}
               language={language}
               entries={entries}
               today={today}
@@ -225,6 +234,7 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
           )}
           {page === 'training' && (
             <TrainingPage
+              key={prefs.profileId}
               language={language}
               sessions={sessions}
               today={today}
@@ -237,7 +247,7 @@ export function App({ store: base = db, today = toIso(new Date()) }: { store?: N
           {page === 'profiles' && (
             <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={switchProfile} onDelete={removeProfile} />
           )}
-          {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
+          {page === 'settings' && <SettingsPage key={prefs.profileId} language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
         </main>
       </div>
     </div>
