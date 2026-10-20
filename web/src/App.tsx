@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BookOpen, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2 } from 'lucide-react';
+import { BookOpen, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles } from 'lucide-react';
 import { CoachPage } from './components/CoachPage';
 import { DashboardPage } from './components/DashboardPage';
+import { MotivationPage } from './components/MotivationPage';
 import { RecordsPage } from './components/RecordsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TrainingPage } from './components/TrainingPage';
@@ -18,6 +19,7 @@ let demoRequested = false; // React StrictMode runs effects twice in development
 
 const PAGES = [
   { id: 'dashboard', key: 'nav_dashboard', icon: LayoutDashboard },
+  { id: 'motivation', key: 'nav_motivation', icon: Sparkles },
   { id: 'records', key: 'nav_records', icon: BookOpen },
   { id: 'training', key: 'nav_training', icon: Dumbbell },
   { id: 'coach', key: 'nav_recommendations', icon: HeartPulse },
@@ -175,6 +177,7 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
               onDelete={async (id) => { await store.workouts.delete(id); await reload(); }}
             />
           )}
+          {page === 'motivation' && <MotivationPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} />}
           {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} today={today} />}
           {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} />}
         </main>

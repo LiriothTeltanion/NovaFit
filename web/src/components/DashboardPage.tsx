@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { CalendarCheck, Droplets, Flame, Footprints, Sparkles, Target, TrendingUp, Trophy } from 'lucide-react';
 import { calculateDashboard, dailySeries, type Goals } from '../domain/analytics';
 import { moodLabel, type HealthEntry } from '../domain/entries';
-import { parseIsoDate } from '../domain/workouts';
+import { sparkKey } from '../domain/motivation';
 import { tr, type Language } from '../i18n';
 import { ConsistencyMap, DailyBars, WaterArea } from './Charts';
 
@@ -23,8 +23,7 @@ export function DashboardPage({ language, entries, goals, today, why, onAddRecor
   const last14 = useMemo(() => dailySeries(entries, 14, today), [entries, today]);
   const last49 = useMemo(() => dailySeries(entries, 49, today), [entries, today]);
   const nf = new Intl.NumberFormat(language === 'he' ? 'he-IL' : language);
-  const dayIndex = Math.floor(parseIsoDate(today).getTime() / 86_400_000);
-  const spark = t(`spark_${(dayIndex % 8) + 1}`);
+  const spark = t(sparkKey(today, stats.entryCount)); // same rotation as the desktop Motivation Center
   const weekdayLabels = WEEKDAYS.map((d) => t(`weekday_${d}`));
 
   const cards = [

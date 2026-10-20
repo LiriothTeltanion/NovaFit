@@ -192,3 +192,16 @@ a.nav:hover { background: color-mix(in srgb, var(--nf-accent) 10%, transparent);
   .chart-grid, .settings { grid-template-columns: minmax(0, 1fr); }
   .stat--wide { grid-column: auto; }
 }
+
+/* Motivation Center */
+.spark { font-size: 1rem; line-height: 1.45; margin-block: 6px 10px; }
+.hero--level-3 { box-shadow: 0 0 0 2px var(--nf-accent), 0 10px 30px rgb(0 0 0 / .18); }
+.badges { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.badge-card { display: flex; gap: 12px; padding: 12px; border-radius: 12px; border: 1px dashed var(--nf-border); opacity: .78; }
+.badge-card--earned { border-style: solid; border-color: var(--nf-accent); opacity: 1; background: color-mix(in srgb, var(--nf-accent) 10%, transparent); }
+.badge-card__icon { font-size: 1.6rem; line-height: 1; }
+.badge-card__title { font-weight: 700; }
+@media (prefers-reduced-motion: no-preference) {
+  .badge-card--earned .badge-card__icon { animation: nf-pop .6s ease-out 1; }
+}
+@keyframes nf-pop { 0% { transform: scale(.6); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
