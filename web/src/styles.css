@@ -183,10 +183,11 @@ a.nav:hover { background: color-mix(in srgb, var(--nf-accent) 10%, transparent);
 .recommendation__head { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
 .recommendation__head h2 { font-size: 1.05rem; }
 .recommendation__index { color: var(--nf-accent-text); margin-inline-end: 6px; }
-.pill { font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; color: var(--nf-bg); }
-.pill--high { background: var(--nf-danger); }
-.pill--medium { background: var(--nf-warning); }
-.pill--low { background: var(--nf-accent); }
+.pill { font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; color: var(--nf-text);
+  border: 1px solid var(--pill, var(--nf-accent)); background: color-mix(in srgb, var(--pill, var(--nf-accent)) 22%, transparent); }
+.pill--high { --pill: var(--nf-danger); }
+.pill--medium { --pill: var(--nf-warning); }
+.pill--low { --pill: var(--nf-accent); }
 .settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space); align-items: start; }
 .settings .form { position: static; }
 .file-button { position: relative; justify-content: center; }
@@ -208,3 +209,13 @@ a.nav:hover { background: color-mix(in srgb, var(--nf-accent) 10%, transparent);
   .badge-card--earned .badge-card__icon { animation: nf-pop .6s ease-out 1; }
 }
 @keyframes nf-pop { 0% { transform: scale(.6); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+/* Profiles */
+.profile-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.profile { display: flex; align-items: center; gap: 12px; }
+.profile--active { border-color: var(--nf-accent); }
+.profile__avatar { display: grid; place-items: center; inline-size: 42px; block-size: 42px; border-radius: 50%;
+  background: color-mix(in srgb, var(--nf-accent) 20%, transparent); color: var(--nf-accent-text); }
+.profile__body { flex: 1; min-inline-size: 0; }
+.profile__name { font-weight: 700; }
+.pill .lucide { vertical-align: -1px; }

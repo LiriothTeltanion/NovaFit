@@ -67,6 +67,33 @@ describe('records, dashboard and coach', () => {
     expect(screen.getByText(tr('en', 'data_confidence'))).toBeInTheDocument();
   });
 
+  it('keeps profiles isolated and deletes only the removed profile', async () => {
+    open('/#/records');
+    const user = userEvent.setup();
+    const store = freshStore();
+    render(<App store={store} today="2026-10-19" />);
+    await user.type(await screen.findByLabelText('Steps'), '7000');
+    await user.type(screen.getByLabelText('Water (L)'), '2');
+    await user.click(screen.getByRole('button', { name: /Save record/ }));
+    await screen.findByRole('status');
+
+    await user.click(screen.getByRole('link', { name: tr('en', 'nav_profiles') }));
+    await user.type(await screen.findByLabelText(tr('en', 'display_name')), 'Mamá');
+    await user.click(screen.getByRole('button', { name: tr('en', 'create') }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Mamá');
+    await user.click(screen.getAllByRole('button', { name: tr('en', 'activate') })[0]);
+
+    await user.click(screen.getByRole('link', { name: tr('en', 'nav_records') }));
+    expect(await screen.findByText(tr('en', 'no_records'))).toBeInTheDocument();
+    expect(await store.entries.count()).toBe(1); // the primary profile still has its record
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await user.click(screen.getByRole('link', { name: tr('en', 'nav_profiles') }));
+    await user.click(await screen.findByRole('button', { name: `${tr('en', 'delete_profile')} Mamá` }));
+    expect(await screen.findByRole('status')).toHaveTextContent(tr('en', 'profile_deleted', { name: 'Mamá' }));
+    expect(await store.entries.count()).toBe(1);
+  });
+
   it('switches the document to Hebrew right-to-left', async () => {
     open('/?lang=he#/training');
     render(<App store={freshStore()} today="2026-10-19" />);

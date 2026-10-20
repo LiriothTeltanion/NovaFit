@@ -10,6 +10,7 @@ same twelve themes as the desktop app. Version 0.2.0 covers the daily workflow e
 | Training | Sessions, weekly cards, WHO reference bars, recent table |
 | Motivation | Grounded headline, daily spark (same rotation as the desktop), next action, weekly challenge, milestone and the achievement constellation |
 | Coach | The desktop's Sport & Data Coach (same rules and copy, including training-load cards) with data confidence and weekly rhythm |
+| Profiles | Several local profiles, each in its own IndexedDB database (isolated records and sessions; deleting a profile removes only its data) |
 | Tools | Goals, activity level, personal why, JSON and CSV import/export compatible with the desktop (`novafit-health-export-v2`, `Date,Steps,Water (L),…`) |
 
 ```bash
@@ -40,7 +41,7 @@ account, no analytics: data never leaves the browser.
 - [x] Daily records, dashboard analytics (ported from `analytics.py` with Python-style rounding) and SVG charts
 - [x] Coach (ported from `recommendations.py`; copy exported from Python)
 - [x] Motivation Center: headline, micro-action, weekly challenge, milestone and 6 badges (ported from `motivation.py`)
-- [ ] Multiple local profiles (the desktop's profile manager)
+- [x] Multiple local profiles (isolated databases). Known gap: goals, language and theme are per browser, not per profile as on the desktop
 - [x] Installable PWA (manifest + offline shell; verified offline with Playwright)
 - [ ] GitHub Pages under `/NovaFit/app/`, Playwright journeys and axe checks in CI
 

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { BookOpen, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BookOpen, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { CoachPage } from './components/CoachPage';
 import { DashboardPage } from './components/DashboardPage';
 import { MotivationPage } from './components/MotivationPage';
+import { ProfilesPage } from './components/ProfilesPage';
+import { deleteProfileData, readProfiles, saveProfiles, storeFor, validateName, type Profile } from './profiles';
 import { RecordsPage } from './components/RecordsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TrainingPage } from './components/TrainingPage';
@@ -24,6 +26,7 @@ const PAGES = [
   { id: 'records', key: 'nav_records', icon: BookOpen },
   { id: 'training', key: 'nav_training', icon: Dumbbell },
   { id: 'coach', key: 'nav_recommendations', icon: HeartPulse },
+  { id: 'profiles', key: 'nav_profiles', icon: UserRound },
   { id: 'settings', key: 'nav_tools', icon: Settings2 },
 ] as const;
 type PageId = (typeof PAGES)[number]['id'];
@@ -33,8 +36,12 @@ const pageFromHash = (): PageId => {
   return (PAGES.some((p) => p.id === id) ? id : 'dashboard') as PageId;
 };
 
-export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFitWebDb; today?: string }) {
+export function App({ store: base = db, today = toIso(new Date()) }: { store?: NovaFitWebDb; today?: string }) {
   const [prefs, setPrefs] = useState<Prefs>(readPrefs);
+  const [profiles, setProfiles] = useState<Profile[]>(readProfiles);
+  const [counts, setCounts] = useState<Record<number, number>>({});
+  const profileId = profiles.some((p) => p.id === prefs.profileId) ? prefs.profileId : 1;
+  const store = useMemo(() => storeFor(base, profileId), [base, profileId]);
   const [page, setPage] = useState<PageId>(pageFromHash);
   const [entries, setEntries] = useState<HealthEntry[]>([]);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
@@ -107,6 +114,28 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
     return t('imported_records', { imported: outcome.entries.length, invalid: outcome.invalid });
   }
 
+  useEffect(() => {
+    if (page !== 'profiles') return;
+    void Promise.all(profiles.map(async (p) => [p.id, await storeFor(base, p.id).entries.count()] as const)).then((rows) => setCounts(Object.fromEntries(rows)));
+  }, [page, profiles, base, entries]);
+
+  async function createProfile(name: string): Promise<string> {
+    const clean = validateName(name, profiles);
+    const next = [...profiles, { id: Math.max(...profiles.map((p) => p.id)) + 1, name: clean }];
+    setProfiles(next);
+    saveProfiles(next);
+    return t('profile_created', { name: clean });
+  }
+
+  async function removeProfile(profile: Profile): Promise<string> {
+    await deleteProfileData(base, profile.id);
+    const next = profiles.filter((p) => p.id !== profile.id);
+    setProfiles(next);
+    saveProfiles(next);
+    if (profileId === profile.id) updatePrefs({ ...prefs, profileId: 1 });
+    return t('profile_deleted', { name: profile.name });
+  }
+
   async function importJson(text: string): Promise<string> {
     const outcome = parseImport(text);
     const known = new Set(sessions.map(sessionKey));
@@ -135,6 +164,14 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
           </div>
         </div>
         <div className="selectors">
+          <label>
+            {t('user')}
+            <select value={profileId} onChange={(e) => updatePrefs({ ...prefs, profileId: Number(e.target.value) })}>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </label>
           <label>
             {t('language')}
             <select value={language} onChange={(e) => updatePrefs({ ...prefs, language: e.target.value as Language })}>
@@ -194,6 +231,9 @@ export function App({ store = db, today = toIso(new Date()) }: { store?: NovaFit
           )}
           {page === 'motivation' && <MotivationPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} />}
           {page === 'coach' && <CoachPage language={language} entries={entries} sessions={sessions} goals={prefs.goals} level={prefs.activityLevel} today={today} />}
+          {page === 'profiles' && (
+            <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={(id) => updatePrefs({ ...prefs, profileId: id })} onDelete={removeProfile} />
+          )}
           {page === 'settings' && <SettingsPage language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onImportCsv={importCsv} />}
         </main>
       </div>

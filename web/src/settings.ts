@@ -10,10 +10,11 @@ export interface Prefs {
   goals: Goals;
   activityLevel: ActivityLevel;
   why: string;
+  profileId: number;
 }
 
 const KEY = 'novafit-web:prefs';
-export const DEFAULT_PREFS: Prefs = { language: 'en', theme: DEFAULT_THEME, goals: DEFAULT_GOALS, activityLevel: 'balanced', why: '' };
+export const DEFAULT_PREFS: Prefs = { language: 'en', theme: DEFAULT_THEME, goals: DEFAULT_GOALS, activityLevel: 'balanced', why: '', profileId: 1 };
 
 export function readPrefs(): Prefs {
   let raw: Partial<Prefs> = {};
@@ -32,6 +33,7 @@ export function readPrefs(): Prefs {
     goals,
     activityLevel: raw.activityLevel && ['beginner', 'balanced', 'active'].includes(raw.activityLevel) ? raw.activityLevel : 'balanced',
     why: typeof raw.why === 'string' ? raw.why.slice(0, 160) : '',
+    profileId: Number.isInteger(raw.profileId) && (raw.profileId as number) > 0 ? (raw.profileId as number) : 1,
   };
 }
 
