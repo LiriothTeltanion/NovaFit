@@ -763,7 +763,6 @@
       "height": 940,
       "animated": false,
       "referenced_by": [
-        "docs/NOVA_HANDOFF.md",
         "README_HE.md"
       ],
       "status": "current",
@@ -778,7 +777,6 @@
       "height": 940,
       "animated": false,
       "referenced_by": [
-        "docs/NOVA_HANDOFF.md",
         "README.md",
         "README_ES.md"
       ],
