@@ -56,4 +56,6 @@ The desktop app stays the complete reference until the web reaches parity.
 
 <img src="docs/dashboard-es-aurora.png" width="49%" alt="NovaFit web Command Center in Spanish, Aurora theme" /> <img src="docs/coach-he-solar.png" width="49%" alt="NovaFit web Coach in Hebrew right-to-left, Solar Paper light theme" />
 
+<img src="docs/trends-es-aurora.png" width="100%" alt="NovaFit web Trend Lab in Spanish: steps with the 7-day average, hydration, routine score, weekday rhythm and moods" />
+
 <img src="docs/dashboard-en-mobile.png" width="24%" alt="NovaFit web Command Center on a 390 px phone" /> <img src="docs/training-es-aurora.png" width="37%" alt="NovaFit web Training Log in Spanish" /> <img src="docs/training-he-solar.png" width="37%" alt="NovaFit web Training Log in Hebrew" />
