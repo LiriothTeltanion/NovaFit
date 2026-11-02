@@ -13,7 +13,7 @@ authors = [{ name = "Kevin Cusnir" }]
 keywords = ["wellness", "sqlite", "tkinter", "cli", "python", "multilingual", "analytics", "portfolio"]
 dependencies = [
   "requests>=2.32.0,<3.0.0",
-  "Faker>=30.0.0,<40.0.0",
+  "Faker>=30.0.0,<41.0.0",
   "matplotlib>=3.10.0,<4.0.0",
   "Pillow>=11.0.0,<13.0.0",
   "tzdata>=2025.2",
