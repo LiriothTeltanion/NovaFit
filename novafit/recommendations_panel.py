@@ -19,6 +19,7 @@ from .i18n import direction_for, tr
 from .models import HealthEntry, UserProfile
 from .recommendations import build_recommendation_plan, format_recommendation_plan
 from .ui_components import ActivityOrbitCanvas
+from .workouts import WorkoutSession
 
 
 class RecommendationsPanel(ttk.Frame):
@@ -141,6 +142,7 @@ class RecommendationsPanel(ttk.Frame):
         entries: Sequence[HealthEntry],
         settings: AppSettings,
         profile: UserProfile,
+        sessions: Sequence[WorkoutSession] | None = None,
     ) -> None:
         """Rebuild recommendations from active profile data.
 
@@ -148,6 +150,7 @@ class RecommendationsPanel(ttk.Frame):
             entries: Active profile records.
             settings: Current goals.
             profile: Active profile preferences.
+            sessions: Optional training sessions for the training cards.
 
         Returns:
             None.
@@ -158,7 +161,9 @@ class RecommendationsPanel(ttk.Frame):
         self.entries = list(entries)
         self.settings = settings
         self.profile = profile
-        self.plan = build_recommendation_plan(self.entries, settings, profile, self.get_language())
+        self.plan = build_recommendation_plan(
+            self.entries, settings, profile, self.get_language(), sessions=sessions
+        )
         self.orbit.set_language(self.get_language())
         self.title_var.set(tr(self.get_language(), "recommendation_title"))
         self.summary_var.set(self.plan.summary)

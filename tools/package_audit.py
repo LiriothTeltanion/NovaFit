@@ -29,6 +29,7 @@ SKIP_DIRECTORIES = {
     "build",
     "dist",
     "htmlcov",
+    "node_modules",
     "venv",
 }
 REQUIRED_PATHS = (

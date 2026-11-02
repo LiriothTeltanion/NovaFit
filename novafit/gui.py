@@ -56,6 +56,7 @@ from .motivation_panel import MotivationCenterPanel
 from .profile_panel import ProfileManagerPanel
 from .recommendations_panel import RecommendationsPanel
 from .reporting import export_html_report
+from .training_panel import TrainingPanel
 from .themes import (
     accessible_text_color,
     get_theme,
@@ -66,6 +67,7 @@ from .themes import (
 )
 from .ui_components import UltimateHeroCanvas
 from .weather import format_weather, get_weather
+from .workouts import WorkoutStore
 
 LOGGER = logging.getLogger(__name__)
 JobResult = TypeVar("JobResult")
@@ -478,6 +480,7 @@ class NovaFitApp(tk.Tk):
             ("motivation", "motivation", self.t("nav_motivation")),
             ("recommendations", "recommendations", self.t("nav_recommendations")),
             ("add", "add", self.t("nav_add")),
+            ("training", "training", self.t("nav_training")),
             ("entries", "records", self.t("nav_records")),
             ("profiles", "profiles", self.t("nav_profiles")),
             ("tools", "tools", self.t("nav_tools")),
@@ -527,6 +530,7 @@ class NovaFitApp(tk.Tk):
         self.motivation_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=0)
         self.recommendations_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=0)
         self.add_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=18)
+        self.training_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=0)
         self.entries_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=18)
         self.profiles_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=0)
         self.tools_tab = ttk.Frame(self.notebook, style="Panel.TFrame", padding=18)
@@ -535,6 +539,7 @@ class NovaFitApp(tk.Tk):
             (self.motivation_tab, self.t("tab_motivation")),
             (self.recommendations_tab, self.t("tab_coach")),
             (self.add_tab, self.t("tab_add")),
+            (self.training_tab, self.t("tab_training")),
             (self.entries_tab, self.t("tab_records")),
             (self.profiles_tab, self.t("tab_profiles")),
             (self.tools_tab, self.t("tab_tools")),
@@ -546,6 +551,7 @@ class NovaFitApp(tk.Tk):
             "motivation": self.motivation_tab,
             "recommendations": self.recommendations_tab,
             "add": self.add_tab,
+            "training": self.training_tab,
             "entries": self.entries_tab,
             "profiles": self.profiles_tab,
             "tools": self.tools_tab,
@@ -554,6 +560,7 @@ class NovaFitApp(tk.Tk):
         self._build_motivation_tab()
         self._build_recommendations_tab()
         self._build_add_tab()
+        self._build_training_tab()
         self._build_entries_tab()
         self._build_profiles_tab()
         self._build_tools_tab()
@@ -696,6 +703,18 @@ class NovaFitApp(tk.Tk):
             self._set_status,
         )
         self.recommendations_panel.pack(fill="both", expand=True)
+
+    def _build_training_tab(self) -> None:
+        self.training_panel = TrainingPanel(
+            self.training_tab,
+            WorkoutStore(self.database),
+            lambda: self.palette,
+            lambda: self.language,
+            lambda: self.active_profile.display_name,
+            self._set_status,
+            self._show_error,
+        )
+        self.training_panel.pack(fill="both", expand=True)
 
     def _build_profiles_tab(self) -> None:
         self.profile_panel = ProfileManagerPanel(
@@ -992,7 +1011,10 @@ class NovaFitApp(tk.Tk):
             stats = calculate_dashboard(entries, self.settings)
             self.dashboard_panel.refresh(entries, stats, self.settings)
             self.motivation_panel.refresh(entries, stats, self.settings)
-            self.recommendations_panel.refresh(entries, self.settings, self.active_profile)
+            self.training_panel.refresh()
+            self.recommendations_panel.refresh(
+                entries, self.settings, self.active_profile, self.training_panel.sessions
+            )
             self.profile_panel.refresh()
             self._refresh_profile_selector()
             self.hero.set_profile_name(self.active_profile.display_name)

@@ -1,0 +1,13 @@
+{
+ "workoutKinds": [
+  "walking",
+  "running",
+  "cycling",
+  "strength",
+  "mobility",
+  "swimming",
+  "sport",
+  "other"
+ ],
+ "referenceWeeklyMinutes": 150
+}
