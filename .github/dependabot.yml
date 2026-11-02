@@ -15,6 +15,11 @@ version: 2
 updates:
   - package-ecosystem: pip
     directory: /
+    # Requirements are ranges (">=1.2.2,<2.0.0") and CI already installs the
+    # newest version inside each range. Only propose a change when a release
+    # falls outside its range. This also avoids fetch-metadata misreading the
+    # range's upper bound as the old version and holding the PR as "major".
+    versioning-strategy: increase-if-necessary
     schedule:
       interval: monthly
       time: '05:15'
