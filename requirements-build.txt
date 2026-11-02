@@ -2,4 +2,4 @@
 
 # Windows standalone and Python package release tooling.
 PyInstaller>=6.22.3,<7.0.0
-build>=1.2.2,<2.0.0
+build>=1.6.1,<2.0.0
