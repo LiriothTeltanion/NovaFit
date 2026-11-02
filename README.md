@@ -726,6 +726,8 @@ NovaFit/
 Beersheba, Israel · Asia/Jerusalem  
 [GitHub](https://github.com/LiriothTeltanion) · [LinkedIn](https://www.linkedin.com/in/kevin-cusnir-883173b4/)
 
+Built with AI-assisted tooling; I reviewed, tested and can explain every change.
+
 ---
 
 ## 📄 License
