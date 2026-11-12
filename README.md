@@ -27,6 +27,14 @@
 
 ---
 
+## ⏱️ NovaFit in 30 seconds
+
+- **What it is:** a desktop wellness studio for Windows that turns daily steps, hydration, mood and training into clear charts and gentle suggestions.
+- **Who it is for:** people who want to track their habits without sending personal health records to a server; every record stays in a local SQLite file.
+- **What I built:** the Python app, the Tkinter interface in English, Spanish and Hebrew (right-to-left), the analytics, the backups, the tests and the Windows releases.
+- **Built with:** Python, Tkinter/ttk, SQLite, unittest and GitHub Actions.
+- **Try it:** open the [live showcase](https://liriothteltanion.github.io/NovaFit/) or download the [Windows build from release v4.2.0](https://github.com/LiriothTeltanion/NovaFit/releases/tag/v4.2.0).
+
 ## 🌌 Product vision
 
 NovaFit is Kevin “Lirioth” Cusnir's private desktop and terminal application for recording daily steps, water, optional calories, mood and notes. Version **4.2.0** turns it into a more polished, honest and maintainable **Wellness Intelligence Studio** with:
