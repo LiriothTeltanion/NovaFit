@@ -59,3 +59,17 @@ The desktop app stays the complete reference until the web reaches parity.
 <img src="docs/trends-es-aurora.png" width="100%" alt="NovaFit web Trend Lab in Spanish: steps with the 7-day average, hydration, routine score, weekday rhythm and moods" />
 
 <img src="docs/dashboard-en-mobile.png" width="24%" alt="NovaFit web Command Center on a 390 px phone" /> <img src="docs/training-es-aurora.png" width="37%" alt="NovaFit web Training Log in Spanish" /> <img src="docs/training-he-solar.png" width="37%" alt="NovaFit web Training Log in Hebrew" />
+
+## Profile and import safety
+
+Profile data is displayed and exported only after the active profile has loaded. A delayed read from a previous
+profile cannot replace the active snapshot. During loading, record and export controls are unavailable.
+
+JSON and CSV imports are additive: an existing date is retained rather than overwritten, repeated input dates
+keep the first row, and identical training sessions are skipped. The result reports how many rows were retained.
+Entries and sessions are committed in one transaction; a failed insertion rolls back the entire import. To change
+an existing day, use the Records editor deliberately instead of importing over it. Export a backup before editing.
+
+Regression verification (2026-11-14): 37 Vitest tests passed; TypeScript/Vite build and generated-catalogue check
+passed. The delayed-profile regression fails against the original PR head and passes with the fix. These are
+local checks with synthetic data, not a deployed-browser or live-user-data test.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, ChartLine, Dumbbell, HeartPulse, LayoutDashboard, Lock, Settings2, Sparkles, UserRound } from 'lucide-react';
 import { CoachPage } from './components/CoachPage';
 import { DashboardPage } from './components/DashboardPage';
@@ -10,7 +10,8 @@ import { TrendsPage } from './components/TrendsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TrainingPage } from './components/TrainingPage';
 import { db, listEntries, listSessions, type NovaFitWebDb } from './db';
-import { exportPayload, parseImport, sessionKey } from './domain/bridge';
+import { exportPayload, parseImport } from './domain/bridge';
+import { importPreservingRecords } from './importPreservingRecords';
 import { csvToEntries, entriesToCsv } from './domain/csv';
 import { demoEntries, demoSessions } from './domain/demo';
 import type { HealthEntry } from './domain/entries';
@@ -19,6 +20,9 @@ import { buildHtmlReport } from './domain/report';
 import { LANGUAGES, directionFor, tr, type Language } from './i18n';
 import { forgetProfilePrefs, readPrefs, readProfilePrefs, savePrefs, type Prefs } from './settings';
 import { THEMES, applyTheme } from './theme';
+
+const EMPTY_ENTRIES: HealthEntry[] = [];
+const EMPTY_SESSIONS: WorkoutSession[] = [];
 
 let demoRequested = false; // React StrictMode runs effects twice in development: seed once.
 
@@ -46,8 +50,15 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
   const profileId = profiles.some((p) => p.id === prefs.profileId) ? prefs.profileId : 1;
   const store = useMemo(() => storeFor(base, profileId), [base, profileId]);
   const [page, setPage] = useState<PageId>(pageFromHash);
-  const [entries, setEntries] = useState<HealthEntry[]>([]);
-  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [snapshot, setSnapshot] = useState<{ store: NovaFitWebDb; entries: HealthEntry[]; sessions: WorkoutSession[] } | null>(null);
+  // A snapshot belongs to one store. Never render or export it under another profile.
+  const activeStore = useRef(store);
+  activeStore.current = store;
+  const requestId = useRef(0);
+  const ready = snapshot?.store === store;
+  const entries = ready ? snapshot.entries : EMPTY_ENTRIES;
+  const sessions = ready ? snapshot.sessions : EMPTY_SESSIONS;
+  const [loadError, setLoadError] = useState(false);
   const { language, theme } = prefs;
   const t = (key: string, values?: Record<string, string | number>) => tr(language, key, values);
   const updatePrefs = (next: Prefs) => {
@@ -75,9 +86,13 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
   }, []);
 
   const reload = useCallback(async () => {
+    if (activeStore.current !== store) return;
+    const id = ++requestId.current;
     const [nextEntries, nextSessions] = await Promise.all([listEntries(store), listSessions(store)]);
-    setEntries(nextEntries);
-    setSessions(nextSessions);
+    if (activeStore.current === store && id === requestId.current) {
+      setSnapshot({ store, entries: nextEntries, sessions: nextSessions });
+      setLoadError(false);
+    }
   }, [store]);
 
   useEffect(() => {
@@ -89,7 +104,8 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
         await store.workouts.bulkAdd(demoSessions(today));
       }
       await reload();
-    })();
+    })().catch(() => { if (activeStore.current === store) setLoadError(true); });
+    return () => { requestId.current += 1; };
   }, [reload, store, today]);
 
   const go = (id: PageId) => {
@@ -104,25 +120,33 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
     URL.revokeObjectURL(url);
   }
 
+  function requireActiveProfile() {
+    if (!ready || activeStore.current !== store) throw new Error('Profile changed or is still loading. Please try again.');
+  }
+
   async function exportJson() {
+    requireActiveProfile();
     download(JSON.stringify(exportPayload([...entries].reverse(), [...sessions].reverse()), null, 2) + '\n', 'application/json', `novafit-web-export-${today}.json`);
   }
 
   async function exportReport() {
+    requireActiveProfile();
     const profileName = profiles.find((p) => p.id === profileId)?.name ?? '';
     const html = buildHtmlReport({ entries, sessions, goals: prefs.goals, language, today, profileName });
     download(html, 'text/html', `novafit-web-report-${today}.html`);
   }
 
   async function exportCsv() {
+    requireActiveProfile();
     download(entriesToCsv([...entries].reverse()), 'text/csv', `novafit-web-records-${today}.csv`);
   }
 
   async function importCsv(text: string): Promise<string> {
+    requireActiveProfile();
     const outcome = csvToEntries(text);
-    await store.entries.bulkPut(outcome.entries);
+    const result = await importPreservingRecords(store, outcome.entries, []);
     await reload();
-    return t('imported_records', { imported: outcome.entries.length, invalid: outcome.invalid });
+    return t('imported_records', { imported: result.entries, invalid: outcome.invalid }) + retainedMessage(result.retained);
   }
 
   useEffect(() => {
@@ -148,16 +172,17 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
     return t('profile_deleted', { name: profile.name });
   }
 
+  function retainedMessage(count: number) {
+    const labels = { en: 'Existing or duplicate records kept', es: 'Registros existentes o duplicados conservados', he: 'רשומות קיימות או כפולות נשמרו' };
+    return ` · ${labels[language]}: ${count}`;
+  }
+
   async function importJson(text: string): Promise<string> {
+    requireActiveProfile();
     const outcome = parseImport(text);
-    const known = new Set(sessions.map(sessionKey));
-    const fresh = outcome.sessions.filter((s) => !known.has(sessionKey(s)) && known.add(sessionKey(s)));
-    await store.transaction('rw', store.entries, store.workouts, async () => {
-      await store.entries.bulkPut(outcome.entries);
-      if (fresh.length) await store.workouts.bulkAdd(fresh);
-    });
+    const result = await importPreservingRecords(store, outcome.entries, outcome.sessions);
     await reload();
-    return t('web_import_done', { entries: outcome.entries.length, sessions: fresh.length, invalid: outcome.invalid });
+    return t('web_import_done', { entries: result.entries, sessions: result.sessions, invalid: outcome.invalid }) + retainedMessage(result.retained);
   }
 
   return (
@@ -230,6 +255,9 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
         </nav>
 
         <main className="content" id="main" tabIndex={-1}>
+          {!ready && page !== 'profiles' ? <p role={loadError ? 'alert' : 'status'}>{loadError
+            ? ({ en: 'Unable to load this profile. Reload to retry.', es: 'No se pudo cargar este perfil. Recarga para reintentar.', he: 'לא ניתן לטעון את הפרופיל. יש לטעון מחדש כדי לנסות שוב.' })[language]
+            : ({ en: 'Loading profile…', es: 'Cargando perfil…', he: 'טוען פרופיל…' })[language]}</p> : <>
           {page === 'dashboard' && <DashboardPage language={language} entries={entries} goals={prefs.goals} today={today} why={prefs.why} onAddRecord={() => go('records')} />}
           {page === 'records' && (
             <RecordsPage
@@ -258,6 +286,7 @@ export function App({ store: base = db, today = localIsoToday() }: { store?: Nov
             <ProfilesPage language={language} profiles={profiles} activeId={profileId} counts={counts} onCreate={createProfile} onActivate={switchProfile} onDelete={removeProfile} />
           )}
           {page === 'settings' && <SettingsPage key={prefs.profileId} language={language} prefs={prefs} onSave={updatePrefs} onExport={exportJson} onImport={importJson} onExportCsv={exportCsv} onExportReport={exportReport} onImportCsv={importCsv} />}
+          </>}
         </main>
       </div>
     </div>

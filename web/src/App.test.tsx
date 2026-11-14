@@ -160,6 +160,51 @@ describe('records, dashboard and coach', () => {
     open('/?lang=he#/training');
     render(<App store={freshStore()} today="2026-10-19" />);
     await waitFor(() => expect(document.documentElement.dir).toBe('rtl'));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('יומן אימונים');
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('יומן אימונים');
+  });
+});
+
+describe('profile load race safety', () => {
+  it('hides old data and exports while the next profile loads, and ignores a late previous-profile read', async () => {
+    const { storeFor } = await import('./profiles');
+    localStorage.setItem('novafit-web:profiles', JSON.stringify([{ id: 1, name: 'Kevin' }, { id: 2, name: 'Mamá' }]));
+    open('/#/settings');
+    const user = userEvent.setup();
+    const store = freshStore();
+    const other = storeFor(store, 2);
+    await store.entries.put({ date: '2026-10-19', steps: 9000, waterL: 2, calories: null, mood: null, note: 'private primary' });
+    let finish!: (rows: never[]) => void;
+    const delay = vi.spyOn(other.entries, 'toArray').mockImplementationOnce(() => new Promise<never[]>((resolve) => { finish = resolve; }) as ReturnType<typeof other.entries.toArray>);
+    render(<App store={store} today="2026-10-19" />);
+    await screen.findByRole('button', { name: tr('en', 'export_report') });
+    await user.selectOptions(screen.getByLabelText(tr('en', 'user')), 'Mamá');
+    await waitFor(() => expect(delay).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: tr('en', 'export_report') })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Loading profile');
+    await user.selectOptions(screen.getByLabelText(tr('en', 'user')), 'Kevin');
+    await screen.findByRole('button', { name: tr('en', 'export_report') });
+    finish([]); // The slow Mamá result must not overwrite Kevin's later snapshot.
+    await waitFor(() => expect(screen.queryByText('Loading profile…')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('link', { name: tr('en', 'nav_records') }));
+    expect(await screen.findByText('private primary')).toBeInTheDocument();
+    delay.mockRestore();
+  });
+});
+
+describe('non-destructive import UI', () => {
+  it.each(['json', 'csv'])('keeps an existing daily record when importing %s', async (format) => {
+    open('/#/settings');
+    const user = userEvent.setup();
+    const store = freshStore();
+    const original = { date: '2026-10-19', steps: 9000, waterL: 2, calories: null, mood: null, note: 'preserve original' };
+    await store.entries.put(original);
+    render(<App store={store} today="2026-10-19" />);
+    const content = format === 'json'
+      ? JSON.stringify({ health_data: [{ ...original, steps: 1, water_l: 1, note: 'replacement' }] })
+      : 'Date,Steps,Water (L),Calories,Mood,Note\n2026-10-19,1,1,,,replacement\n';
+    const input = await screen.findByLabelText(tr('en', format === 'json' ? 'import_json' : 'import_csv'));
+    await user.upload(input, new File([content], `data.${format}`, { type: format === 'json' ? 'application/json' : 'text/csv' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Existing or duplicate records kept: 1');
+    expect(await store.entries.get(original.date)).toEqual(original);
   });
 });
