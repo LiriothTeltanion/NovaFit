@@ -252,6 +252,34 @@ Available calendar ranges:
 
 ---
 
+## 🏋️ Training Log
+
+The Training Log adds what a fitness app was missing: the sessions themselves. Each local profile keeps its own
+log of walks, runs, rides, strength, mobility, swimming and sport sessions.
+
+- **Log a session** with its type, minutes, effort on the 1–10 RPE scale, optional distance and a private note.
+- **See the week at a glance:** minutes, sessions and active days, a weekly streak, the change against last
+  week and an eight-week bar chart.
+- **Session load** is minutes × RPE, the descriptive bookkeeping coaches use to compare weeks.
+- **WHO reference:** the dashed line marks the general adult reference of 150 minutes a week. It is
+  orientation, not a personal prescription.
+- **Coach-aware:** the Sport & Data Coach notices a sharp jump in your 7-day session load, a two-week pause
+  or four weeks of a single workout type, and suggests a conservative next step.
+- **Portable:** JSON exports and imports carry the sessions (no duplicates on re-import), there is a
+  sessions CSV, and the complete ZIP backup includes them.
+- **Safe upgrade:** schema 5 only adds a `workouts` table, so existing daily records are never rewritten.
+
+<img src="./assets/training-log.png" width="100%" alt="NovaFit Training Log with weekly minutes, streak and recent sessions" />
+
+```powershell
+python -m novafit.cli --add-workout 2026-10-19 --kind running --minutes 32 --rpe 6 --distance 5.4
+python -m novafit.cli --workouts 10
+python -m novafit.cli --training 8 --language es
+python -m novafit.cli --export-workouts-csv data\training.csv
+```
+
+---
+
 ## 🧠 Sport & Data Coach
 
 The recommendation engine uses only the active user’s stored records, configured goals and profile preferences.

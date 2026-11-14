@@ -12,7 +12,7 @@ import csv
 import json
 import logging
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Iterable, Literal, Mapping
@@ -22,6 +22,7 @@ from .config import CSV_EXPORT_PATH, EXPORT_PATH
 from .database import NovaFitDatabase
 from .models import HealthEntry
 from .time_utils import now_local, timestamp_label
+from .workouts import WorkoutSession, WorkoutStore
 
 LOGGER = logging.getLogger(__name__)
 ImportStrategy = Literal["replace", "skip"]
@@ -38,6 +39,7 @@ class ImportResult:
         skipped: Number of existing rows skipped by strategy.
         invalid: Number of malformed rows ignored.
         errors: Short actionable messages for invalid rows.
+        sessions_imported: Training sessions added from a JSON export (duplicates are skipped).
 
     Example:
         >>> ImportResult(1, 0, 0, ()).imported
@@ -48,6 +50,7 @@ class ImportResult:
     skipped: int
     invalid: int
     errors: tuple[str, ...]
+    sessions_imported: int = 0
 
 
 def export_json(
@@ -72,6 +75,7 @@ def export_json(
         True
     """
     entries = [entry.to_dict() for entry in database.list(limit=None)]
+    sessions = [_session_row(session) for session in WorkoutStore(database).list(None)]
     payload = {
         "metadata": {
             "exported_at": now_local().isoformat(timespec="seconds"),
@@ -80,8 +84,11 @@ def export_json(
             "timezone": timestamp_label(),
             "total_entries": len(entries),
             "schema": "novafit-health-export-v2",
+            "total_sessions": len(sessions),
         },
         "health_data": entries,
+        # Added with schema 5. Older NovaFit releases read only health_data and ignore this key.
+        "training_sessions": sessions,
     }
     _atomic_write_text(
         destination,
@@ -172,7 +179,66 @@ def import_json(
         rows = [payload]
     else:
         raise ValueError("JSON root must be an object or list of objects.")
-    return _import_rows(database, rows, strategy=strategy)
+    result = _import_rows(database, rows, strategy=strategy)
+    if isinstance(payload, Mapping) and isinstance(payload.get("training_sessions"), list):
+        added, invalid, errors = _import_sessions(database, payload["training_sessions"])
+        result = replace(
+            result,
+            invalid=result.invalid + invalid,
+            errors=result.errors + errors,
+            sessions_imported=added,
+        )
+    return result
+
+
+def _session_row(session: WorkoutSession) -> dict[str, Any]:
+    row = session.to_row()
+    row.pop("id", None)
+    row.pop("load", None)  # derived from duration and RPE
+    return row
+
+
+def _import_sessions(database: NovaFitDatabase, rows: list[Any]) -> tuple[int, int, tuple[str, ...]]:
+    """Add exported sessions to the active profile, skipping exact duplicates."""
+    store = WorkoutStore(database)
+    seen = {_session_key(session) for session in store.list(None)}
+    added = invalid = 0
+    errors: list[str] = []
+    for index, raw in enumerate(rows[:MAX_IMPORT_ROWS], start=1):
+        try:
+            if not isinstance(raw, Mapping):
+                raise ValueError("session must be an object")
+            session = WorkoutSession.build(
+                raw.get("date", ""),
+                raw.get("kind"),
+                raw.get("duration_min"),
+                rpe=raw.get("rpe"),
+                distance_km=raw.get("distance_km"),
+                note=raw.get("note"),
+            )
+        except ValueError as exc:
+            invalid += 1
+            if len(errors) < 20:
+                errors.append(f"Session {index}: {exc}")
+            continue
+        key = _session_key(session)
+        if key in seen:
+            continue
+        store.add(session)
+        seen.add(key)
+        added += 1
+    return added, invalid, tuple(errors)
+
+
+def _session_key(session: WorkoutSession) -> tuple[Any, ...]:
+    return (
+        session.session_date,
+        session.kind,
+        session.duration_min,
+        session.rpe,
+        session.distance_km,
+        session.note,
+    )
 
 
 def import_csv(

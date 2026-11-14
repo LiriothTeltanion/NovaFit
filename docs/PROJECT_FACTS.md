@@ -4,10 +4,10 @@
 
 - **Version:** `4.2.0`
 - **Default branch:** `main`
-- **Automated tests discovered:** 124
+- **Automated tests discovered:** 144
 - **Interface languages:** en, es, he
 - **Themes:** 12
-- **Public visual assets:** 58 (26.65 MiB)
+- **Public visual assets:** 60 (26.79 MiB)
 - **Complete verification:** `VERIFY_ALL.bat`
 - **Strict release audit:** `python tools/package_audit.py --strict-distribution`
 - **Live public showcase:** https://liriothteltanion.github.io/NovaFit/

@@ -143,6 +143,20 @@ python -m novafit.cli --settings
 
 Only safe preferences are displayed. Health records and notes are not printed by this action.
 
+## Training log
+
+```bash
+python -m novafit.cli --add-workout 2026-10-19 --kind running --minutes 32 --rpe 6 --distance 5.4 --note "easy loop"
+python -m novafit.cli --workouts 10
+python -m novafit.cli --training 8 --language es
+python -m novafit.cli --delete-workout 3
+python -m novafit.cli --export-workouts-csv data/training.csv
+python -m novafit.cli --seed-workouts 6
+```
+
+`--kind` accepts walking, running, cycling, strength, mobility, swimming, sport or other.
+`--add-workout` requires `--kind` and `--minutes`; `--rpe`, `--distance` and `--note` are optional.
+
 ## Separate database examples
 
 ```bash

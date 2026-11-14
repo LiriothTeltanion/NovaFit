@@ -2,6 +2,31 @@
 
 All notable NovaFit changes are documented here.
 
+## Unreleased — local branch `nova/2026-10-19-workouts`
+
+### Added
+
+- Training Log: per-profile workout sessions (type, minutes, RPE 1–10, optional distance and note).
+- Training tab in the desktop app with weekly minutes, streak, change against last week, an eight-week
+  chart against the WHO 150-minute adult reference, a recent-session table and CSV export.
+- CLI flags `--add-workout`, `--workouts`, `--training`, `--delete-workout`, `--export-workouts-csv`
+  and `--seed-workouts` (deterministic demo history).
+- 13 automated tests, including the schema 4 → 5 upgrade and the Tk panel in English, Spanish and Hebrew.
+- Sport & Data Coach reads training sessions: a sharp jump in 7-day session load (≥ 1.5 × the previous three
+  weeks' weekly mean), no session in 14 days, a single workout type for four weeks, or an empty log.
+- JSON exports carry `training_sessions` (and `metadata.total_sessions`); imports add them to the active
+  profile and skip exact duplicates. Older releases ignore the new key.
+- 6 more tests for the coach signals and the JSON round trip (19 training tests in total).
+
+### Fixed
+
+- `--recommendations --language es|he` printed the report headings in the profile's language.
+
+### Changed
+
+- SQLite schema 5 adds the `workouts` table. The upgrade is additive; daily records are not rewritten.
+  A schema-5 file is refused by older releases through the existing newer-schema guard.
+
 ## 4.2.0 — 2026-07-16 · Public Showcase and One-Click Delivery
 
 ### Added

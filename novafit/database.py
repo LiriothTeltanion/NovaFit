@@ -21,7 +21,7 @@ from .config import DB_PATH
 from .models import HealthEntry, UserProfile
 
 LOGGER = logging.getLogger(__name__)
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 DEFAULT_PROFILE_NAME = "Primary User"
 
 
@@ -99,6 +99,7 @@ class NovaFitDatabase:
                     self._migrate_log_columns(connection)
             else:
                 self._create_logs_table(connection)
+            self._create_workouts_table(connection)
             self._create_indexes(connection)
             connection.execute(
                 """
@@ -624,6 +625,25 @@ class NovaFitDatabase:
             ).fetchone()
         return int(row["total"])
 
+    def resolve_profile_id(self, profile_id: int | None = None) -> int:
+        """Return an existing profile id, defaulting to the active profile.
+
+        Args:
+            profile_id: Optional explicit profile identifier.
+
+        Returns:
+            The validated profile id used by companion stores such as workouts.
+
+        Raises:
+            ValueError: If the profile does not exist.
+
+        Example:
+            >>> db = NovaFitDatabase(Path('data/example.db'))
+            >>> db.initialize(); db.resolve_profile_id()
+            1
+        """
+        return self._resolve_profile_id(profile_id)
+
     def _resolve_profile_id(self, profile_id: int | None) -> int:
         self.initialize()
         selected = profile_id if profile_id is not None else self.active_profile_id
@@ -750,6 +770,26 @@ class NovaFitDatabase:
             """
         )
 
+    @staticmethod
+    def _create_workouts_table(connection: sqlite3.Connection) -> None:
+        # Schema 5 adds training sessions beside the daily logs. Creating the
+        # table is additive, so upgrading a schema-4 file never touches a log row.
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS workouts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+                date TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                duration_min INTEGER NOT NULL CHECK (duration_min BETWEEN 1 AND 600),
+                rpe INTEGER CHECK (rpe IS NULL OR rpe BETWEEN 1 AND 10),
+                distance_km REAL CHECK (distance_km IS NULL OR distance_km >= 0),
+                note TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
     def _rebuild_legacy_logs(self, connection: sqlite3.Connection) -> None:
         LOGGER.info("Migrating legacy single-user logs to profile-aware schema")
         legacy_name = "logs_legacy_v2"
@@ -806,5 +846,6 @@ class NovaFitDatabase:
             """
             CREATE INDEX IF NOT EXISTS idx_logs_user_date ON logs(user_id, date DESC);
             CREATE INDEX IF NOT EXISTS idx_profiles_name ON profiles(display_name COLLATE NOCASE);
+            CREATE INDEX IF NOT EXISTS idx_workouts_user_date ON workouts(user_id, date DESC);
             """
         )
